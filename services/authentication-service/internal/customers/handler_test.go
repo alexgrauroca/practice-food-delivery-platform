@@ -32,6 +32,12 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 		},
 		//TODO those error response were used to learn about how gin handles validation errors, but they should simpler
 		{
+			name:                 "when empty payload is provided, then it should return a 400 with the validation error",
+			jsonPayload:          `{}`,
+			expectedJsonResponse: `{"error":"Key: 'RegisterCustomerRequest.Email' Error:Field validation for 'Email' failed on the 'required' tag\nKey: 'RegisterCustomerRequest.Password' Error:Field validation for 'Password' failed on the 'required' tag\nKey: 'RegisterCustomerRequest.Name' Error:Field validation for 'Name' failed on the 'required' tag"}`,
+			expectedStatusCode:   http.StatusBadRequest,
+		},
+		{
 			name:                 "when invalid email is provided, then it should return a 400 with the email validation error",
 			jsonPayload:          `{"email": "invalid-email", "name": "John Doe", "password": "ValidPassword123"}`,
 			expectedJsonResponse: `{"error": "Key: 'RegisterCustomerRequest.Email' Error:Field validation for 'Email' failed on the 'email' tag"}`,
