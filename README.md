@@ -8,6 +8,8 @@ This is the initial use case designed by GitHub Copilot. This is an starting poi
 
 I will follow a kind of Lean Agile methodology to develop this project. The main idea is to do small and quick iterations, aiming to reduce the risk of failure and to improve the knowledge.
 
+Services will follow a Domain Service Design approach, where each service is responsible for a specific domain of the application. This will allow for better separation of concerns and easier maintenance. The main problem with a microservice architecture is that maintainability of all the services becomes hard, so the operational costs rise up quickly.
+
 ## Food Delivery Platform - Use Case
 
 ### Actors
