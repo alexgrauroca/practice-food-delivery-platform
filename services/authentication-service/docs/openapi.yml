@@ -1,0 +1,96 @@
+openapi: 3.0.3
+info:
+  title: Authentication Service API
+  version: 1.0.0
+  description: API documentation for the authentication service.
+
+servers:
+  - url: http://localhost:8080
+    description: Local server
+
+paths:
+  /v1.0/customers:
+    post:
+      summary: Register a new customer
+      operationId: registerCustomer
+      tags:
+        - Customers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterCustomerRequest'
+      responses:
+        '201':
+          description: Customer registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterCustomerResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    enum:
+                      - Invalid email
+                      - Invalid password
+        '409':
+          description: Customer already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    enum:
+                      - Customer already exists
+
+components:
+  schemas:
+    RegisterCustomerRequest:
+      type: object
+      required:
+        - email
+        - password
+        - name
+      properties:
+        email:
+          type: string
+          format: email
+          pattern: '^[\w\.-]+@[\w\.-]+\.\w{2,}$'
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: strongpassword123
+        name:
+          type: string
+          example: John Doe
+
+    RegisterCustomerResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: '^[a-fA-F0-9]{24}$'
+          example: 507f1f77bcf86cd799439011
+        email:
+          type: string
+          format: email
+          pattern: '^[\w\.-]+@[\w\.-]+\.\w{2,}$'
+          example: user@example.com
+        name:
+          type: string
+          example: John Doe
+        created_at:
+          type: string
+          format: date-time
+          example: 2024-06-01T12:00:00Z
