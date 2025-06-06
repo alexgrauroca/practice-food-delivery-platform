@@ -30,6 +30,7 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 			expectedJsonResponse: `{"error": "Invalid request"}`,
 			expectedStatusCode:   http.StatusBadRequest,
 		},
+		//TODO those error response were used to learn about how gin handles validation errors, but they should simpler
 		{
 			name:                 "when invalid email is provided, then it should return a 400 with the email validation error",
 			jsonPayload:          `{"email": "invalid-email", "name": "John Doe", "password": "ValidPassword123"}`,
