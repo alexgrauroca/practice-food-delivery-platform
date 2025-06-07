@@ -1,4 +1,25 @@
-name: workflow.yml
+name: Food Delivery Platform CI
+
 on:
+  pull_request:
+    branches-ignore:
+      - main
+    paths:
+      - 'services/authentication-service/**'
+      - 'deployments/**'
+      - '.github/workflows/**'
 
 jobs:
+  authentication-service-tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/authentication-service
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+      - name: Run Unit Tests
+        run: go test ./...
