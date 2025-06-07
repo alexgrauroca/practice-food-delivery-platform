@@ -1,13 +1,9 @@
 name: Food Delivery Platform CI
+
 on:
   pull_request:
     branches-ignore:
       - main
-    paths:
-      #- 'services/authentication-service/**'
-      #- 'deployments/**'
-      #- '.github/workflows/**'
-      - '**'
 
 jobs:
   authentication-service-tests:
