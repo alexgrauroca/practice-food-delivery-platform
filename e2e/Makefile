@@ -4,4 +4,4 @@ run-e2e-tests: start-docker
 
 start-docker:
 	@echo "Starting Docker containers for end-to-end tests..."
-	@docker compose -f ../../docker-compose.yml up -d --build
+	@docker compose -f ../docker-compose.yml up -d --build
