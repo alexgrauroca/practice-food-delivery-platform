@@ -9,7 +9,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
-	"golang.org/x/crypto/bcrypt"
 )
 
 const (
@@ -56,16 +55,10 @@ func NewRepository(logger *zap.Logger, db *mongo.Database, clk clock.Clock) Repo
 
 func (r *repository) CreateCustomer(ctx context.Context, params CreateCustomerParams) (Customer, error) {
 	now := r.clock.Now()
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(params.Password), 12)
-	if err != nil {
-		r.logger.Error("Failed to hash password", zap.Error(err))
-		return Customer{}, err
-	}
-
 	c := Customer{
 		Email:     params.Email,
 		Name:      params.Name,
-		Password:  string(hashedPassword),
+		Password:  params.Password,
 		CreatedAt: now,
 		UpdatedAt: now,
 		Active:    true,

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
 )
 
 //go:generate mockgen -destination=./mocks/service_mock.go -package=mocks github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers Service
@@ -39,9 +40,15 @@ func NewService(logger *zap.Logger, repo Repository) Service {
 
 func (s *service) RegisterCustomer(ctx context.Context, input RegisterCustomerInput) (RegisterCustomerOutput, error) {
 	s.logger.Info("registering customer", zap.String("email", input.Email), zap.String("name", input.Name))
+	hashedPassword, err := HashPassword(input.Password)
+	if err != nil {
+		s.logger.Error("failed to hash password", zap.Error(err))
+		return RegisterCustomerOutput{}, err
+	}
+
 	params := CreateCustomerParams{
 		Email:    input.Email,
-		Password: input.Password,
+		Password: hashedPassword,
 		Name:     input.Name,
 	}
 
@@ -59,4 +66,12 @@ func (s *service) RegisterCustomer(ctx context.Context, input RegisterCustomerIn
 	}
 	s.logger.Info("customer registered successfully", zap.String("customerID", customer.ID))
 	return output, nil
+}
+
+func HashPassword(password string) (string, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 12)
+	if err != nil {
+		return "", err
+	}
+	return string(hashedPassword), nil
 }

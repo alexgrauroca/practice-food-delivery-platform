@@ -65,15 +65,17 @@ func TestService_RegisterCustomer(t *testing.T) {
 				Name:     "John Doe",
 			},
 			mocksSetup: func(repo *mocks.MockRepository) {
+				hashedPassword, _ := customers.HashPassword("ValidPassword123")
 				repo.EXPECT().CreateCustomer(gomock.Any(), customers.CreateCustomerParams{
 					Email:    "test@example.com",
-					Password: "ValidPassword123",
+					Password: hashedPassword,
 					Name:     "John Doe",
 				}).
 					Return(customers.Customer{
 						ID:        "fake-id",
 						Email:     "test@example.com",
 						Name:      "John Doe",
+						Password:  hashedPassword,
 						CreatedAt: now,
 						UpdatedAt: now,
 						Active:    true,
