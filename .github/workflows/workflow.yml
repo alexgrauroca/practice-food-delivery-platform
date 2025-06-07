@@ -4,9 +4,10 @@ on:
     branches-ignore:
       - main
     paths:
-      - 'services/authentication-service/**'
-      - 'deployments/**'
-      - '.github/workflows/**'
+      #- 'services/authentication-service/**'
+      #- 'deployments/**'
+      #- '.github/workflows/**'
+      - '**'
 
 jobs:
   authentication-service-tests:
