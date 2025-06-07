@@ -10,7 +10,9 @@ import (
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func TestService_RegisterCustomer(t *testing.T) {
@@ -65,21 +67,22 @@ func TestService_RegisterCustomer(t *testing.T) {
 				Name:     "John Doe",
 			},
 			mocksSetup: func(repo *mocks.MockRepository) {
-				hashedPassword, _ := customers.HashPassword("ValidPassword123")
-				repo.EXPECT().CreateCustomer(gomock.Any(), customers.CreateCustomerParams{
-					Email:    "test@example.com",
-					Password: hashedPassword,
-					Name:     "John Doe",
-				}).
-					Return(customers.Customer{
-						ID:        "fake-id",
-						Email:     "test@example.com",
-						Name:      "John Doe",
-						Password:  hashedPassword,
-						CreatedAt: now,
-						UpdatedAt: now,
-						Active:    true,
-					}, nil)
+				repo.EXPECT().CreateCustomer(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(_ context.Context, params customers.CreateCustomerParams) (customers.Customer, error) {
+						// Assert that the password is hashed
+						err := bcrypt.CompareHashAndPassword([]byte(params.Password), []byte("ValidPassword123"))
+						require.NoError(t, err, "Password should be hashed and match the input password")
+
+						return customers.Customer{
+							ID:        "fake-id",
+							Email:     params.Email,
+							Name:      params.Name,
+							Password:  params.Password,
+							CreatedAt: now,
+							UpdatedAt: now,
+							Active:    true,
+						}, nil
+					})
 			},
 			expectedOutput: customers.RegisterCustomerOutput{
 				ID:        "fake-id",
