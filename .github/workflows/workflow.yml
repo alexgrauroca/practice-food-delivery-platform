@@ -1,5 +1,4 @@
 name: Food Delivery Platform CI
-
 on:
   pull_request:
     branches-ignore:
