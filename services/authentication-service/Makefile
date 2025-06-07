@@ -7,8 +7,8 @@ install-mockgen:
 
 run-integration-tests: start-docker
 	@echo "Running integration tests for authentication service..."
-	@go test -v -tags=integration ./... -run IntegrationTest
+	@bash -c "set -a && source ../../.env && set +a && go test -v --tags=integration ./internal/customers/integration/..."
 
 start-docker:
 	@echo "Starting Docker containers for integration tests..."
-	@docker-compose -f ../../docker-compose.yml up -d
+	@docker compose -f ../../docker-compose.yml up -d

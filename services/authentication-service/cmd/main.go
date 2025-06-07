@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/clock"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/config"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
 	"github.com/gin-gonic/gin"
@@ -71,7 +72,7 @@ func initMongoDB(logger *zap.Logger) (*mongo.Database, bool) {
 
 func initCustomersFeature(logger *zap.Logger, db *mongo.Database, router *gin.Engine) {
 	// Initialize the customers repository
-	repo := customers.NewRepository(logger, db)
+	repo := customers.NewRepository(logger, db, clock.RealClock{})
 
 	// Initialize the customers service
 	service := customers.NewService(logger, repo)

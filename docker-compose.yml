@@ -19,11 +19,8 @@ services:
     container_name: authentication-service
     depends_on:
       - mongodb
-    environment:
-      # This is not recommended for real projects, use secrets or environment variables instead
-      - MONGO_URI=mongodb://mongodb:27017
-      - MONGO_USER=root
-      - MONGO_PWD=rootpassword
+    env_file:
+      - .env
     ports:
       - "8080:8080"
     restart: always

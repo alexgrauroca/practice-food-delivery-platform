@@ -2,14 +2,9 @@ package customers
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"go.uber.org/zap"
-)
-
-var (
-	ErrCustomerAlreadyExists = errors.New("customer already exists")
 )
 
 //go:generate mockgen -destination=./mocks/service_mock.go -package=mocks github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers Service
