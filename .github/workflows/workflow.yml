@@ -37,5 +37,5 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-      - name: Run Unit Tests
+      - name: Run Integration Tests
         run: make run-unit-tests
