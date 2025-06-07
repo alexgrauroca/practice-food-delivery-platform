@@ -3,23 +3,23 @@ package customers_test
 import (
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers/mocks"
 	"github.com/golang/mock/gomock"
+	"go.uber.org/zap"
+
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap/zaptest"
-
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
 )
 
 func TestHandler_RegisterCustomer(t *testing.T) {
 	// Setting up the default values
 	gin.SetMode(gin.TestMode)
-	logger := zaptest.NewLogger(t)
+	logger := zap.NewNop()
 
 	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 
@@ -77,7 +77,7 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 			name:        "when the customer already exists, then it should return a 409 with the customer already exists error",
 			jsonPayload: `{"email": "test@example.com", "name": "John Doe", "password": "ValidPassword123"}`,
 			mocksSetup: func(service *mocks.MockService) {
-				service.EXPECT().RegisterCustomer(gomock.Any()).
+				service.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.RegisterCustomerOutput{}, customers.ErrCustomerAlreadyExists)
 			},
 			expectedJsonResponse: `{"error": "Customer already exists"}`,
@@ -87,7 +87,7 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 			name:        "when the customer is successfully registered, then it should return a 201 with the customer details",
 			jsonPayload: `{"email": "test@example.com", "name": "John Doe", "password": "ValidPassword123"}`,
 			mocksSetup: func(service *mocks.MockService) {
-				service.EXPECT().RegisterCustomer(customers.RegisterCustomerInput{
+				service.EXPECT().RegisterCustomer(gomock.Any(), customers.RegisterCustomerInput{
 					Email:    "test@example.com",
 					Password: "ValidPassword123",
 					Name:     "John Doe",
