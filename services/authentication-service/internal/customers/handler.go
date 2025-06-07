@@ -2,11 +2,12 @@ package customers
 
 import (
 	"errors"
+	"net/http"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"go.uber.org/zap"
-	"net/http"
-	"time"
 )
 
 const (
@@ -49,6 +50,7 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 }
 
 func (h *Handler) RegisterCustomer(c *gin.Context) {
+	//TODO review how can I include context info in the logs
 	h.logger.Info("RegisterCustomer handler called")
 
 	var req RegisterCustomerRequest
@@ -65,7 +67,7 @@ func (h *Handler) RegisterCustomer(c *gin.Context) {
 		Name:     req.Name,
 	}
 
-	output, err := h.service.RegisterCustomer(input)
+	output, err := h.service.RegisterCustomer(c.Request.Context(), input)
 	if err != nil {
 		if errors.Is(err, ErrCustomerAlreadyExists) {
 			h.logger.Warn("Customer already exists", zap.String("email", req.Email))

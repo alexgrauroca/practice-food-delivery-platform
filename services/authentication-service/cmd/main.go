@@ -1,10 +1,11 @@
 package main
 
 import (
+	"log"
+
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	"log"
 )
 
 func main() {
@@ -22,8 +23,11 @@ func main() {
 	// Initialize the Gin router
 	router := gin.Default()
 
+	// Initialize the customers repository
+	repo := customers.NewRepository(logger)
+
 	// Initialize the customers service
-	service := customers.NewService(logger)
+	service := customers.NewService(logger, repo)
 
 	// Initialize the customers handler and register routes
 	handler := customers.NewHandler(logger, service)
