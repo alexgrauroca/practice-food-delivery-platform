@@ -20,5 +20,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.24'
+      - name: Generate mocks
+        run: make generate-mocks
       - name: Run Unit Tests
         run: go test ./...
