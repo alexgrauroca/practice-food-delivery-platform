@@ -1,10 +1,13 @@
 package customers_test
 
 import (
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers/mocks"
+	"github.com/golang/mock/gomock"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -18,9 +21,12 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	logger := zaptest.NewLogger(t)
 
+	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+
 	tests := []struct {
 		name                 string
 		jsonPayload          string
+		mocksSetup           func(service *mocks.MockService)
 		expectedJsonResponse string
 		expectedStatusCode   int
 	}{
@@ -68,14 +74,30 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 			expectedStatusCode:   http.StatusBadRequest,
 		},
 		{
-			name:                 "when the customer already exists, then it should return a 409 with the customer already exists error",
-			jsonPayload:          `{"email": "test@example.com", "name": "John Doe", "password": "ValidPassword123"}`,
-			expectedJsonResponse: `{}`,
+			name:        "when the customer already exists, then it should return a 409 with the customer already exists error",
+			jsonPayload: `{"email": "test@example.com", "name": "John Doe", "password": "ValidPassword123"}`,
+			mocksSetup: func(service *mocks.MockService) {
+				service.EXPECT().RegisterCustomer(gomock.Any()).
+					Return(customers.RegisterCustomerOutput{}, customers.ErrCustomerAlreadyExists)
+			},
+			expectedJsonResponse: `{"error": "Customer already exists"}`,
 			expectedStatusCode:   http.StatusConflict,
 		},
 		{
-			name:                 "when the customer is successfully registered, then it should return a 201 with the customer details",
-			jsonPayload:          `{"email": "test@example.com", "name": "John Doe", "password": "ValidPassword123"}`,
+			name:        "when the customer is successfully registered, then it should return a 201 with the customer details",
+			jsonPayload: `{"email": "test@example.com", "name": "John Doe", "password": "ValidPassword123"}`,
+			mocksSetup: func(service *mocks.MockService) {
+				service.EXPECT().RegisterCustomer(customers.RegisterCustomerInput{
+					Email:    "test@example.com",
+					Password: "ValidPassword123",
+					Name:     "John Doe",
+				}).Return(customers.RegisterCustomerOutput{
+					ID:        "fake-id",
+					Email:     "test@example.com",
+					Name:      "John Doe",
+					CreatedAt: now,
+				}, nil)
+			},
 			expectedJsonResponse: `{"created_at":"2025-01-01T00:00:00Z", "email":"test@example.com", "id":"fake-id", "name":"John Doe"}`,
 			expectedStatusCode:   http.StatusCreated,
 		},
@@ -83,8 +105,14 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Create new mock service
+			service := mocks.NewMockService(gomock.NewController(t))
+			if tt.mocksSetup != nil {
+				tt.mocksSetup(service)
+			}
+
 			// Initialize the handler
-			h := customers.NewHandler(logger)
+			h := customers.NewHandler(logger, service)
 
 			// Initialize the Gin router and register the routes
 			router := gin.New()

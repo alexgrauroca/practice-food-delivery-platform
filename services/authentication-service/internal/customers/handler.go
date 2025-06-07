@@ -9,6 +9,12 @@ import (
 	"time"
 )
 
+const (
+	ErrorMsgCustomerAlreadyExists    = "Customer already exists"
+	ErrorMsgFailedToRegisterCustomer = "Failed to register customer"
+	ErrorMsgInvalidRequest           = "Invalid request"
+)
+
 type RegisterCustomerRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required,min=8"`
@@ -27,12 +33,14 @@ type ErrorResponse struct {
 }
 
 type Handler struct {
-	logger *zap.Logger
+	logger  *zap.Logger
+	service Service
 }
 
-func NewHandler(logger *zap.Logger) *Handler {
+func NewHandler(logger *zap.Logger, service Service) *Handler {
 	return &Handler{
-		logger: logger,
+		logger:  logger,
+		service: service,
 	}
 }
 
@@ -51,14 +59,29 @@ func (h *Handler) RegisterCustomer(c *gin.Context) {
 		return
 	}
 
-	//TODO implement the use case logic for registering a customer
+	input := RegisterCustomerInput{
+		Email:    req.Email,
+		Password: req.Password,
+		Name:     req.Name,
+	}
 
-	//TODO remove the mocked response
+	output, err := h.service.RegisterCustomer(input)
+	if err != nil {
+		if errors.Is(err, ErrCustomerAlreadyExists) {
+			h.logger.Warn("Customer already exists", zap.String("email", req.Email))
+			c.JSON(http.StatusConflict, ErrorResponse{Error: ErrorMsgCustomerAlreadyExists})
+			return
+		}
+		h.logger.Error("Failed to register customer", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: ErrorMsgFailedToRegisterCustomer})
+		return
+	}
+
 	resp := RegisterCustomerResponse{
-		ID:        "fake-id",
-		Email:     req.Email,
-		Name:      req.Name,
-		CreatedAt: time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
+		ID:        output.ID,
+		Email:     output.Email,
+		Name:      output.Name,
+		CreatedAt: output.CreatedAt,
 	}
 	h.logger.Info("Customer registered successfully", zap.Any("customer", resp))
 	c.JSON(http.StatusCreated, resp)
@@ -70,5 +93,5 @@ func (h *Handler) getErrorResponseFromValidationErr(err error) ErrorResponse {
 	if errors.As(err, &ve) {
 		return ErrorResponse{Error: ve.Error()}
 	}
-	return ErrorResponse{Error: "Invalid request"}
+	return ErrorResponse{Error: ErrorMsgInvalidRequest}
 }

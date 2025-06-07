@@ -1,0 +1,3 @@
+generate-mocks:
+	@echo "Generating mocks for authentication service..."
+	@go generate ./...

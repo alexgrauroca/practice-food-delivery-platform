@@ -22,8 +22,11 @@ func main() {
 	// Initialize the Gin router
 	router := gin.Default()
 
+	// Initialize the customers service
+	service := customers.NewService(logger)
+
 	// Initialize the customers handler and register routes
-	handler := customers.NewHandler(logger)
+	handler := customers.NewHandler(logger, service)
 	handler.RegisterRoutes(router)
 
 	if err := router.Run(":8080"); err != nil {
