@@ -2,8 +2,11 @@ name: Food Delivery Platform CI
 
 on:
   pull_request:
-    branches-ignore:
-      - main
+    paths:
+      - 'services/authentication-service/**'
+      - '.github/workflows/**'
+      - 'deployments/**'
+      - 'docker-compose.yml'
 
 jobs:
   authentication-service-tests:
