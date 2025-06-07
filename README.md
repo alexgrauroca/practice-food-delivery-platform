@@ -10,6 +10,8 @@ I will follow a kind of Lean Agile methodology to develop this project. The main
 
 Services will follow a Domain Service Design approach, where each service is responsible for a specific domain of the application. This will allow for better separation of concerns and easier maintenance. The main problem with a microservice architecture is that maintainability of all the services becomes hard, so the operational costs rise up quickly.
 
+TDD (Test Driven Development) and BDD (Behavior Driven Development) will be used to ensure that the code is well tested and that the behavior of the application is as expected. This will help to reduce bugs and improve the quality of the code.
+
 ## Food Delivery Platform - Use Case
 
 ### Actors
