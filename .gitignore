@@ -248,3 +248,4 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/linux,visualstudiocode,goland,windows,go,redis,database,macos
 
 mocks/
+prompt.md
