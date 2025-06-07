@@ -88,3 +88,16 @@ func TestRepository_CreateCustomer(t *testing.T) {
 		})
 	}
 }
+
+func TestRepository_CreateCustomer_UnexpectedFailure(t *testing.T) {
+	db, cleanup := setupTestDB(t)
+
+	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	repo := customers.NewRepository(zap.NewNop(), db, clock.FixedClock{FixedTime: now})
+
+	// Simulating an unexpected failure by closing the opened connection
+	cleanup()
+
+	_, err := repo.CreateCustomer(context.Background(), customers.CreateCustomerParams{})
+	assert.Error(t, err, "Expected an error due to unexpected failure")
+}
