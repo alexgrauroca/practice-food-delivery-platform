@@ -1,0 +1,3 @@
+run-e2e-tests:
+	@echo "Running end-to-end tests..."
+	@go test -v ./...
