@@ -8,19 +8,31 @@ on:
       - 'deployments/**'
       - 'docker-compose.yml'
 
+go-setup-steps: &go-setup-steps
+  - name: Set up Go
+    uses: actions/setup-go@v5
+    with:
+      go-version: '1.24'
+
 jobs:
-  authentication-service-tests:
+  authentication-service-unit-tests:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: services/authentication-service
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.24'
-      - name: Generate mocks
-        run: make generate-mocks
+      - <<: *go-setup-steps
       - name: Run Unit Tests
-        run: go test ./...
+        run: make run-unit-tests
+
+  authentication-service-integration-tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/authentication-service
+    steps:
+      - uses: actions/checkout@v4
+      - <<: *go-setup-steps
+      - name: Run Unit Tests
+        run: make run-unit-tests
