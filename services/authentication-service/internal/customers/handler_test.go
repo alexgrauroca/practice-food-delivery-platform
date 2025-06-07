@@ -3,23 +3,23 @@ package customers_test
 import (
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers/mocks"
 	"github.com/golang/mock/gomock"
+	"go.uber.org/zap"
+
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap/zaptest"
-
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
 )
 
 func TestHandler_RegisterCustomer(t *testing.T) {
 	// Setting up the default values
 	gin.SetMode(gin.TestMode)
-	logger := zaptest.NewLogger(t)
+	logger := zap.NewNop()
 
 	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 
