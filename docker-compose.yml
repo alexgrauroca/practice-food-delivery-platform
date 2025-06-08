@@ -35,8 +35,6 @@ services:
       - MONGO_URI=mongodb://mongodb:27017
       - MONGO_USER=root
       - MONGO_PWD=rootpassword
-    ports:
-      - "8080:8080"
     restart: always
 
 volumes:
