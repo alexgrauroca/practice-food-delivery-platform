@@ -16,11 +16,14 @@ const (
 	CodeInvalidRequest        = "INVALID_REQUEST"
 	CodeCustomerAlreadyExists = "CUSTOMER_ALREADY_EXISTS"
 	CodeInternalError         = "INTERNAL_ERROR"
+	CodeInvalidCredentials    = "INVALID_CREDENTIALS"
 
-	MsgValidationError       = "validation failed"
-	MsgInvalidRequest        = "invalid request"
-	MsgCustomerAlreadyExists = "customer already exists"
-	MsgInternalError         = "failed to register the customer"
+	MsgValidationError          = "validation failed"
+	MsgInvalidRequest           = "invalid request"
+	MsgCustomerAlreadyExists    = "customer already exists"
+	MsgFailedToRegisterCustomer = "failed to register the customer"
+	MsgInvalidCredentials       = "invalid credentials"
+	MsgFailedToLoginCustomer    = "failed to login the customer"
 )
 
 type RegisterCustomerRequest struct {
@@ -42,9 +45,8 @@ type LoginCustomerRequest struct {
 }
 
 type LoginCustomerResponse struct {
-	Token string `json:"token"`
-	// ExpiresIn is the number of seconds until the token expires
-	ExpiresIn int    `json:"expires_in"`
+	Token     string `json:"token"`
+	ExpiresIn int    `json:"expires_in"` // the number of seconds until the token expires
 	TokenType string `json:"token_type"`
 }
 
@@ -68,6 +70,7 @@ func NewHandler(logger *zap.Logger, service Service) *Handler {
 
 func (h *Handler) RegisterRoutes(router *gin.Engine) {
 	router.POST("/v1.0/customers/register", h.RegisterCustomer)
+	router.POST("/v1.0/customers/login", h.LoginCustomer)
 }
 
 func (h *Handler) RegisterCustomer(c *gin.Context) {
@@ -96,7 +99,7 @@ func (h *Handler) RegisterCustomer(c *gin.Context) {
 			return
 		}
 		h.logger.Error("Failed to register customer", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, newErrorResponse(CodeInternalError, MsgInternalError))
+		c.JSON(http.StatusInternalServerError, newErrorResponse(CodeInternalError, MsgFailedToRegisterCustomer))
 		return
 	}
 
@@ -122,14 +125,26 @@ func (h *Handler) LoginCustomer(c *gin.Context) {
 		return
 	}
 
-	//TODO setup the service to handle login
+	input := LoginCustomerInput{
+		Email:    req.Email,
+		Password: req.Password,
+	}
+	output, err := h.service.LoginCustomer(c.Request.Context(), input)
+	if err != nil {
+		if errors.Is(err, ErrInvalidCredentials) {
+			h.logger.Warn("Invalid credentials provided", zap.String("email", req.Email))
+			c.JSON(http.StatusUnauthorized, newErrorResponse(CodeInvalidCredentials, MsgInvalidCredentials))
+			return
+		}
+		h.logger.Error("Failed to login customer", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, newErrorResponse(CodeInternalError, MsgFailedToLoginCustomer))
+		return
+	}
 
 	resp := LoginCustomerResponse{
-		Token: "example-token",
-		// ExpiresIn is set to 3600 seconds (1 hour)
-		ExpiresIn: 3600,
-		// TokenType is set to "Bearer" as per the OAuth 2.0 specification
-		TokenType: "Bearer",
+		Token:     output.Token,
+		ExpiresIn: output.ExpiresIn,
+		TokenType: output.TokenType,
 	}
 	h.logger.Info("Customer logged in successfully")
 	c.JSON(http.StatusOK, resp)

@@ -236,7 +236,7 @@ func TestHandler_LoginCustomer(t *testing.T) {
 				"message": "validation failed",
 				"details": [
 					"email is required",
-					"password is required",
+					"password is required"
 				]
 			}`,
 			expectedStatusCode: http.StatusBadRequest,
@@ -270,10 +270,10 @@ func TestHandler_LoginCustomer(t *testing.T) {
 			name:        "when there is not an active customer with the same email and password, then it should return a 401 with invalid credentials error",
 			jsonPayload: `{"email": "test@example.com", "password": "ValidPassword123"}`,
 			//TODO setup the mock to return ErrInvalidCredentials
-			/*mocksSetup: func(service *mocks.MockService) {
-				service.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
-					Return(customers.RegisterCustomerOutput{}, customers.ErrCustomerAlreadyExists)
-			},*/
+			mocksSetup: func(service *mocks.MockService) {
+				service.EXPECT().LoginCustomer(gomock.Any(), gomock.Any()).
+					Return(customers.LoginCustomerOutput{}, customers.ErrInvalidCredentials)
+			},
 			expectedJsonResponse: `{
 				"code": "INVALID_CREDENTIALS",
 				"message": "invalid credentials",
@@ -284,11 +284,10 @@ func TestHandler_LoginCustomer(t *testing.T) {
 		{
 			name:        "when unexpected error when login the customer, then it should return a 500 with the internal error",
 			jsonPayload: `{"email": "test@example.com", "password": "ValidPassword123"}`,
-			//TODO setup the mock to return an unexpected error
-			/*mocksSetup: func(service *mocks.MockService) {
-				service.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
-					Return(customers.RegisterCustomerOutput{}, errors.New("unexpected error"))
-			},*/
+			mocksSetup: func(service *mocks.MockService) {
+				service.EXPECT().LoginCustomer(gomock.Any(), gomock.Any()).
+					Return(customers.LoginCustomerOutput{}, errors.New("unexpected error"))
+			},
 			expectedJsonResponse: `{
 				"code": "INTERNAL_ERROR",
 				"message": "failed to login the customer",
@@ -300,18 +299,16 @@ func TestHandler_LoginCustomer(t *testing.T) {
 			name:        "when an active customer has the same email and password, then it should return a 200 with the token",
 			jsonPayload: `{"email": "test@example.com", "password": "ValidPassword123"}`,
 			//TODO setup the mock to return a valid token
-			/*mocksSetup: func(service *mocks.MockService) {
-				service.EXPECT().RegisterCustomer(gomock.Any(), customers.RegisterCustomerInput{
+			mocksSetup: func(service *mocks.MockService) {
+				service.EXPECT().LoginCustomer(gomock.Any(), customers.LoginCustomerInput{
 					Email:    "test@example.com",
 					Password: "ValidPassword123",
-					Name:     "John Doe",
-				}).Return(customers.RegisterCustomerOutput{
-					ID:        "fake-id",
-					Email:     "test@example.com",
-					Name:      "John Doe",
-					CreatedAt: now,
+				}).Return(customers.LoginCustomerOutput{
+					Token:     "fake-token",
+					ExpiresIn: customers.DefaultTokenExpiration,
+					TokenType: customers.DefaultTokenType,
 				}, nil)
-			},*/
+			},
 			expectedJsonResponse: `{
 			  "token": "fake-token",
 			  "expires_in": 3600,

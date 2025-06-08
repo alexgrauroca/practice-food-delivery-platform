@@ -8,9 +8,15 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+const (
+	DefaultTokenExpiration = 3600 // 1 hour in seconds
+	DefaultTokenType       = "Bearer"
+)
+
 //go:generate mockgen -destination=./mocks/service_mock.go -package=mocks github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers Service
 type Service interface {
 	RegisterCustomer(ctx context.Context, input RegisterCustomerInput) (RegisterCustomerOutput, error)
+	LoginCustomer(ctx context.Context, input LoginCustomerInput) (LoginCustomerOutput, error)
 }
 
 type RegisterCustomerInput struct {
@@ -24,6 +30,17 @@ type RegisterCustomerOutput struct {
 	Email     string
 	Name      string
 	CreatedAt time.Time
+}
+
+type LoginCustomerInput struct {
+	Email    string
+	Password string
+}
+
+type LoginCustomerOutput struct {
+	Token     string
+	ExpiresIn int // Number of seconds until the token expires
+	TokenType string
 }
 
 type service struct {
@@ -40,7 +57,7 @@ func NewService(logger *zap.Logger, repo Repository) Service {
 
 func (s *service) RegisterCustomer(ctx context.Context, input RegisterCustomerInput) (RegisterCustomerOutput, error) {
 	s.logger.Info("registering customer", zap.String("email", input.Email), zap.String("name", input.Name))
-	hashedPassword, err := HashPassword(input.Password)
+	hashedPassword, err := hashPassword(input.Password)
 	if err != nil {
 		s.logger.Error("failed to hash password", zap.Error(err))
 		return RegisterCustomerOutput{}, err
@@ -68,7 +85,12 @@ func (s *service) RegisterCustomer(ctx context.Context, input RegisterCustomerIn
 	return output, nil
 }
 
-func HashPassword(password string) (string, error) {
+func (s *service) LoginCustomer(ctx context.Context, input LoginCustomerInput) (LoginCustomerOutput, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func hashPassword(password string) (string, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
 		return "", err
