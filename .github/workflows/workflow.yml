@@ -35,7 +35,7 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Run Integration Tests
-        run: make run-unit-tests
+        run: make run-integration-tests
 
   e2e-tests:
     runs-on: ubuntu-latest
