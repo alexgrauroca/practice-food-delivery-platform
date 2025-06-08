@@ -17,22 +17,61 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestHandler_RegisterCustomer(t *testing.T) {
+type customerHandlerTestCase struct {
+	name                 string
+	jsonPayload          string
+	mocksSetup           func(service *mocks.MockService)
+	expectedJsonResponse string
+	expectedStatusCode   int
+}
+
+// setupTestEnv initializes the test environment with default values common to all tests.
+func setupTestEnv() *zap.Logger {
 	// Setting up the default values
 	gin.SetMode(gin.TestMode)
 	logger := zap.NewNop()
+	return logger
+}
 
+// runCustomerHandlerTestCase executes a test case for the customer handler, which is common for all tests.
+func runCustomerHandlerTestCase(
+	t *testing.T,
+	logger *zap.Logger,
+	route string,
+	tt customerHandlerTestCase,
+) {
+	// Create new mock service
+	service := mocks.NewMockService(gomock.NewController(t))
+	if tt.mocksSetup != nil {
+		tt.mocksSetup(service)
+	}
+
+	// Initialize the handler
+	h := customers.NewHandler(logger, service)
+
+	// Initialize the Gin router and register the routes
+	router := gin.New()
+	h.RegisterRoutes(router)
+
+	// Create a new HTTP request with the test case's JSON payload
+	req := httptest.NewRequest(http.MethodPost, route, strings.NewReader(tt.jsonPayload))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	// Make the request to the handler
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, tt.expectedStatusCode, w.Code)
+	assert.JSONEq(t, tt.expectedJsonResponse, w.Body.String())
+}
+
+func TestHandler_RegisterCustomer(t *testing.T) {
+	logger := setupTestEnv()
 	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 
-	tests := []struct {
-		name                 string
-		jsonPayload          string
-		mocksSetup           func(service *mocks.MockService)
-		expectedJsonResponse string
-		expectedStatusCode   int
-	}{
+	tests := []customerHandlerTestCase{
 		{
-			name:        "when invalid payload is provided, then it should return a 400 with validation errors",
+			name:        "when invalid payload is provided, then it should return a 400 with invalid request error",
 			jsonPayload: `{"name": 1.2, "email": true}`,
 			expectedJsonResponse: `{
 				"code": "INVALID_REQUEST",
@@ -41,7 +80,6 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 			}`,
 			expectedStatusCode: http.StatusBadRequest,
 		},
-		//TODO those error response were used to learn about how gin handles validation errors, but they should simpler
 		{
 			name:        "when empty payload is provided, then it should return a 400 with the validation error",
 			jsonPayload: `{}`,
@@ -171,29 +209,30 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create new mock service
-			service := mocks.NewMockService(gomock.NewController(t))
-			if tt.mocksSetup != nil {
-				tt.mocksSetup(service)
-			}
+			runCustomerHandlerTestCase(t, logger, "/v1.0/customers/register", tt)
+		})
+	}
+}
 
-			// Initialize the handler
-			h := customers.NewHandler(logger, service)
+func TestHandler_LoginCustomer(t *testing.T) {
+	logger := setupTestEnv()
 
-			// Initialize the Gin router and register the routes
-			router := gin.New()
-			h.RegisterRoutes(router)
+	tests := []customerHandlerTestCase{
+		{
+			name:        "when invalid payload is provided, then it should return a 400 with invalid request error",
+			jsonPayload: `{"name": 1.2, "email": true}`,
+			expectedJsonResponse: `{
+				"code": "INVALID_REQUEST",
+				"message": "invalid request",
+				"details": []
+			}`,
+			expectedStatusCode: http.StatusBadRequest,
+		},
+	}
 
-			// Create a new HTTP request with the test case's JSON payload
-			req := httptest.NewRequest(http.MethodPost, "/v1.0/customers/register", strings.NewReader(tt.jsonPayload))
-			req.Header.Set("Content-Type", "application/json")
-			w := httptest.NewRecorder()
-
-			// Make the request to the handler
-			router.ServeHTTP(w, req)
-
-			assert.Equal(t, tt.expectedStatusCode, w.Code)
-			assert.JSONEq(t, tt.expectedJsonResponse, w.Body.String())
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			runCustomerHandlerTestCase(t, logger, "/v1.0/customers/login", tt)
 		})
 	}
 }

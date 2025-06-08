@@ -98,6 +98,11 @@ func (h *Handler) RegisterCustomer(c *gin.Context) {
 	c.JSON(http.StatusCreated, resp)
 }
 
+func (h *Handler) LoginCustomer(c *gin.Context) {
+	//TODO implement the LoginCustomer handler
+	c.JSON(http.StatusNotImplemented, gin.H{"message": "LoginCustomer not implemented"})
+}
+
 func newErrorResponse(code, message string) ErrorResponse {
 	return ErrorResponse{
 		Code:    code,
