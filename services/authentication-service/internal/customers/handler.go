@@ -16,11 +16,14 @@ const (
 	CodeInvalidRequest        = "INVALID_REQUEST"
 	CodeCustomerAlreadyExists = "CUSTOMER_ALREADY_EXISTS"
 	CodeInternalError         = "INTERNAL_ERROR"
+	CodeInvalidCredentials    = "INVALID_CREDENTIALS"
 
-	MsgValidationError       = "validation failed"
-	MsgInvalidRequest        = "invalid request"
-	MsgCustomerAlreadyExists = "customer already exists"
-	MsgInternalError         = "failed to register the customer"
+	MsgValidationError          = "validation failed"
+	MsgInvalidRequest           = "invalid request"
+	MsgCustomerAlreadyExists    = "customer already exists"
+	MsgFailedToRegisterCustomer = "failed to register the customer"
+	MsgInvalidCredentials       = "invalid credentials"
+	MsgFailedToLoginCustomer    = "failed to login the customer"
 )
 
 type RegisterCustomerRequest struct {
@@ -34,6 +37,17 @@ type RegisterCustomerResponse struct {
 	Email     string    `json:"email"`
 	Name      string    `json:"name"`
 	CreatedAt time.Time `json:"created_at"`
+}
+
+type LoginCustomerRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required,min=8"`
+}
+
+type LoginCustomerResponse struct {
+	Token     string `json:"token"`
+	ExpiresIn int    `json:"expires_in"` // the number of seconds until the token expires
+	TokenType string `json:"token_type"`
 }
 
 type ErrorResponse struct {
@@ -56,6 +70,7 @@ func NewHandler(logger *zap.Logger, service Service) *Handler {
 
 func (h *Handler) RegisterRoutes(router *gin.Engine) {
 	router.POST("/v1.0/customers/register", h.RegisterCustomer)
+	router.POST("/v1.0/customers/login", h.LoginCustomer)
 }
 
 func (h *Handler) RegisterCustomer(c *gin.Context) {
@@ -84,7 +99,7 @@ func (h *Handler) RegisterCustomer(c *gin.Context) {
 			return
 		}
 		h.logger.Error("Failed to register customer", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, newErrorResponse(CodeInternalError, MsgInternalError))
+		c.JSON(http.StatusInternalServerError, newErrorResponse(CodeInternalError, MsgFailedToRegisterCustomer))
 		return
 	}
 
@@ -96,6 +111,43 @@ func (h *Handler) RegisterCustomer(c *gin.Context) {
 	}
 	h.logger.Info("Customer registered successfully", zap.Any("customer", resp))
 	c.JSON(http.StatusCreated, resp)
+}
+
+func (h *Handler) LoginCustomer(c *gin.Context) {
+	//TODO review how can I include context info in the logs
+	h.logger.Info("LoginCustomer handler called")
+
+	var req LoginCustomerRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		h.logger.Warn("Failed to bind request", zap.Error(err))
+		errResp := getErrorResponseFromValidationErr(err)
+		c.JSON(http.StatusBadRequest, errResp)
+		return
+	}
+
+	input := LoginCustomerInput{
+		Email:    req.Email,
+		Password: req.Password,
+	}
+	output, err := h.service.LoginCustomer(c.Request.Context(), input)
+	if err != nil {
+		if errors.Is(err, ErrInvalidCredentials) {
+			h.logger.Warn("Invalid credentials provided", zap.String("email", req.Email))
+			c.JSON(http.StatusUnauthorized, newErrorResponse(CodeInvalidCredentials, MsgInvalidCredentials))
+			return
+		}
+		h.logger.Error("Failed to login customer", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, newErrorResponse(CodeInternalError, MsgFailedToLoginCustomer))
+		return
+	}
+
+	resp := LoginCustomerResponse{
+		Token:     output.Token,
+		ExpiresIn: output.ExpiresIn,
+		TokenType: output.TokenType,
+	}
+	h.logger.Info("Customer logged in successfully")
+	c.JSON(http.StatusOK, resp)
 }
 
 func newErrorResponse(code, message string) ErrorResponse {
