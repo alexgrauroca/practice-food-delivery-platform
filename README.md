@@ -1,89 +1,136 @@
 # practice-food-delivery-platform
 
-This is a practical exercise to improve my own skills with Kubernetes, Docker, Go, No-SQL and GitHub Actions.
+This is a practical exercise to improve my own skills with Kubernetes, Docker, Go, No-SQL, and GitHub Actions.
 
-This is the initial use case designed by GitHub Copilot. This is an starting point and will be improved over time by myself.
+This project simulates a simplified food delivery platform and is used as a training ground for infrastructure design, clean architecture, service boundaries, and automation.
 
 ## Methodology
 
-I will follow a kind of Lean Agile methodology to develop this project. The main idea is to do small and quick iterations, aiming to reduce the risk of failure and to improve the knowledge.
+This project follows a Lean Agile development style with quick, incremental iterations to minimize risk and continuously improve the solution.
 
-Services will follow a Domain Service Design approach, where each service is responsible for a specific domain of the application. This will allow for better separation of concerns and easier maintenance. The main problem with a microservice architecture is that maintainability of all the services becomes hard, so the operational costs rise up quickly.
+A **Domain Service Architecture** is used, where each microservice encapsulates a clear and distinct domain. This improves separation of concerns and system maintainability.
 
-TDD (Test Driven Development) and BDD (Behavior Driven Development) will be used to ensure that the code is well tested and that the behavior of the application is as expected. This will help to reduce bugs and improve the quality of the code.
+Testing follows **TDD (Test-Driven Development)** and **BDD (Behavior-Driven Development)** principles, ensuring behavior and correctness are covered through automation.
 
-## Food Delivery Platform - Use Case
+---
 
-### Actors
+## Actors
 
 - **Customer**: Browses restaurants, places orders, tracks deliveries.
-- **Restaurant**: Manages menu, receives and prepares orders.
-- **Delivery Person**: Picks up orders from restaurants and delivers to customers.
+- **Restaurant User**: Manages restaurant profile, menus, and orders.
+- **Delivery Person**: Handles the delivery of orders to customers.
 
 ---
 
-### Services (Go microservices, each with its own REST API)
+## Services (Go microservices, each exposing a REST API)
 
-1. **Customer Service**
-    - User registration/login
-    - Profile management
-    - Order history
+### 1. Authentication Service
+- Handles identity and session management for:
+    - **Customers**
+    - **Restaurant Users**
+- Issues JWTs (access & refresh tokens)
+- Manages independent auth flows for each user type
+- Example Endpoints:
+    - `POST /customers/register`
+    - `POST /restaurants/login`
+    - `POST /customers/refresh-token`
 
-2. **Restaurant Service**
-    - Restaurant registration/login
-    - Menu management (CRUD for dishes)
-    - Order management (receive, update status)
+### 2. Customer Service
+- Manages domain data and behavior for customers:
+    - Profile (address, preferences, etc.)
+    - Order history (linked by user ID from JWT)
 
-3. **Order Service**
-    - Order placement (by customer)
-    - Order status tracking (pending, preparing, out for delivery, delivered)
-    - Assign delivery person
+### 3. Restaurant Service
+- Manages restaurants and their menus:
+    - Restaurant profile
+    - Menu management (CRUD)
+    - Order status updates (preparing, ready)
 
-4. **Delivery Service**
-    - Delivery person registration/login
-    - View assigned deliveries
-    - Update delivery status
+### 4. Order Service
+- Handles full order lifecycle:
+    - Order placement
+    - Order status tracking
+    - Delivery assignment
+    - Menu validation (via Restaurant Service)
+
+### 5. Delivery Service
+- Manages delivery personnel and tasks:
+    - Registration and login (via Auth Service)
+    - Assigned deliveries
+    - Delivery status updates
+
+### 6. API Gateway
+- The only publicly exposed entrypoint
+- Routes requests to the appropriate internal service
+- Optionally validates JWTs
+- Manages CORS, rate limiting, logging, etc.
 
 ---
 
-### Data Storage
+## Data Storage
 
-- **MongoDB**: Stores users, restaurants, menus, orders, and delivery info.
+- **MongoDB**: Primary store for persistent data (users, restaurants, orders, menus, deliveries)
 - **Redis**:
-    - Caches popular menus and restaurant data for fast access.
-    - Implements distributed locks for order processing (to avoid double assignment).
-    - Stores short-lived order status updates for real-time tracking.
+    - Caches popular restaurants and menus
+    - Stores short-lived order status for real-time tracking
+    - Implements distributed locks to prevent race conditions (e.g., double delivery assignment)
 
 ---
 
-### Communication
+## Communication
 
-- All services expose REST APIs.
-- Internal service-to-service communication also via REST (e.g., Order Service calls Restaurant Service to check menu availability).
-
----
-
-### Example Workflow
-
-1. **Customer** browses restaurants and menus (Customer Service → Restaurant Service).
-2. **Customer** places an order (Customer Service → Order Service).
-3. **Order Service** checks menu and availability (calls Restaurant Service), creates order in MongoDB, and uses Redis to lock order processing.
-4. **Order Service** assigns a delivery person (calls Delivery Service).
-5. **Restaurant** updates order status (preparing, ready).
-6. **Delivery Person** picks up and delivers order, updating status via Delivery Service.
-7. **Customer** tracks order status in real time (Order Service uses Redis for fast status updates).
+- Services communicate via REST over HTTP
+- API Gateway maps external routes (e.g., `/customers/login`) to the appropriate service
+- Services remain stateless and communicate using secure JWT tokens
 
 ---
 
-### Concurrency & Performance
+## Example Workflow
 
-- Redis locks prevent race conditions in order assignment.
-- Caching menus and restaurant data reduces MongoDB load.
-- Services are stateless and horizontally scalable (Kubernetes).
+1. A **customer** registers via `POST /customers/register` (Auth Service)
+2. They login and receive JWT tokens
+3. They browse restaurants and menus (`Customer Service → Restaurant Service`)
+4. They place an order (`Customer Service → Order Service`)
+5. Order is validated, stored, and assigned a delivery person
+6. Restaurant updates order status as it prepares
+7. Delivery person picks up and updates delivery status
+8. Customer tracks delivery in real-time (via Redis-backed status from Order Service)
 
 ---
 
-### CI/CD Pipeline (GitHub Actions)
+## JWT & Security
 
-- Runs unit, integration, and e2e tests on non-main branches.
-- No deployment on main.
+- JWTs include claims such as `sub` (user ID), `role` (customer, restaurant), and `user_type`
+- Tokens are verified by services or the API Gateway
+- Refresh tokens allow session extension
+- Future support for MFA is planned (initially for restaurant users)
+
+---
+
+## Concurrency & Performance
+
+- Redis locks prevent double assignment of deliveries
+- Redis caching reduces MongoDB load on frequent reads
+- Services are stateless and horizontally scalable via Kubernetes
+
+---
+
+## CI/CD Pipeline (GitHub Actions)
+
+- Runs on non-main branches:
+    - Unit tests
+    - Integration tests
+    - End-to-end tests
+- No deployment occurs on `main` to avoid accidental production pushes
+- Future plans: add linting, security checks, and deployment to a test cluster
+
+---
+
+## Planned Improvements
+
+- Add MFA support for restaurant users
+- Add delivery person role to the Authentication Service
+- Add observability tools (e.g., Prometheus, Grafana)
+- Implement circuit breakers and retries between services
+- Extend order tracking with websockets or server-sent events (SSE)
+

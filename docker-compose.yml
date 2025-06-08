@@ -1,4 +1,16 @@
 services:
+  api-gateway:
+    image: nginx:1.28-alpine
+    container_name: api-gateway
+    ports:
+      - "80:80"
+    volumes:
+      - ./deployments/api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./deployments/api-gateway/conf.d:/etc/nginx/conf.d:ro
+    depends_on:
+      - authentication-service
+    restart: always
+
   mongodb:
     image: mongo:8.0
     container_name: mongodb
@@ -23,8 +35,6 @@ services:
       - MONGO_URI=mongodb://mongodb:27017
       - MONGO_USER=root
       - MONGO_PWD=rootpassword
-    ports:
-      - "8080:8080"
     restart: always
 
 volumes:

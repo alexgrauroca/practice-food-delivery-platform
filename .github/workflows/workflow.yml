@@ -3,11 +3,7 @@ name: Food Delivery Platform CI
 on:
   pull_request:
     paths:
-      - 'services/authentication-service/**'
-      - '.github/workflows/**'
-      - 'deployments/**'
-      - 'docker-compose.yml'
-      - 'e2e/**'
+      - '**'
 
 env:
   GO_VERSION: '1.24'
