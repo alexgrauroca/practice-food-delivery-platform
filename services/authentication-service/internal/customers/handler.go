@@ -36,6 +36,18 @@ type RegisterCustomerResponse struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+type LoginCustomerRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required,min=8"`
+}
+
+type LoginCustomerResponse struct {
+	Token string `json:"token"`
+	// ExpiresIn is the number of seconds until the token expires
+	ExpiresIn int    `json:"expires_in"`
+	TokenType string `json:"token_type"`
+}
+
 type ErrorResponse struct {
 	Code    string   `json:"code"`
 	Message string   `json:"message"`
@@ -99,8 +111,28 @@ func (h *Handler) RegisterCustomer(c *gin.Context) {
 }
 
 func (h *Handler) LoginCustomer(c *gin.Context) {
-	//TODO implement the LoginCustomer handler
-	c.JSON(http.StatusNotImplemented, gin.H{"message": "LoginCustomer not implemented"})
+	//TODO review how can I include context info in the logs
+	h.logger.Info("LoginCustomer handler called")
+
+	var req LoginCustomerRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		h.logger.Warn("Failed to bind request", zap.Error(err))
+		errResp := getErrorResponseFromValidationErr(err)
+		c.JSON(http.StatusBadRequest, errResp)
+		return
+	}
+
+	//TODO setup the service to handle login
+
+	resp := LoginCustomerResponse{
+		Token: "example-token",
+		// ExpiresIn is set to 3600 seconds (1 hour)
+		ExpiresIn: 3600,
+		// TokenType is set to "Bearer" as per the OAuth 2.0 specification
+		TokenType: "Bearer",
+	}
+	h.logger.Info("Customer logged in successfully")
+	c.JSON(http.StatusOK, resp)
 }
 
 func newErrorResponse(code, message string) ErrorResponse {
