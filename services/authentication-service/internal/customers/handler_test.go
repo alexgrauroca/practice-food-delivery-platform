@@ -228,6 +228,97 @@ func TestHandler_LoginCustomer(t *testing.T) {
 			}`,
 			expectedStatusCode: http.StatusBadRequest,
 		},
+		{
+			name:        "when empty payload is provided, then it should return a 400 with the validation error",
+			jsonPayload: `{}`,
+			expectedJsonResponse: `{
+				"code": "VALIDATION_ERROR",
+				"message": "validation failed",
+				"details": [
+					"email is required",
+					"password is required",
+				]
+			}`,
+			expectedStatusCode: http.StatusBadRequest,
+		},
+		{
+			name:        "when invalid email is provided, then it should return a 400 with the email validation error",
+			jsonPayload: `{"email": "invalid-email", "password": "ValidPassword123"}`,
+			expectedJsonResponse: `{
+				"code": "VALIDATION_ERROR",
+				"message": "validation failed",
+				"details": [
+					"email must be a valid email address"
+				]
+			}`,
+			expectedStatusCode: http.StatusBadRequest,
+		},
+		{
+			name:        "when invalid password is provided, then it should return a 400 with the pwd validation error",
+			jsonPayload: `{"email":"test@example.com", "password": "short"}`,
+			expectedJsonResponse: `{
+				"code": "VALIDATION_ERROR",
+				"message": "validation failed",
+				"details": [
+					"password must be a valid password with at least 8 characters long"
+				]
+			}`,
+			expectedStatusCode: http.StatusBadRequest,
+		},
+
+		{
+			name:        "when there is not an active customer with the same email and password, then it should return a 401 with invalid credentials error",
+			jsonPayload: `{"email": "test@example.com", "password": "ValidPassword123"}`,
+			//TODO setup the mock to return ErrInvalidCredentials
+			/*mocksSetup: func(service *mocks.MockService) {
+				service.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
+					Return(customers.RegisterCustomerOutput{}, customers.ErrCustomerAlreadyExists)
+			},*/
+			expectedJsonResponse: `{
+				"code": "INVALID_CREDENTIALS",
+				"message": "invalid credentials",
+				"details": []
+			}`,
+			expectedStatusCode: http.StatusUnauthorized,
+		},
+		{
+			name:        "when unexpected error when login the customer, then it should return a 500 with the internal error",
+			jsonPayload: `{"email": "test@example.com", "password": "ValidPassword123"}`,
+			//TODO setup the mock to return an unexpected error
+			/*mocksSetup: func(service *mocks.MockService) {
+				service.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
+					Return(customers.RegisterCustomerOutput{}, errors.New("unexpected error"))
+			},*/
+			expectedJsonResponse: `{
+				"code": "INTERNAL_ERROR",
+				"message": "failed to login the customer",
+				"details": []
+			}`,
+			expectedStatusCode: http.StatusInternalServerError,
+		},
+		{
+			name:        "when an active customer has the same email and password, then it should return a 200 with the token",
+			jsonPayload: `{"email": "test@example.com", "password": "ValidPassword123"}`,
+			//TODO setup the mock to return a valid token
+			/*mocksSetup: func(service *mocks.MockService) {
+				service.EXPECT().RegisterCustomer(gomock.Any(), customers.RegisterCustomerInput{
+					Email:    "test@example.com",
+					Password: "ValidPassword123",
+					Name:     "John Doe",
+				}).Return(customers.RegisterCustomerOutput{
+					ID:        "fake-id",
+					Email:     "test@example.com",
+					Name:      "John Doe",
+					CreatedAt: now,
+				}, nil)
+			},*/
+			expectedJsonResponse: `{
+			  "token": "fake-token",
+			  "expires_in": 3600,
+			  "token_type": "Bearer"
+			}`,
+			expectedStatusCode: http.StatusOK,
+		},
 	}
 
 	for _, tt := range tests {
