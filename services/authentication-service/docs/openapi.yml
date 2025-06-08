@@ -9,7 +9,7 @@ servers:
     description: Local server
 
 paths:
-  /v1.0/customers:
+  /v1.0/customers/register:
     post:
       summary: Register a new customer
       operationId: registerCustomer

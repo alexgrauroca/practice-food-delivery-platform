@@ -46,7 +46,7 @@ func NewHandler(logger *zap.Logger, service Service) *Handler {
 }
 
 func (h *Handler) RegisterRoutes(router *gin.Engine) {
-	router.POST("/v1.0/customers", h.RegisterCustomer)
+	router.POST("/v1.0/customers/register", h.RegisterCustomer)
 }
 
 func (h *Handler) RegisterCustomer(c *gin.Context) {

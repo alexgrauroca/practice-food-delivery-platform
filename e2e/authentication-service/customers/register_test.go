@@ -13,7 +13,7 @@ import (
 
 var _ = Describe("Customer Registration", func() {
 	It("registers a new customer successfully", func() {
-		url := "http://localhost:8080/v1.0/customers"
+		url := "http://localhost:8080/v1.0/customers/register"
 		payload := map[string]any{
 			"email":    "e2e_test_user_" + time.Now().Format("150405") + "@example.com",
 			"password": "strongpassword123",

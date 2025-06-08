@@ -119,7 +119,7 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 			h.RegisterRoutes(router)
 
 			// Create a new HTTP request with the test case's JSON payload
-			req := httptest.NewRequest(http.MethodPost, "/v1.0/customers", strings.NewReader(tt.jsonPayload))
+			req := httptest.NewRequest(http.MethodPost, "/v1.0/customers/register", strings.NewReader(tt.jsonPayload))
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
