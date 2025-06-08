@@ -1,15 +1,16 @@
 package customers_test
 
 import (
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers/mocks"
-	"github.com/golang/mock/gomock"
-	"go.uber.org/zap"
-
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers/mocks"
+	"github.com/golang/mock/gomock"
+	"go.uber.org/zap"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
 	"github.com/gin-gonic/gin"
@@ -31,47 +32,89 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 		expectedStatusCode   int
 	}{
 		{
-			name:                 "when invalid payload is provided, then it should return a 400 with validation errors",
-			jsonPayload:          `{`,
-			expectedJsonResponse: `{"error": "Invalid request"}`,
-			expectedStatusCode:   http.StatusBadRequest,
+			name:        "when invalid payload is provided, then it should return a 400 with validation errors",
+			jsonPayload: `{"name": 1.2, "email": true}`,
+			expectedJsonResponse: `{
+				"code": "INVALID_REQUEST",
+				"message": "invalid request",
+				"details": []
+			}`,
+			expectedStatusCode: http.StatusBadRequest,
 		},
 		//TODO those error response were used to learn about how gin handles validation errors, but they should simpler
 		{
-			name:                 "when empty payload is provided, then it should return a 400 with the validation error",
-			jsonPayload:          `{}`,
-			expectedJsonResponse: `{"error":"Key: 'RegisterCustomerRequest.Email' Error:Field validation for 'Email' failed on the 'required' tag\nKey: 'RegisterCustomerRequest.Password' Error:Field validation for 'Password' failed on the 'required' tag\nKey: 'RegisterCustomerRequest.Name' Error:Field validation for 'Name' failed on the 'required' tag"}`,
-			expectedStatusCode:   http.StatusBadRequest,
+			name:        "when empty payload is provided, then it should return a 400 with the validation error",
+			jsonPayload: `{}`,
+			expectedJsonResponse: `{
+				"code": "VALIDATION_ERROR",
+				"message": "validation failed",
+				"details": [
+					"email is required",
+					"password is required",
+					"name is required"
+				]
+			}`,
+			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
-			name:                 "when invalid email is provided, then it should return a 400 with the email validation error",
-			jsonPayload:          `{"email": "invalid-email", "name": "John Doe", "password": "ValidPassword123"}`,
-			expectedJsonResponse: `{"error": "Key: 'RegisterCustomerRequest.Email' Error:Field validation for 'Email' failed on the 'email' tag"}`,
-			expectedStatusCode:   http.StatusBadRequest,
+			name:        "when invalid email is provided, then it should return a 400 with the email validation error",
+			jsonPayload: `{"email": "invalid-email", "name": "John Doe", "password": "ValidPassword123"}`,
+			expectedJsonResponse: `{
+				"code": "VALIDATION_ERROR",
+				"message": "validation failed",
+				"details": [
+					"email must be a valid email address"
+				]
+			}`,
+			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
-			name:                 "when invalid password is provided, then it should return a 400 with the pwd validation error",
-			jsonPayload:          `{"email":"test@example.com", "name": "John Doe", "password": "short"}`,
-			expectedJsonResponse: `{"error":"Key: 'RegisterCustomerRequest.Password' Error:Field validation for 'Password' failed on the 'min' tag"}`,
-			expectedStatusCode:   http.StatusBadRequest,
+			name:        "when invalid password is provided, then it should return a 400 with the pwd validation error",
+			jsonPayload: `{"email":"test@example.com", "name": "John Doe", "password": "short"}`,
+			expectedJsonResponse: `{
+				"code": "VALIDATION_ERROR",
+				"message": "validation failed",
+				"details": [
+					"password must be a valid password with at least 8 characters long"
+				]
+			}`,
+			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
-			name:                 "when no name is provided, then it should return a 400 with the name validation error",
-			jsonPayload:          `{"email":"test@example.com", "password": "ValidPassword123"}`,
-			expectedJsonResponse: `{"error":"Key: 'RegisterCustomerRequest.Name' Error:Field validation for 'Name' failed on the 'required' tag"}`,
-			expectedStatusCode:   http.StatusBadRequest,
+			name:        "when no name is provided, then it should return a 400 with the name validation error",
+			jsonPayload: `{"email":"test@example.com", "password": "ValidPassword123"}`,
+			expectedJsonResponse: `{
+				"code":"VALIDATION_ERROR",
+				"message":"validation failed",
+				"details":[
+					"name is required"
+				]
+			}`,
+			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
-			name:                 "when no email is provided, then it should return a 400 with the email validation error",
-			jsonPayload:          `{"name": "John Doe", "password": "ValidPassword123"}`,
-			expectedJsonResponse: `{"error":"Key: 'RegisterCustomerRequest.Email' Error:Field validation for 'Email' failed on the 'required' tag"}`,
-			expectedStatusCode:   http.StatusBadRequest,
+			name:        "when no email is provided, then it should return a 400 with the email validation error",
+			jsonPayload: `{"name": "John Doe", "password": "ValidPassword123"}`,
+			expectedJsonResponse: `{
+				"code":"VALIDATION_ERROR",
+				"message":"validation failed",
+				"details":[
+					"email is required"
+				]
+			}`,
+			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
-			name:                 "when no password is provided, then it should return a 400 with the email validation error",
-			jsonPayload:          `{"email": "test@example.com", "name": "John Doe"}`,
-			expectedJsonResponse: `{"error":"Key: 'RegisterCustomerRequest.Password' Error:Field validation for 'Password' failed on the 'required' tag"}`,
-			expectedStatusCode:   http.StatusBadRequest,
+			name:        "when no password is provided, then it should return a 400 with the email validation error",
+			jsonPayload: `{"email": "test@example.com", "name": "John Doe"}`,
+			expectedJsonResponse: `{
+				"code":"VALIDATION_ERROR",
+				"message":"validation failed",
+				"details":[
+					"password is required"
+				]
+			}`,
+			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
 			name:        "when the customer already exists, then it should return a 409 with the customer already exists error",
@@ -80,8 +123,26 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 				service.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.RegisterCustomerOutput{}, customers.ErrCustomerAlreadyExists)
 			},
-			expectedJsonResponse: `{"error": "Customer already exists"}`,
-			expectedStatusCode:   http.StatusConflict,
+			expectedJsonResponse: `{
+				"code": "CUSTOMER_ALREADY_EXISTS",
+				"message": "customer already exists",
+				"details": []
+			}`,
+			expectedStatusCode: http.StatusConflict,
+		},
+		{
+			name:        "when unexpected error when registering the customer, then it should return a 500 with the internal error",
+			jsonPayload: `{"email": "test@example.com", "name": "John Doe", "password": "ValidPassword123"}`,
+			mocksSetup: func(service *mocks.MockService) {
+				service.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
+					Return(customers.RegisterCustomerOutput{}, errors.New("unexpected error"))
+			},
+			expectedJsonResponse: `{
+				"code": "INTERNAL_ERROR",
+				"message": "failed to register the customer",
+				"details": []
+			}`,
+			expectedStatusCode: http.StatusInternalServerError,
 		},
 		{
 			name:        "when the customer is successfully registered, then it should return a 201 with the customer details",
@@ -98,8 +159,13 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 					CreatedAt: now,
 				}, nil)
 			},
-			expectedJsonResponse: `{"created_at":"2025-01-01T00:00:00Z", "email":"test@example.com", "id":"fake-id", "name":"John Doe"}`,
-			expectedStatusCode:   http.StatusCreated,
+			expectedJsonResponse: `{
+				"created_at":"2025-01-01T00:00:00Z",
+				"email":"test@example.com",
+				"id":"fake-id",
+				"name":"John Doe"
+			}`,
+			expectedStatusCode: http.StatusCreated,
 		},
 	}
 

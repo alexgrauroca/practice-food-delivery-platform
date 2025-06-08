@@ -3,6 +3,7 @@ package customers
 import (
 	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -11,9 +12,15 @@ import (
 )
 
 const (
-	ErrorMsgCustomerAlreadyExists    = "Customer already exists"
-	ErrorMsgFailedToRegisterCustomer = "Failed to register customer"
-	ErrorMsgInvalidRequest           = "Invalid request"
+	CodeValidationError       = "VALIDATION_ERROR"
+	CodeInvalidRequest        = "INVALID_REQUEST"
+	CodeCustomerAlreadyExists = "CUSTOMER_ALREADY_EXISTS"
+	CodeInternalError         = "INTERNAL_ERROR"
+
+	MsgValidationError       = "validation failed"
+	MsgInvalidRequest        = "invalid request"
+	MsgCustomerAlreadyExists = "customer already exists"
+	MsgInternalError         = "failed to register the customer"
 )
 
 type RegisterCustomerRequest struct {
@@ -30,7 +37,9 @@ type RegisterCustomerResponse struct {
 }
 
 type ErrorResponse struct {
-	Error string `json:"error"`
+	Code    string   `json:"code"`
+	Message string   `json:"message"`
+	Details []string `json:"details"`
 }
 
 type Handler struct {
@@ -56,7 +65,7 @@ func (h *Handler) RegisterCustomer(c *gin.Context) {
 	var req RegisterCustomerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Warn("Failed to bind request", zap.Error(err))
-		errResp := h.getErrorResponseFromValidationErr(err)
+		errResp := getErrorResponseFromValidationErr(err)
 		c.JSON(http.StatusBadRequest, errResp)
 		return
 	}
@@ -71,11 +80,11 @@ func (h *Handler) RegisterCustomer(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, ErrCustomerAlreadyExists) {
 			h.logger.Warn("Customer already exists", zap.String("email", req.Email))
-			c.JSON(http.StatusConflict, ErrorResponse{Error: ErrorMsgCustomerAlreadyExists})
+			c.JSON(http.StatusConflict, newErrorResponse(CodeCustomerAlreadyExists, MsgCustomerAlreadyExists))
 			return
 		}
 		h.logger.Error("Failed to register customer", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: ErrorMsgFailedToRegisterCustomer})
+		c.JSON(http.StatusInternalServerError, newErrorResponse(CodeInternalError, MsgInternalError))
 		return
 	}
 
@@ -89,11 +98,45 @@ func (h *Handler) RegisterCustomer(c *gin.Context) {
 	c.JSON(http.StatusCreated, resp)
 }
 
+func newErrorResponse(code, message string) ErrorResponse {
+	return ErrorResponse{
+		Code:    code,
+		Message: message,
+		Details: make([]string, 0),
+	}
+}
+
 // getErrorResponseFromValidationErr gets the ErrorResponse based on the error type returned from the validation
-func (h *Handler) getErrorResponseFromValidationErr(err error) ErrorResponse {
+func getErrorResponseFromValidationErr(err error) ErrorResponse {
 	var ve validator.ValidationErrors
 	if errors.As(err, &ve) {
-		return ErrorResponse{Error: ve.Error()}
+		errResp := newErrorResponse(CodeValidationError, MsgValidationError)
+		details := make([]string, 0)
+
+		for _, fe := range ve {
+			details = append(details, getValidationErrorDetail(fe))
+		}
+		errResp.Details = details
+
+		return errResp
 	}
-	return ErrorResponse{Error: ErrorMsgInvalidRequest}
+	return newErrorResponse(CodeInvalidRequest, MsgInvalidRequest)
+}
+
+// getValidationErrorDetail returns a detailed error message based on the field error
+func getValidationErrorDetail(fe validator.FieldError) string {
+	field := strings.ToLower(fe.Field())
+	switch fe.Tag() {
+	case "required":
+		return field + " is required"
+	case "email":
+		return field + " must be a valid email address"
+	case "min":
+		if field == "password" {
+			return field + " must be a valid password with at least 8 characters long"
+		}
+		return field + " must be at least " + fe.Param() + " characters long"
+	default:
+		return field + " is invalid"
+	}
 }
