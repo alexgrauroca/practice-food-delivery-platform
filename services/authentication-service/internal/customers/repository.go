@@ -7,6 +7,7 @@ import (
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/clock"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/logctx"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
@@ -82,8 +83,22 @@ func (r *repository) CreateCustomer(ctx context.Context, params CreateCustomerPa
 }
 
 func (r *repository) FindByEmail(ctx context.Context, email string) (Customer, error) {
-	//TODO implement the repository call to find a customer by email
-	panic("implement me")
+	var customer Customer
+	filter := bson.M{
+		FieldEmail:  email,
+		FieldActive: true,
+	}
+
+	if err := r.collection.FindOne(ctx, filter).Decode(&customer); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			logctx.LoggerWithRequestInfo(ctx, r.logger).
+				Warn("Customer not found", zap.String("email", email))
+			return Customer{}, ErrCustomerNotFound
+		}
+		logctx.LoggerWithRequestInfo(ctx, r.logger).Error("Failed to find customer", zap.Error(err))
+		return Customer{}, err
+	}
+	return customer, nil
 }
 
 // isDuplicateKeyError checks if the error is a duplicate key error (MongoDB error code 11000).
