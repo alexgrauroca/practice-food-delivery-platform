@@ -11,7 +11,7 @@ install-mockgen:
 
 run-integration-tests: start-mongodb
 	@echo "Running integration tests for authentication service..."
-	@bash -c "set -a && source ../../.env && set +a && go test -v --tags=integration ./internal/customers/integration/..."
+	@bash -c "set -a && source ../../.env && set +a && go test -v -tags=integration ./..."
 
 start-mongodb:
 	@echo "Starting MongoDB Docker containers for integration tests..."

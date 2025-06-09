@@ -12,6 +12,8 @@ A **Domain Service Architecture** is used, where each microservice encapsulates 
 
 Testing follows **TDD (Test-Driven Development)** and **BDD (Behavior-Driven Development)** principles, ensuring behavior and correctness are covered through automation.
 
+Coverage reports will not be generated at this stage. Ideally the pipelines should generate coverage reports with tools like courtney and gocovmerge, to then upload them to an analysis tool like Sonar. Setting up 100% coverage is considered a bad practice, as testing should focus on quality not quantity, but coverage reports can help to detect missed cases scenarios. During the development of this project the Goland coverage tool was used to detect those cases. TDD should help to reduce those cases as much as possible, because we just create the needed code based on the expected behaviour.
+
 ---
 
 ## Actors

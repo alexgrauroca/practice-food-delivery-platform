@@ -6,13 +6,14 @@ import (
 	"time"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/clock"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/logctx"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
 )
 
 const (
-	CustomersCollectionName = "customers"
+	CollectionName = "customers"
 
 	FieldEmail  = "email"
 	FieldActive = "active"
@@ -21,6 +22,7 @@ const (
 //go:generate mockgen -destination=./mocks/repository_mock.go -package=mocks github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers Repository
 type Repository interface {
 	CreateCustomer(ctx context.Context, params CreateCustomerParams) (Customer, error)
+	FindByEmail(ctx context.Context, email string) (Customer, error)
 }
 
 type CreateCustomerParams struct {
@@ -48,7 +50,7 @@ type repository struct {
 func NewRepository(logger *zap.Logger, db *mongo.Database, clk clock.Clock) Repository {
 	return &repository{
 		logger:     logger,
-		collection: db.Collection(CustomersCollectionName),
+		collection: db.Collection(CollectionName),
 		clock:      clk,
 	}
 }
@@ -66,15 +68,22 @@ func (r *repository) CreateCustomer(ctx context.Context, params CreateCustomerPa
 	res, err := r.collection.InsertOne(ctx, c)
 	if err != nil {
 		if isDuplicateKeyError(err) {
-			r.logger.Warn("Customer already exists", zap.String("email", params.Email))
+			logctx.LoggerWithRequestInfo(ctx, r.logger).
+				Warn("Customer already exists", zap.String("email", params.Email))
 			return Customer{}, ErrCustomerAlreadyExists
 		}
-		r.logger.Error("Failed to insert customer", zap.Error(err))
+		logctx.LoggerWithRequestInfo(ctx, r.logger).Error("Failed to insert customer", zap.Error(err))
 		return Customer{}, err
 	}
 	c.ID = res.InsertedID.(primitive.ObjectID).Hex()
-	r.logger.Info("Customer created successfully", zap.String("customer_id", c.ID))
+	logctx.LoggerWithRequestInfo(ctx, r.logger).
+		Info("Customer created successfully", zap.String("customer_id", c.ID))
 	return c, nil
+}
+
+func (r *repository) FindByEmail(ctx context.Context, email string) (Customer, error) {
+	//TODO implement the repository call to find a customer by email
+	panic("implement me")
 }
 
 // isDuplicateKeyError checks if the error is a duplicate key error (MongoDB error code 11000).

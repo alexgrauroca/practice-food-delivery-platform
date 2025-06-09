@@ -7,6 +7,7 @@ import (
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/clock"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/config"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/middleware"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -28,6 +29,7 @@ func main() {
 
 	// Initialize the Gin router
 	router := gin.Default()
+	router.Use(middleware.RequestInfoMiddleware())
 
 	// Initialize MongoDB connection
 	db, done := initMongoDB(logger)
