@@ -99,5 +99,6 @@ func TestRepository_CreateCustomer_UnexpectedFailure(t *testing.T) {
 	cleanup()
 
 	_, err := repo.CreateCustomer(context.Background(), customers.CreateCustomerParams{})
+	//TODO ensure the error is not one of the controlled errors
 	assert.Error(t, err, "Expected an error due to unexpected failure")
 }

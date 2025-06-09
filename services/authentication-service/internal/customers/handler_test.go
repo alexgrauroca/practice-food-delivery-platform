@@ -269,7 +269,6 @@ func TestHandler_LoginCustomer(t *testing.T) {
 		{
 			name:        "when there is not an active customer with the same email and password, then it should return a 401 with invalid credentials error",
 			jsonPayload: `{"email": "test@example.com", "password": "ValidPassword123"}`,
-			//TODO setup the mock to return ErrInvalidCredentials
 			mocksSetup: func(service *mocks.MockService) {
 				service.EXPECT().LoginCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.LoginCustomerOutput{}, customers.ErrInvalidCredentials)
@@ -298,7 +297,6 @@ func TestHandler_LoginCustomer(t *testing.T) {
 		{
 			name:        "when an active customer has the same email and password, then it should return a 200 with the token",
 			jsonPayload: `{"email": "test@example.com", "password": "ValidPassword123"}`,
-			//TODO setup the mock to return a valid token
 			mocksSetup: func(service *mocks.MockService) {
 				service.EXPECT().LoginCustomer(gomock.Any(), customers.LoginCustomerInput{
 					Email:    "test@example.com",
