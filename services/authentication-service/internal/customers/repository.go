@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/clock"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/logctx"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
@@ -66,14 +67,16 @@ func (r *repository) CreateCustomer(ctx context.Context, params CreateCustomerPa
 	res, err := r.collection.InsertOne(ctx, c)
 	if err != nil {
 		if isDuplicateKeyError(err) {
-			r.logger.Warn("Customer already exists", zap.String("email", params.Email))
+			logctx.LoggerWithRequestInfo(ctx, r.logger).
+				Warn("Customer already exists", zap.String("email", params.Email))
 			return Customer{}, ErrCustomerAlreadyExists
 		}
-		r.logger.Error("Failed to insert customer", zap.Error(err))
+		logctx.LoggerWithRequestInfo(ctx, r.logger).Error("Failed to insert customer", zap.Error(err))
 		return Customer{}, err
 	}
 	c.ID = res.InsertedID.(primitive.ObjectID).Hex()
-	r.logger.Info("Customer created successfully", zap.String("customer_id", c.ID))
+	logctx.LoggerWithRequestInfo(ctx, r.logger).
+		Info("Customer created successfully", zap.String("customer_id", c.ID))
 	return c, nil
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/logctx"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -56,10 +57,11 @@ func NewService(logger *zap.Logger, repo Repository) Service {
 }
 
 func (s *service) RegisterCustomer(ctx context.Context, input RegisterCustomerInput) (RegisterCustomerOutput, error) {
-	s.logger.Info("registering customer", zap.String("email", input.Email), zap.String("name", input.Name))
+	logctx.LoggerWithRequestInfo(ctx, s.logger).
+		Info("registering customer", zap.String("email", input.Email), zap.String("name", input.Name))
 	hashedPassword, err := hashPassword(input.Password)
 	if err != nil {
-		s.logger.Error("failed to hash password", zap.Error(err))
+		logctx.LoggerWithRequestInfo(ctx, s.logger).Error("failed to hash password", zap.Error(err))
 		return RegisterCustomerOutput{}, err
 	}
 
@@ -71,7 +73,7 @@ func (s *service) RegisterCustomer(ctx context.Context, input RegisterCustomerIn
 
 	customer, err := s.repo.CreateCustomer(ctx, params)
 	if err != nil {
-		s.logger.Error("failed to create customer", zap.Error(err))
+		logctx.LoggerWithRequestInfo(ctx, s.logger).Error("failed to create customer", zap.Error(err))
 		return RegisterCustomerOutput{}, err
 	}
 
@@ -81,7 +83,8 @@ func (s *service) RegisterCustomer(ctx context.Context, input RegisterCustomerIn
 		Name:      customer.Name,
 		CreatedAt: customer.CreatedAt,
 	}
-	s.logger.Info("customer registered successfully", zap.String("customerID", customer.ID))
+	logctx.LoggerWithRequestInfo(ctx, s.logger).
+		Info("customer registered successfully", zap.String("customerID", customer.ID))
 	return output, nil
 }
 

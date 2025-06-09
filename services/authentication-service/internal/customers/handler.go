@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/logctx"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"go.uber.org/zap"
@@ -74,12 +75,11 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 }
 
 func (h *Handler) RegisterCustomer(c *gin.Context) {
-	//TODO review how can I include context info in the logs
-	h.logger.Info("RegisterCustomer handler called")
+	logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).Info("RegisterCustomer handler called")
 
 	var req RegisterCustomerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Warn("Failed to bind request", zap.Error(err))
+		logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).Warn("Failed to bind request", zap.Error(err))
 		errResp := getErrorResponseFromValidationErr(err)
 		c.JSON(http.StatusBadRequest, errResp)
 		return
@@ -94,11 +94,13 @@ func (h *Handler) RegisterCustomer(c *gin.Context) {
 	output, err := h.service.RegisterCustomer(c.Request.Context(), input)
 	if err != nil {
 		if errors.Is(err, ErrCustomerAlreadyExists) {
-			h.logger.Warn("Customer already exists", zap.String("email", req.Email))
+			logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).
+				Warn("Customer already exists", zap.String("email", req.Email))
 			c.JSON(http.StatusConflict, newErrorResponse(CodeCustomerAlreadyExists, MsgCustomerAlreadyExists))
 			return
 		}
-		h.logger.Error("Failed to register customer", zap.Error(err))
+		logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).
+			Error("Failed to register customer", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, newErrorResponse(CodeInternalError, MsgFailedToRegisterCustomer))
 		return
 	}
@@ -109,17 +111,17 @@ func (h *Handler) RegisterCustomer(c *gin.Context) {
 		Name:      output.Name,
 		CreatedAt: output.CreatedAt,
 	}
-	h.logger.Info("Customer registered successfully", zap.Any("customer", resp))
+	logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).
+		Info("Customer registered successfully", zap.Any("customer", resp))
 	c.JSON(http.StatusCreated, resp)
 }
 
 func (h *Handler) LoginCustomer(c *gin.Context) {
-	//TODO review how can I include context info in the logs
-	h.logger.Info("LoginCustomer handler called")
+	logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).Info("LoginCustomer handler called")
 
 	var req LoginCustomerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Warn("Failed to bind request", zap.Error(err))
+		logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).Warn("Failed to bind request", zap.Error(err))
 		errResp := getErrorResponseFromValidationErr(err)
 		c.JSON(http.StatusBadRequest, errResp)
 		return
@@ -132,11 +134,13 @@ func (h *Handler) LoginCustomer(c *gin.Context) {
 	output, err := h.service.LoginCustomer(c.Request.Context(), input)
 	if err != nil {
 		if errors.Is(err, ErrInvalidCredentials) {
-			h.logger.Warn("Invalid credentials provided", zap.String("email", req.Email))
+			logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).
+				Warn("Invalid credentials provided", zap.String("email", req.Email))
 			c.JSON(http.StatusUnauthorized, newErrorResponse(CodeInvalidCredentials, MsgInvalidCredentials))
 			return
 		}
-		h.logger.Error("Failed to login customer", zap.Error(err))
+		logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).
+			Error("Failed to login customer", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, newErrorResponse(CodeInternalError, MsgFailedToLoginCustomer))
 		return
 	}
@@ -146,7 +150,8 @@ func (h *Handler) LoginCustomer(c *gin.Context) {
 		ExpiresIn: output.ExpiresIn,
 		TokenType: output.TokenType,
 	}
-	h.logger.Info("Customer logged in successfully")
+	logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).
+		Info("Customer logged in successfully")
 	c.JSON(http.StatusOK, resp)
 }
 
