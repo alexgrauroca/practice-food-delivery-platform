@@ -35,15 +35,11 @@ func TestService_RegisterCustomer(t *testing.T) {
 				Name:     "John Doe",
 			},
 			mocksSetup: func(repo *mocks.MockRepository) {
-				//TODO replace the error for the correct one after knowing how the driver returns the unique constraint error
 				repo.EXPECT().CreateCustomer(gomock.Any(), gomock.Any()).
-					Return(customers.Customer{}, repoError)
+					Return(customers.Customer{}, customers.ErrCustomerAlreadyExists)
 			},
 			expectedOutput: customers.RegisterCustomerOutput{},
-			//TODO replace the error for the correct one after knowing how the driver returns the unique constraint error
-			// this is not the best way to do it, but as I'm learning how everything works, this is the only way to pass
-			// the ci pipeline
-			expectError: repoError,
+			expectError:    customers.ErrCustomerAlreadyExists,
 		},
 		{
 			name: "when there is an error when creating the customer, then it should propagate the error",
