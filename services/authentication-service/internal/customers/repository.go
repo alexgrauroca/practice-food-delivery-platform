@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	CustomersCollectionName = "customers"
+	CollectionName = "customers"
 
 	FieldEmail  = "email"
 	FieldActive = "active"
@@ -22,6 +22,7 @@ const (
 //go:generate mockgen -destination=./mocks/repository_mock.go -package=mocks github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers Repository
 type Repository interface {
 	CreateCustomer(ctx context.Context, params CreateCustomerParams) (Customer, error)
+	FindByEmail(ctx context.Context, email string) (Customer, error)
 }
 
 type CreateCustomerParams struct {
@@ -49,7 +50,7 @@ type repository struct {
 func NewRepository(logger *zap.Logger, db *mongo.Database, clk clock.Clock) Repository {
 	return &repository{
 		logger:     logger,
-		collection: db.Collection(CustomersCollectionName),
+		collection: db.Collection(CollectionName),
 		clock:      clk,
 	}
 }
@@ -78,6 +79,11 @@ func (r *repository) CreateCustomer(ctx context.Context, params CreateCustomerPa
 	logctx.LoggerWithRequestInfo(ctx, r.logger).
 		Info("Customer created successfully", zap.String("customer_id", c.ID))
 	return c, nil
+}
+
+func (r *repository) FindByEmail(ctx context.Context, email string) (Customer, error) {
+	//TODO implement the repository call to find a customer by email
+	panic("implement me")
 }
 
 // isDuplicateKeyError checks if the error is a duplicate key error (MongoDB error code 11000).

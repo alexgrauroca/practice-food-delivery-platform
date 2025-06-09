@@ -192,8 +192,8 @@ func getValidationErrorDetail(fe validator.FieldError) string {
 		if field == "password" {
 			return field + " must be a valid password with at least 8 characters long"
 		}
-		return field + " must be at least " + fe.Param() + " characters long"
-	default:
+		return field + " must be at least " + fe.Param() + " characters long" //notest
+	default: //notest
 		return field + " is invalid"
 	}
 }

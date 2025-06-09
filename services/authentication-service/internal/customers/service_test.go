@@ -1,3 +1,5 @@
+//go:build !integration
+
 package customers_test
 
 import (
@@ -8,17 +10,20 @@ import (
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers/mocks"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/password"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
-	"golang.org/x/crypto/bcrypt"
+)
+
+var (
+	repoError = errors.New("repository error")
+	logger    = zap.NewNop()
 )
 
 func TestService_RegisterCustomer(t *testing.T) {
-	logger := zap.NewNop()
 	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
-	repoError := errors.New("repository error")
 
 	tests := []struct {
 		name           string
@@ -42,7 +47,7 @@ func TestService_RegisterCustomer(t *testing.T) {
 			expectError:    customers.ErrCustomerAlreadyExists,
 		},
 		{
-			name: "when there is an error when creating the customer, then it should propagate the error",
+			name: "when there is an unexpected error when creating the customer, then it should propagate the error",
 			input: customers.RegisterCustomerInput{
 				Email:    "test@example.com",
 				Password: "ValidPassword123",
@@ -66,8 +71,8 @@ func TestService_RegisterCustomer(t *testing.T) {
 				repo.EXPECT().CreateCustomer(gomock.Any(), gomock.Any()).
 					DoAndReturn(func(_ context.Context, params customers.CreateCustomerParams) (customers.Customer, error) {
 						// Assert that the password is hashed
-						err := bcrypt.CompareHashAndPassword([]byte(params.Password), []byte("ValidPassword123"))
-						require.NoError(t, err, "Password should be hashed and match the input password")
+						ok := password.Verify(params.Password, "ValidPassword123")
+						require.True(t, ok, "Password should be hashed and match the input password")
 
 						return customers.Customer{
 							ID:        "fake-id",
@@ -92,7 +97,10 @@ func TestService_RegisterCustomer(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			repo := mocks.NewMockRepository(gomock.NewController(t))
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			repo := mocks.NewMockRepository(ctrl)
 			if tt.mocksSetup != nil {
 				tt.mocksSetup(repo)
 			}
@@ -102,6 +110,122 @@ func TestService_RegisterCustomer(t *testing.T) {
 
 			assert.Equal(t, tt.expectedOutput, output)
 			assert.Equal(t, tt.expectError, err)
+		})
+	}
+}
+
+func TestService_LoginCustomer(t *testing.T) {
+	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	tests := []struct {
+		name           string
+		input          customers.LoginCustomerInput
+		mocksSetup     func(repo *mocks.MockRepository)
+		expectedOutput customers.LoginCustomerOutput
+		expectError    error
+	}{
+		{
+			name: "when there is not an active customer with the same email, then it should an invalid credentials error",
+			input: customers.LoginCustomerInput{
+				Email:    "test@example.com",
+				Password: "ValidPassword123",
+			},
+			mocksSetup: func(repo *mocks.MockRepository) {
+				repo.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).
+					Return(customers.Customer{}, customers.ErrCustomerNotFound)
+			},
+			expectedOutput: customers.LoginCustomerOutput{},
+			expectError:    customers.ErrInvalidCredentials,
+		},
+		{
+			name: "when there is not an active customer with the same password, then it should an invalid credentials error",
+			input: customers.LoginCustomerInput{
+				Email:    "test@example.com",
+				Password: "InvalidPassword123",
+			},
+			mocksSetup: func(repo *mocks.MockRepository) {
+				hashedPassword, err := password.Hash("ValidPassword123")
+				require.NoError(t, err)
+
+				repo.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).
+					Return(customers.Customer{
+						ID:        "fake-id",
+						Email:     "test@example.com",
+						Name:      "John Doe",
+						Password:  hashedPassword, // This should be a hashed password
+						CreatedAt: now,
+						UpdatedAt: now,
+						Active:    true,
+					}, nil)
+			},
+			expectedOutput: customers.LoginCustomerOutput{},
+			expectError:    customers.ErrInvalidCredentials,
+		},
+		{
+			name: "when there is an unexpected error when fetching the customer, then it should propagate the error",
+			input: customers.LoginCustomerInput{
+				Email:    "test@example.com",
+				Password: "ValidPassword123",
+			},
+			mocksSetup: func(repo *mocks.MockRepository) {
+				repo.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).
+					Return(customers.Customer{}, repoError)
+			},
+			expectedOutput: customers.LoginCustomerOutput{},
+			expectError:    repoError,
+		},
+		{
+			name: "when there is an active customer with the same email and password, then it should return its token",
+			input: customers.LoginCustomerInput{
+				Email:    "test@example.com",
+				Password: "ValidPassword123",
+			},
+			mocksSetup: func(repo *mocks.MockRepository) {
+				hashedPassword, err := password.Hash("ValidPassword123")
+				require.NoError(t, err)
+
+				repo.EXPECT().FindByEmail(gomock.Any(), "test@example.com").
+					Return(customers.Customer{
+						ID:        "fake-id",
+						Email:     "test@example.com",
+						Name:      "John Doe",
+						Password:  hashedPassword, // This should be a hashed password
+						CreatedAt: now,
+						UpdatedAt: now,
+						Active:    true,
+					}, nil)
+			},
+			expectedOutput: customers.LoginCustomerOutput{
+				ExpiresIn: 3600, // 1 hour
+				TokenType: "Bearer",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			repo := mocks.NewMockRepository(ctrl)
+			if tt.mocksSetup != nil {
+				tt.mocksSetup(repo)
+			}
+
+			service := customers.NewService(logger, repo)
+			output, err := service.LoginCustomer(context.Background(), tt.input)
+
+			assert.ErrorIs(t, err, tt.expectError)
+
+			// We only assert the expectedOutput if there is any error
+			if tt.expectError == nil {
+				assert.Equal(t, tt.expectedOutput.TokenType, output.TokenType)
+				assert.Equal(t, tt.expectedOutput.ExpiresIn, output.ExpiresIn)
+
+				// As tokens are generated depending on the moment of the time, we just need to check if token
+				// is not empty
+				assert.NotEmpty(t, output.Token)
+			}
 		})
 	}
 }

@@ -1,3 +1,5 @@
+//go:build !integration
+
 package customers_test
 
 import (
@@ -9,6 +11,7 @@ import (
 	"time"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers/mocks"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/jwt"
 	"github.com/golang/mock/gomock"
 	"go.uber.org/zap"
 
@@ -304,7 +307,7 @@ func TestHandler_LoginCustomer(t *testing.T) {
 				}).Return(customers.LoginCustomerOutput{
 					Token:     "fake-token",
 					ExpiresIn: customers.DefaultTokenExpiration,
-					TokenType: customers.DefaultTokenType,
+					TokenType: jwt.DefaultTokenType,
 				}, nil)
 			},
 			expectedJsonResponse: `{
