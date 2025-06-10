@@ -10,22 +10,20 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers/mocks"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/jwt"
-
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
-
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
+	customersmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers/mocks"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/jwt"
 )
 
 type customerHandlerTestCase struct {
 	name                 string
 	jsonPayload          string
-	mocksSetup           func(service *mocks.MockService)
+	mocksSetup           func(service *customersmocks.MockService)
 	expectedJSONResponse string
 	expectedStatusCode   int
 }
@@ -122,7 +120,7 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 		{
 			name:        "when the customer already exists, then it should return a 409 with the customer already exists error",
 			jsonPayload: `{"email": "test@example.com", "name": "John Doe", "password": "ValidPassword123"}`,
-			mocksSetup: func(service *mocks.MockService) {
+			mocksSetup: func(service *customersmocks.MockService) {
 				service.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.RegisterCustomerOutput{}, customers.ErrCustomerAlreadyExists)
 			},
@@ -136,7 +134,7 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 		{
 			name:        "when unexpected error when registering the customer, then it should return a 500 with the internal error",
 			jsonPayload: `{"email": "test@example.com", "name": "John Doe", "password": "ValidPassword123"}`,
-			mocksSetup: func(service *mocks.MockService) {
+			mocksSetup: func(service *customersmocks.MockService) {
 				service.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.RegisterCustomerOutput{}, errors.New("unexpected error"))
 			},
@@ -150,7 +148,7 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 		{
 			name:        "when the customer is successfully registered, then it should return a 201 with the customer details",
 			jsonPayload: `{"email": "test@example.com", "name": "John Doe", "password": "ValidPassword123"}`,
-			mocksSetup: func(service *mocks.MockService) {
+			mocksSetup: func(service *customersmocks.MockService) {
 				service.EXPECT().RegisterCustomer(gomock.Any(), customers.RegisterCustomerInput{
 					Email:    "test@example.com",
 					Password: "ValidPassword123",
@@ -234,7 +232,7 @@ func TestHandler_LoginCustomer(t *testing.T) {
 		{
 			name:        "when there is not an active customer with the same email and password, then it should return a 401 with invalid credentials error",
 			jsonPayload: `{"email": "test@example.com", "password": "ValidPassword123"}`,
-			mocksSetup: func(service *mocks.MockService) {
+			mocksSetup: func(service *customersmocks.MockService) {
 				service.EXPECT().LoginCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.LoginCustomerOutput{}, customers.ErrInvalidCredentials)
 			},
@@ -248,7 +246,7 @@ func TestHandler_LoginCustomer(t *testing.T) {
 		{
 			name:        "when unexpected error when login the customer, then it should return a 500 with the internal error",
 			jsonPayload: `{"email": "test@example.com", "password": "ValidPassword123"}`,
-			mocksSetup: func(service *mocks.MockService) {
+			mocksSetup: func(service *customersmocks.MockService) {
 				service.EXPECT().LoginCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.LoginCustomerOutput{}, errors.New("unexpected error"))
 			},
@@ -262,7 +260,7 @@ func TestHandler_LoginCustomer(t *testing.T) {
 		{
 			name:        "when an active customer has the same email and password, then it should return a 200 with the token",
 			jsonPayload: `{"email": "test@example.com", "password": "ValidPassword123"}`,
-			mocksSetup: func(service *mocks.MockService) {
+			mocksSetup: func(service *customersmocks.MockService) {
 				service.EXPECT().LoginCustomer(gomock.Any(), customers.LoginCustomerInput{
 					Email:    "test@example.com",
 					Password: "ValidPassword123",
@@ -306,7 +304,7 @@ func runCustomerHandlerTestCase(
 	tt customerHandlerTestCase,
 ) {
 	// Create a new mock service
-	service := mocks.NewMockService(gomock.NewController(t))
+	service := customersmocks.NewMockService(gomock.NewController(t))
 	if tt.mocksSetup != nil {
 		tt.mocksSetup(service)
 	}

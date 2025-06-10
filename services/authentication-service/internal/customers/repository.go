@@ -27,7 +27,7 @@ const (
 // Repository defines the interface for customer repository operations.
 // It includes methods to create a customer and find a customer by email.
 //
-//go:generate mockgen -destination=./mocks/repository_mock.go -package=mocks github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers Repository
+//go:generate mockgen -destination=./mocks/repository_mock.go -package=customers_mocks github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers Repository
 type Repository interface {
 	CreateCustomer(ctx context.Context, params CreateCustomerParams) (Customer, error)
 	FindByEmail(ctx context.Context, email string) (Customer, error)

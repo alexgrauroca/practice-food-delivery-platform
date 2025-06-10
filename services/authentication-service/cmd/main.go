@@ -4,14 +4,16 @@ import (
 	"context"
 	"log"
 
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/clock"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/config"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/middleware"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
+
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/clock"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/config"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/middleware"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh"
 )
 
 func main() {
@@ -37,8 +39,9 @@ func main() {
 		return
 	}
 
-	// Initialize the customers feature
-	initCustomersFeature(logger, db, router)
+	// Initialize features
+	refreshService := initRefreshFeature(logger, db)
+	initCustomersFeature(logger, db, router, refreshService)
 
 	logger.Info("Starting http server")
 	// Start the server
@@ -72,14 +75,22 @@ func initMongoDB(logger *zap.Logger) (*mongo.Database, bool) {
 	return db, true
 }
 
-func initCustomersFeature(logger *zap.Logger, db *mongo.Database, router *gin.Engine) {
-	// Initialize the customers repository
+func initRefreshFeature(logger *zap.Logger, db *mongo.Database) refresh.Service {
+	// Initialize the refresh repository
+	repo := refresh.NewRepository(logger, db, clock.RealClock{})
+
+	// Initialize the refresh service
+	return refresh.NewService(logger, repo)
+}
+
+func initCustomersFeature(logger *zap.Logger, db *mongo.Database, router *gin.Engine, refreshService refresh.Service) {
+	// Initialize the customer's repository
 	repo := customers.NewRepository(logger, db, clock.RealClock{})
 
-	// Initialize the customers service
-	service := customers.NewService(logger, repo)
+	// Initialize the customer's service
+	service := customers.NewService(logger, repo, refreshService)
 
-	// Initialize the customers handler and register routes
+	// Initialize the customer's handler and register routes
 	handler := customers.NewHandler(logger, service)
 	handler.RegisterRoutes(router)
 }
