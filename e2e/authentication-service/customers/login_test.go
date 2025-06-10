@@ -14,10 +14,11 @@ var _ = ginkgo.Describe("Customer Login", func() {
 		_, err := c.Register()
 		gomega.Expect(err).NotTo(gomega.HaveOccurred())
 
-		// Login the customer
+		// Log in the customer
 		result, err := c.Login()
 		gomega.Expect(err).NotTo(gomega.HaveOccurred())
-		gomega.Expect(result.Token).NotTo(gomega.BeEmpty())
+		gomega.Expect(result.AccessToken).NotTo(gomega.BeEmpty())
+		gomega.Expect(result.RefreshToken).NotTo(gomega.BeEmpty())
 		gomega.Expect(result.ExpiresIn).To(gomega.BeNumerically(">", 0))
 		gomega.Expect(result.TokenType).To(gomega.Equal("Bearer"))
 	})

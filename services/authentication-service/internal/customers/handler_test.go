@@ -10,62 +10,24 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers/mocks"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/jwt"
 	"github.com/golang/mock/gomock"
 	"go.uber.org/zap"
 
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers/mocks"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/jwt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
 )
 
 type customerHandlerTestCase struct {
 	name                 string
 	jsonPayload          string
 	mocksSetup           func(service *mocks.MockService)
-	expectedJsonResponse string
+	expectedJSONResponse string
 	expectedStatusCode   int
-}
-
-// setupTestEnv initializes the test environment with default values common to all tests.
-func setupTestEnv() *zap.Logger {
-	// Setting up the default values
-	gin.SetMode(gin.TestMode)
-	logger := zap.NewNop()
-	return logger
-}
-
-// runCustomerHandlerTestCase executes a test case for the customer handler, which is common for all tests.
-func runCustomerHandlerTestCase(
-	t *testing.T,
-	logger *zap.Logger,
-	route string,
-	tt customerHandlerTestCase,
-) {
-	// Create new mock service
-	service := mocks.NewMockService(gomock.NewController(t))
-	if tt.mocksSetup != nil {
-		tt.mocksSetup(service)
-	}
-
-	// Initialize the handler
-	h := customers.NewHandler(logger, service)
-
-	// Initialize the Gin router and register the routes
-	router := gin.New()
-	h.RegisterRoutes(router)
-
-	// Create a new HTTP request with the test case's JSON payload
-	req := httptest.NewRequest(http.MethodPost, route, strings.NewReader(tt.jsonPayload))
-	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-
-	// Make the request to the handler
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, tt.expectedStatusCode, w.Code)
-	assert.JSONEq(t, tt.expectedJsonResponse, w.Body.String())
 }
 
 func TestHandler_RegisterCustomer(t *testing.T) {
@@ -76,7 +38,7 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 		{
 			name:        "when invalid payload is provided, then it should return a 400 with invalid request error",
 			jsonPayload: `{"name": 1.2, "email": true}`,
-			expectedJsonResponse: `{
+			expectedJSONResponse: `{
 				"code": "INVALID_REQUEST",
 				"message": "invalid request",
 				"details": []
@@ -86,7 +48,7 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 		{
 			name:        "when empty payload is provided, then it should return a 400 with the validation error",
 			jsonPayload: `{}`,
-			expectedJsonResponse: `{
+			expectedJSONResponse: `{
 				"code": "VALIDATION_ERROR",
 				"message": "validation failed",
 				"details": [
@@ -100,7 +62,7 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 		{
 			name:        "when invalid email is provided, then it should return a 400 with the email validation error",
 			jsonPayload: `{"email": "invalid-email", "name": "John Doe", "password": "ValidPassword123"}`,
-			expectedJsonResponse: `{
+			expectedJSONResponse: `{
 				"code": "VALIDATION_ERROR",
 				"message": "validation failed",
 				"details": [
@@ -112,7 +74,7 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 		{
 			name:        "when invalid password is provided, then it should return a 400 with the pwd validation error",
 			jsonPayload: `{"email":"test@example.com", "name": "John Doe", "password": "short"}`,
-			expectedJsonResponse: `{
+			expectedJSONResponse: `{
 				"code": "VALIDATION_ERROR",
 				"message": "validation failed",
 				"details": [
@@ -124,7 +86,7 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 		{
 			name:        "when no name is provided, then it should return a 400 with the name validation error",
 			jsonPayload: `{"email":"test@example.com", "password": "ValidPassword123"}`,
-			expectedJsonResponse: `{
+			expectedJSONResponse: `{
 				"code":"VALIDATION_ERROR",
 				"message":"validation failed",
 				"details":[
@@ -136,7 +98,7 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 		{
 			name:        "when no email is provided, then it should return a 400 with the email validation error",
 			jsonPayload: `{"name": "John Doe", "password": "ValidPassword123"}`,
-			expectedJsonResponse: `{
+			expectedJSONResponse: `{
 				"code":"VALIDATION_ERROR",
 				"message":"validation failed",
 				"details":[
@@ -148,7 +110,7 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 		{
 			name:        "when no password is provided, then it should return a 400 with the email validation error",
 			jsonPayload: `{"email": "test@example.com", "name": "John Doe"}`,
-			expectedJsonResponse: `{
+			expectedJSONResponse: `{
 				"code":"VALIDATION_ERROR",
 				"message":"validation failed",
 				"details":[
@@ -164,7 +126,7 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 				service.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.RegisterCustomerOutput{}, customers.ErrCustomerAlreadyExists)
 			},
-			expectedJsonResponse: `{
+			expectedJSONResponse: `{
 				"code": "CUSTOMER_ALREADY_EXISTS",
 				"message": "customer already exists",
 				"details": []
@@ -178,7 +140,7 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 				service.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.RegisterCustomerOutput{}, errors.New("unexpected error"))
 			},
-			expectedJsonResponse: `{
+			expectedJSONResponse: `{
 				"code": "INTERNAL_ERROR",
 				"message": "failed to register the customer",
 				"details": []
@@ -200,7 +162,7 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 					CreatedAt: now,
 				}, nil)
 			},
-			expectedJsonResponse: `{
+			expectedJSONResponse: `{
 				"created_at":"2025-01-01T00:00:00Z",
 				"email":"test@example.com",
 				"id":"fake-id",
@@ -224,7 +186,7 @@ func TestHandler_LoginCustomer(t *testing.T) {
 		{
 			name:        "when invalid payload is provided, then it should return a 400 with invalid request error",
 			jsonPayload: `{"name": 1.2, "email": true}`,
-			expectedJsonResponse: `{
+			expectedJSONResponse: `{
 				"code": "INVALID_REQUEST",
 				"message": "invalid request",
 				"details": []
@@ -234,7 +196,7 @@ func TestHandler_LoginCustomer(t *testing.T) {
 		{
 			name:        "when empty payload is provided, then it should return a 400 with the validation error",
 			jsonPayload: `{}`,
-			expectedJsonResponse: `{
+			expectedJSONResponse: `{
 				"code": "VALIDATION_ERROR",
 				"message": "validation failed",
 				"details": [
@@ -247,7 +209,7 @@ func TestHandler_LoginCustomer(t *testing.T) {
 		{
 			name:        "when invalid email is provided, then it should return a 400 with the email validation error",
 			jsonPayload: `{"email": "invalid-email", "password": "ValidPassword123"}`,
-			expectedJsonResponse: `{
+			expectedJSONResponse: `{
 				"code": "VALIDATION_ERROR",
 				"message": "validation failed",
 				"details": [
@@ -259,7 +221,7 @@ func TestHandler_LoginCustomer(t *testing.T) {
 		{
 			name:        "when invalid password is provided, then it should return a 400 with the pwd validation error",
 			jsonPayload: `{"email":"test@example.com", "password": "short"}`,
-			expectedJsonResponse: `{
+			expectedJSONResponse: `{
 				"code": "VALIDATION_ERROR",
 				"message": "validation failed",
 				"details": [
@@ -276,7 +238,7 @@ func TestHandler_LoginCustomer(t *testing.T) {
 				service.EXPECT().LoginCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.LoginCustomerOutput{}, customers.ErrInvalidCredentials)
 			},
-			expectedJsonResponse: `{
+			expectedJSONResponse: `{
 				"code": "INVALID_CREDENTIALS",
 				"message": "invalid credentials",
 				"details": []
@@ -290,7 +252,7 @@ func TestHandler_LoginCustomer(t *testing.T) {
 				service.EXPECT().LoginCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.LoginCustomerOutput{}, errors.New("unexpected error"))
 			},
-			expectedJsonResponse: `{
+			expectedJSONResponse: `{
 				"code": "INTERNAL_ERROR",
 				"message": "failed to login the customer",
 				"details": []
@@ -305,13 +267,15 @@ func TestHandler_LoginCustomer(t *testing.T) {
 					Email:    "test@example.com",
 					Password: "ValidPassword123",
 				}).Return(customers.LoginCustomerOutput{
-					Token:     "fake-token",
-					ExpiresIn: customers.DefaultTokenExpiration,
-					TokenType: jwt.DefaultTokenType,
+					AccessToken:  "fake-token",
+					RefreshToken: "fake-refresh-token",
+					ExpiresIn:    customers.DefaultTokenExpiration,
+					TokenType:    jwt.DefaultTokenType,
 				}, nil)
 			},
-			expectedJsonResponse: `{
-			  "token": "fake-token",
+			expectedJSONResponse: `{
+			  "access_token": "fake-token",
+			  "refresh_token": "fake-refresh-token",
 			  "expires_in": 3600,
 			  "token_type": "Bearer"
 			}`,
@@ -324,4 +288,44 @@ func TestHandler_LoginCustomer(t *testing.T) {
 			runCustomerHandlerTestCase(t, logger, "/v1.0/customers/login", tt)
 		})
 	}
+}
+
+// setupTestEnv initializes the test environment with default values common to all tests.
+func setupTestEnv() *zap.Logger {
+	// Setting up the default values
+	gin.SetMode(gin.TestMode)
+	logger := zap.NewNop()
+	return logger
+}
+
+// runCustomerHandlerTestCase executes a test case for the customer handler, which is common for all tests.
+func runCustomerHandlerTestCase(
+	t *testing.T,
+	logger *zap.Logger,
+	route string,
+	tt customerHandlerTestCase,
+) {
+	// Create a new mock service
+	service := mocks.NewMockService(gomock.NewController(t))
+	if tt.mocksSetup != nil {
+		tt.mocksSetup(service)
+	}
+
+	// Initialize the handler
+	h := customers.NewHandler(logger, service)
+
+	// Initialize the Gin router and register the routes
+	router := gin.New()
+	h.RegisterRoutes(router)
+
+	// Create a new HTTP request with the test case's JSON payload
+	req := httptest.NewRequest(http.MethodPost, route, strings.NewReader(tt.jsonPayload))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	// Make the request to the handler
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, tt.expectedStatusCode, w.Code)
+	assert.JSONEq(t, tt.expectedJSONResponse, w.Body.String())
 }

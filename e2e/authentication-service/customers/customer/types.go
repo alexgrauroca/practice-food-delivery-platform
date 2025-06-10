@@ -17,9 +17,10 @@ type RegisterResponse struct {
 
 // LoginResponse represents the response payload returned upon a successful login containing token information.
 type LoginResponse struct {
-	Token     string `json:"token"`
-	ExpiresIn int    `json:"expires_in"`
-	TokenType string `json:"token_type"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	ExpiresIn    int    `json:"expires_in"`
+	TokenType    string `json:"token_type"`
 }
 
 const (

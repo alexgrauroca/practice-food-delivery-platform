@@ -6,33 +6,48 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/logctx"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"go.uber.org/zap"
+
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/logctx"
 )
 
 const (
-	CodeValidationError       = "VALIDATION_ERROR"
-	CodeInvalidRequest        = "INVALID_REQUEST"
-	CodeCustomerAlreadyExists = "CUSTOMER_ALREADY_EXISTS"
-	CodeInternalError         = "INTERNAL_ERROR"
-	CodeInvalidCredentials    = "INVALID_CREDENTIALS"
 
-	MsgValidationError          = "validation failed"
-	MsgInvalidRequest           = "invalid request"
-	MsgCustomerAlreadyExists    = "customer already exists"
+	// CodeValidationError represents the error code for validation failures during input processing or validation checks.
+	CodeValidationError = "VALIDATION_ERROR"
+	// CodeInvalidRequest represents the error code for an invalid or improper request made to the system.
+	CodeInvalidRequest = "INVALID_REQUEST"
+	// CodeCustomerAlreadyExists represents the error code indicating the customer already exists in the system.
+	CodeCustomerAlreadyExists = "CUSTOMER_ALREADY_EXISTS"
+	// CodeInternalError represents the error code for an unspecified internal server error encountered in the system.
+	CodeInternalError = "INTERNAL_ERROR"
+	// CodeInvalidCredentials represents the error code for failed authentication due to invalid login credentials.
+	CodeInvalidCredentials = "INVALID_CREDENTIALS"
+
+	// MsgValidationError represents the error message for validation failures during input validation checks.
+	MsgValidationError = "validation failed"
+	// MsgInvalidRequest represents the error message for an invalid or improperly formed request.
+	MsgInvalidRequest = "invalid request"
+	// MsgCustomerAlreadyExists represents the error message indicating that the customer already exists in the system.
+	MsgCustomerAlreadyExists = "customer already exists"
+	// MsgFailedToRegisterCustomer indicates an error occurred while attempting to register a new customer.
 	MsgFailedToRegisterCustomer = "failed to register the customer"
-	MsgInvalidCredentials       = "invalid credentials"
-	MsgFailedToLoginCustomer    = "failed to login the customer"
+	// MsgInvalidCredentials represents the error message returned when login authentication fails due to invalid credentials.
+	MsgInvalidCredentials = "invalid credentials"
+	// MsgFailedToLoginCustomer represents the error message returned when the system fails to log in a customer.
+	MsgFailedToLoginCustomer = "failed to login the customer"
 )
 
+// RegisterCustomerRequest represents the request payload for registering a new customer.
 type RegisterCustomerRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required,min=8"`
 	Name     string `json:"name" binding:"required"`
 }
 
+// RegisterCustomerResponse represents the response returned after successfully registering a new customer.
 type RegisterCustomerResponse struct {
 	ID        string    `json:"id"`
 	Email     string    `json:"email"`
@@ -40,28 +55,34 @@ type RegisterCustomerResponse struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+// LoginCustomerRequest represents the request payload for logging in a customer.
 type LoginCustomerRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required,min=8"`
 }
 
+// LoginCustomerResponse represents the response payload for a successful customer login.
 type LoginCustomerResponse struct {
-	Token     string `json:"token"`
-	ExpiresIn int    `json:"expires_in"` // the number of seconds until the token expires
-	TokenType string `json:"token_type"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	ExpiresIn    int    `json:"expires_in"` // the number of seconds until the token expires
+	TokenType    string `json:"token_type"`
 }
 
+// ErrorResponse represents a standardized structure for API error responses containing code, message, and optional details.
 type ErrorResponse struct {
 	Code    string   `json:"code"`
 	Message string   `json:"message"`
 	Details []string `json:"details"`
 }
 
+// Handler manages HTTP requests for auth-customer-related operations.
 type Handler struct {
 	logger  *zap.Logger
 	service Service
 }
 
+// NewHandler creates a new instance of Handler.
 func NewHandler(logger *zap.Logger, service Service) *Handler {
 	return &Handler{
 		logger:  logger,
@@ -69,11 +90,13 @@ func NewHandler(logger *zap.Logger, service Service) *Handler {
 	}
 }
 
+// RegisterRoutes registers the customer-related HTTP routes.
 func (h *Handler) RegisterRoutes(router *gin.Engine) {
 	router.POST("/v1.0/customers/register", h.RegisterCustomer)
 	router.POST("/v1.0/customers/login", h.LoginCustomer)
 }
 
+// RegisterCustomer handles the registration of a new customer.
 func (h *Handler) RegisterCustomer(c *gin.Context) {
 	logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).Info("RegisterCustomer handler called")
 
@@ -85,11 +108,7 @@ func (h *Handler) RegisterCustomer(c *gin.Context) {
 		return
 	}
 
-	input := RegisterCustomerInput{
-		Email:    req.Email,
-		Password: req.Password,
-		Name:     req.Name,
-	}
+	input := RegisterCustomerInput(req)
 
 	output, err := h.service.RegisterCustomer(c.Request.Context(), input)
 	if err != nil {
@@ -105,17 +124,13 @@ func (h *Handler) RegisterCustomer(c *gin.Context) {
 		return
 	}
 
-	resp := RegisterCustomerResponse{
-		ID:        output.ID,
-		Email:     output.Email,
-		Name:      output.Name,
-		CreatedAt: output.CreatedAt,
-	}
+	resp := RegisterCustomerResponse(output)
 	logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).
 		Info("Customer registered successfully", zap.Any("customer", resp))
 	c.JSON(http.StatusCreated, resp)
 }
 
+// LoginCustomer processes the login request for a customer using credentials provided in JSON format.
 func (h *Handler) LoginCustomer(c *gin.Context) {
 	logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).Info("LoginCustomer handler called")
 
@@ -127,10 +142,7 @@ func (h *Handler) LoginCustomer(c *gin.Context) {
 		return
 	}
 
-	input := LoginCustomerInput{
-		Email:    req.Email,
-		Password: req.Password,
-	}
+	input := LoginCustomerInput(req)
 	output, err := h.service.LoginCustomer(c.Request.Context(), input)
 	if err != nil {
 		if errors.Is(err, ErrInvalidCredentials) {
@@ -145,11 +157,7 @@ func (h *Handler) LoginCustomer(c *gin.Context) {
 		return
 	}
 
-	resp := LoginCustomerResponse{
-		Token:     output.Token,
-		ExpiresIn: output.ExpiresIn,
-		TokenType: output.TokenType,
-	}
+	resp := LoginCustomerResponse(output)
 	logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).
 		Info("Customer logged in successfully")
 	c.JSON(http.StatusOK, resp)
