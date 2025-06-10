@@ -5,33 +5,42 @@ import (
 	"errors"
 	"time"
 
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/clock"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/logctx"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
+
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/clock"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/logctx"
 )
 
 const (
+	// CollectionName defines the name of the MongoDB collection used for storing customer documents.
 	CollectionName = "customers"
 
-	FieldEmail  = "email"
+	// FieldEmail represents the field name used to store or query email addresses in the database.
+	FieldEmail = "email"
+	// FieldActive represents the field name used to indicate the active status of a customer in the database.
 	FieldActive = "active"
 )
 
+// Repository defines the interface for customer repository operations.
+// It includes methods to create a customer and find a customer by email.
+//
 //go:generate mockgen -destination=./mocks/repository_mock.go -package=mocks github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers Repository
 type Repository interface {
 	CreateCustomer(ctx context.Context, params CreateCustomerParams) (Customer, error)
 	FindByEmail(ctx context.Context, email string) (Customer, error)
 }
 
+// CreateCustomerParams represents the parameters needed to create a new customer.
 type CreateCustomerParams struct {
 	Email    string
 	Password string
 	Name     string
 }
 
+// Customer represents a user in the system with associated details such as email, name, and account activation status.
 type Customer struct {
 	ID        string    `bson:"_id,omitempty"`
 	Email     string    `bson:"email"`
@@ -48,6 +57,8 @@ type repository struct {
 	clock      clock.Clock
 }
 
+// NewRepository creates a new instance of the Repository interface with MongoDB implementation.
+// It requires a logger for operational logging, a database connection, and a clock implementation for timestamp generation.
 func NewRepository(logger *zap.Logger, db *mongo.Database, clk clock.Clock) Repository {
 	return &repository{
 		logger:     logger,
@@ -56,6 +67,9 @@ func NewRepository(logger *zap.Logger, db *mongo.Database, clk clock.Clock) Repo
 	}
 }
 
+// CreateCustomer creates a new customer record in the database.
+// It returns the created customer with an assigned ID or an error if the operation fails.
+// If a customer with the same email already exists, it returns ErrCustomerAlreadyExists.
 func (r *repository) CreateCustomer(ctx context.Context, params CreateCustomerParams) (Customer, error) {
 	now := r.clock.Now()
 	c := Customer{
@@ -82,6 +96,8 @@ func (r *repository) CreateCustomer(ctx context.Context, params CreateCustomerPa
 	return c, nil
 }
 
+// FindByEmail searches for an active customer with the specified email address.
+// It returns the customer if found or ErrCustomerNotFound if no matching active customer exists.
 func (r *repository) FindByEmail(ctx context.Context, email string) (Customer, error) {
 	var customer Customer
 	filter := bson.M{
