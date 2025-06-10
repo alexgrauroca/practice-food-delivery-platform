@@ -14,7 +14,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers/mocks"
+	customersmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers/mocks"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/password"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh"
 	refreshmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh/mocks"
@@ -31,7 +31,7 @@ func TestService_RegisterCustomer(t *testing.T) {
 	tests := []struct {
 		name           string
 		input          customers.RegisterCustomerInput
-		mocksSetup     func(repo *customers_mocks.MockRepository)
+		mocksSetup     func(repo *customersmocks.MockRepository)
 		expectedOutput customers.RegisterCustomerOutput
 		expectError    error
 	}{
@@ -42,7 +42,7 @@ func TestService_RegisterCustomer(t *testing.T) {
 				Password: "ValidPassword123",
 				Name:     "John Doe",
 			},
-			mocksSetup: func(repo *customers_mocks.MockRepository) {
+			mocksSetup: func(repo *customersmocks.MockRepository) {
 				repo.EXPECT().CreateCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, customers.ErrCustomerAlreadyExists)
 			},
@@ -56,7 +56,7 @@ func TestService_RegisterCustomer(t *testing.T) {
 				Password: "ValidPassword123",
 				Name:     "John Doe",
 			},
-			mocksSetup: func(repo *customers_mocks.MockRepository) {
+			mocksSetup: func(repo *customersmocks.MockRepository) {
 				repo.EXPECT().CreateCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, errRepo)
 			},
@@ -70,7 +70,7 @@ func TestService_RegisterCustomer(t *testing.T) {
 				Password: "ValidPassword123",
 				Name:     "John Doe",
 			},
-			mocksSetup: func(repo *customers_mocks.MockRepository) {
+			mocksSetup: func(repo *customersmocks.MockRepository) {
 				repo.EXPECT().CreateCustomer(gomock.Any(), gomock.Any()).
 					DoAndReturn(func(_ context.Context, params customers.CreateCustomerParams) (customers.Customer, error) {
 						// Assert that the password is hashed
@@ -103,7 +103,7 @@ func TestService_RegisterCustomer(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			repo := customers_mocks.NewMockRepository(ctrl)
+			repo := customersmocks.NewMockRepository(ctrl)
 			refreshService := refreshmocks.NewMockService(ctrl)
 			if tt.mocksSetup != nil {
 				tt.mocksSetup(repo)
@@ -112,8 +112,8 @@ func TestService_RegisterCustomer(t *testing.T) {
 			service := customers.NewService(logger, repo, refreshService)
 			output, err := service.RegisterCustomer(context.Background(), tt.input)
 
+			assert.ErrorIs(t, err, tt.expectError)
 			assert.Equal(t, tt.expectedOutput, output)
-			assert.Equal(t, tt.expectError, err)
 		})
 	}
 }
@@ -124,7 +124,7 @@ func TestService_LoginCustomer(t *testing.T) {
 	tests := []struct {
 		name           string
 		input          customers.LoginCustomerInput
-		mocksSetup     func(repo *customers_mocks.MockRepository, refreshService *refreshmocks.MockService)
+		mocksSetup     func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService)
 		expectedOutput customers.LoginCustomerOutput
 		expectError    error
 	}{
@@ -134,7 +134,7 @@ func TestService_LoginCustomer(t *testing.T) {
 				Email:    "test@example.com",
 				Password: "ValidPassword123",
 			},
-			mocksSetup: func(repo *customers_mocks.MockRepository, refreshService *refreshmocks.MockService) {
+			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService) {
 				repo.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, customers.ErrCustomerNotFound)
 			},
@@ -147,7 +147,7 @@ func TestService_LoginCustomer(t *testing.T) {
 				Email:    "test@example.com",
 				Password: "InvalidPassword123",
 			},
-			mocksSetup: func(repo *customers_mocks.MockRepository, refreshService *refreshmocks.MockService) {
+			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService) {
 				hashedPassword, err := password.Hash("ValidPassword123")
 				require.NoError(t, err)
 
@@ -171,7 +171,7 @@ func TestService_LoginCustomer(t *testing.T) {
 				Email:    "test@example.com",
 				Password: "ValidPassword123",
 			},
-			mocksSetup: func(repo *customers_mocks.MockRepository, refreshService *refreshmocks.MockService) {
+			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService) {
 				repo.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, errRepo)
 			},
@@ -184,7 +184,7 @@ func TestService_LoginCustomer(t *testing.T) {
 				Email:    "test@example.com",
 				Password: "ValidPassword123",
 			},
-			mocksSetup: func(repo *customers_mocks.MockRepository, refreshService *refreshmocks.MockService) {
+			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService) {
 				repo.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, nil)
 
@@ -200,7 +200,7 @@ func TestService_LoginCustomer(t *testing.T) {
 				Email:    "test@example.com",
 				Password: "ValidPassword123",
 			},
-			mocksSetup: func(repo *customers_mocks.MockRepository, refreshService *refreshmocks.MockService) {
+			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService) {
 				hashedPassword, err := password.Hash("ValidPassword123")
 				require.NoError(t, err)
 
@@ -233,7 +233,7 @@ func TestService_LoginCustomer(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			repo := customers_mocks.NewMockRepository(ctrl)
+			repo := customersmocks.NewMockRepository(ctrl)
 			refreshService := refreshmocks.NewMockService(ctrl)
 			if tt.mocksSetup != nil {
 				tt.mocksSetup(repo, refreshService)

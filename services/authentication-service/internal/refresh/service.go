@@ -63,11 +63,12 @@ func (s *service) Generate(ctx context.Context, input GenerateTokenInput) (Gener
 		ExpiresAt: time.Now().Add(DefaultTokenExpiration),
 	}
 
-	if _, err := s.repo.Store(ctx, params); err != nil {
+	refreshToken, err := s.repo.Store(ctx, params)
+	if err != nil {
 		logctx.LoggerWithRequestInfo(ctx, s.logger).Error("failed to store refresh token", zap.Error(err))
 		return GenerateTokenOutput{}, err
 	}
-	return GenerateTokenOutput{RefreshToken: token}, nil
+	return GenerateTokenOutput{RefreshToken: refreshToken.Token}, nil
 }
 
 func generateToken() (string, error) {

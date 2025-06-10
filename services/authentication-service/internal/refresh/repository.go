@@ -26,6 +26,8 @@ const (
 )
 
 // Repository defines a contract for storing and managing refresh tokens in a persistence layer.
+//
+//go:generate mockgen -destination=./mocks/repository_mock.go -package=refresh_mocks github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh Repository
 type Repository interface {
 	Store(ctx context.Context, params CreateTokenParams) (Token, error)
 }
@@ -42,6 +44,7 @@ type Token struct {
 	UpdatedAt time.Time   `bson:"updated_at"`
 }
 
+// CreateTokenParams defines the parameters required to create a new token for a user.
 type CreateTokenParams struct {
 	UserID    string
 	Role      string
