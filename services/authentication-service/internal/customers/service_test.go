@@ -16,20 +16,22 @@ import (
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers/mocks"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/password"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh"
+	refreshmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh/mocks"
 )
 
 var (
-	errRepo = errors.New("repository error")
-	logger  = zap.NewNop()
+	errRepo  = errors.New("repository error")
+	errToken = errors.New("token error")
+	logger   = zap.NewNop()
 )
 
 func TestService_RegisterCustomer(t *testing.T) {
 	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
-
 	tests := []struct {
 		name           string
 		input          customers.RegisterCustomerInput
-		mocksSetup     func(repo *mocks.MockRepository)
+		mocksSetup     func(repo *customers_mocks.MockRepository)
 		expectedOutput customers.RegisterCustomerOutput
 		expectError    error
 	}{
@@ -40,7 +42,7 @@ func TestService_RegisterCustomer(t *testing.T) {
 				Password: "ValidPassword123",
 				Name:     "John Doe",
 			},
-			mocksSetup: func(repo *mocks.MockRepository) {
+			mocksSetup: func(repo *customers_mocks.MockRepository) {
 				repo.EXPECT().CreateCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, customers.ErrCustomerAlreadyExists)
 			},
@@ -54,7 +56,7 @@ func TestService_RegisterCustomer(t *testing.T) {
 				Password: "ValidPassword123",
 				Name:     "John Doe",
 			},
-			mocksSetup: func(repo *mocks.MockRepository) {
+			mocksSetup: func(repo *customers_mocks.MockRepository) {
 				repo.EXPECT().CreateCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, errRepo)
 			},
@@ -68,7 +70,7 @@ func TestService_RegisterCustomer(t *testing.T) {
 				Password: "ValidPassword123",
 				Name:     "John Doe",
 			},
-			mocksSetup: func(repo *mocks.MockRepository) {
+			mocksSetup: func(repo *customers_mocks.MockRepository) {
 				repo.EXPECT().CreateCustomer(gomock.Any(), gomock.Any()).
 					DoAndReturn(func(_ context.Context, params customers.CreateCustomerParams) (customers.Customer, error) {
 						// Assert that the password is hashed
@@ -101,12 +103,13 @@ func TestService_RegisterCustomer(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			repo := mocks.NewMockRepository(ctrl)
+			repo := customers_mocks.NewMockRepository(ctrl)
+			refreshService := refreshmocks.NewMockService(ctrl)
 			if tt.mocksSetup != nil {
 				tt.mocksSetup(repo)
 			}
 
-			service := customers.NewService(logger, repo)
+			service := customers.NewService(logger, repo, refreshService)
 			output, err := service.RegisterCustomer(context.Background(), tt.input)
 
 			assert.Equal(t, tt.expectedOutput, output)
@@ -121,7 +124,7 @@ func TestService_LoginCustomer(t *testing.T) {
 	tests := []struct {
 		name           string
 		input          customers.LoginCustomerInput
-		mocksSetup     func(repo *mocks.MockRepository)
+		mocksSetup     func(repo *customers_mocks.MockRepository, refreshService *refreshmocks.MockService)
 		expectedOutput customers.LoginCustomerOutput
 		expectError    error
 	}{
@@ -131,7 +134,7 @@ func TestService_LoginCustomer(t *testing.T) {
 				Email:    "test@example.com",
 				Password: "ValidPassword123",
 			},
-			mocksSetup: func(repo *mocks.MockRepository) {
+			mocksSetup: func(repo *customers_mocks.MockRepository, refreshService *refreshmocks.MockService) {
 				repo.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, customers.ErrCustomerNotFound)
 			},
@@ -144,7 +147,7 @@ func TestService_LoginCustomer(t *testing.T) {
 				Email:    "test@example.com",
 				Password: "InvalidPassword123",
 			},
-			mocksSetup: func(repo *mocks.MockRepository) {
+			mocksSetup: func(repo *customers_mocks.MockRepository, refreshService *refreshmocks.MockService) {
 				hashedPassword, err := password.Hash("ValidPassword123")
 				require.NoError(t, err)
 
@@ -168,7 +171,7 @@ func TestService_LoginCustomer(t *testing.T) {
 				Email:    "test@example.com",
 				Password: "ValidPassword123",
 			},
-			mocksSetup: func(repo *mocks.MockRepository) {
+			mocksSetup: func(repo *customers_mocks.MockRepository, refreshService *refreshmocks.MockService) {
 				repo.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, errRepo)
 			},
@@ -176,12 +179,28 @@ func TestService_LoginCustomer(t *testing.T) {
 			expectError:    errRepo,
 		},
 		{
+			name: "when there is an error generating the refresh token, then it should propagate the error",
+			input: customers.LoginCustomerInput{
+				Email:    "test@example.com",
+				Password: "ValidPassword123",
+			},
+			mocksSetup: func(repo *customers_mocks.MockRepository, refreshService *refreshmocks.MockService) {
+				repo.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).
+					Return(customers.Customer{}, nil)
+
+				refreshService.EXPECT().Generate(gomock.Any(), gomock.Any()).
+					Return("", errToken)
+			},
+			expectedOutput: customers.LoginCustomerOutput{},
+			expectError:    errToken,
+		},
+		{
 			name: "when there is an active customer with the same email and password, then it should return its token",
 			input: customers.LoginCustomerInput{
 				Email:    "test@example.com",
 				Password: "ValidPassword123",
 			},
-			mocksSetup: func(repo *mocks.MockRepository) {
+			mocksSetup: func(repo *customers_mocks.MockRepository, refreshService *refreshmocks.MockService) {
 				hashedPassword, err := password.Hash("ValidPassword123")
 				require.NoError(t, err)
 
@@ -195,10 +214,16 @@ func TestService_LoginCustomer(t *testing.T) {
 						UpdatedAt: now,
 						Active:    true,
 					}, nil)
+
+				refreshService.EXPECT().Generate(gomock.Any(), refresh.GenerateTokenInput{
+					UserID: "fake-id",
+					Role:   "customer",
+				}).Return("fake-refresh-token", nil)
 			},
 			expectedOutput: customers.LoginCustomerOutput{
-				ExpiresIn: 3600, // 1 hour
-				TokenType: "Bearer",
+				ExpiresIn:    3600, // 1 hour
+				TokenType:    "Bearer",
+				RefreshToken: "fake-refresh-token",
 			},
 		},
 	}
@@ -208,12 +233,13 @@ func TestService_LoginCustomer(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			repo := mocks.NewMockRepository(ctrl)
+			repo := customers_mocks.NewMockRepository(ctrl)
+			refreshService := refreshmocks.NewMockService(ctrl)
 			if tt.mocksSetup != nil {
-				tt.mocksSetup(repo)
+				tt.mocksSetup(repo, refreshService)
 			}
 
-			service := customers.NewService(logger, repo)
+			service := customers.NewService(logger, repo, refreshService)
 			output, err := service.LoginCustomer(context.Background(), tt.input)
 
 			assert.ErrorIs(t, err, tt.expectError)
@@ -222,11 +248,11 @@ func TestService_LoginCustomer(t *testing.T) {
 			if tt.expectError == nil {
 				assert.Equal(t, tt.expectedOutput.TokenType, output.TokenType)
 				assert.Equal(t, tt.expectedOutput.ExpiresIn, output.ExpiresIn)
+				assert.Equal(t, tt.expectedOutput.RefreshToken, output.RefreshToken)
 
 				// As tokens are generated depending on the moment of the time, we just need to check if the token
 				// is not empty
 				assert.NotEmpty(t, output.AccessToken)
-				assert.NotEmpty(t, output.RefreshToken)
 			}
 		})
 	}

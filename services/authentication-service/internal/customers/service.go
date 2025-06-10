@@ -10,6 +10,7 @@ import (
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/jwt"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/logctx"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/password"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh"
 )
 
 const (
@@ -22,7 +23,7 @@ const (
 
 // Service defines the interface for customer authentication management service.
 //
-//go:generate mockgen -destination=./mocks/service_mock.go -package=mocks github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers Service
+//go:generate mockgen -destination=./mocks/service_mock.go -package=customers_mocks github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers Service
 type Service interface {
 	RegisterCustomer(ctx context.Context, input RegisterCustomerInput) (RegisterCustomerOutput, error)
 	LoginCustomer(ctx context.Context, input LoginCustomerInput) (LoginCustomerOutput, error)
@@ -58,15 +59,17 @@ type LoginCustomerOutput struct {
 }
 
 type service struct {
-	logger *zap.Logger
-	repo   Repository
+	logger         *zap.Logger
+	repo           Repository
+	refreshService refresh.Service
 }
 
 // NewService creates a new instance of Service with the provided logger and repository dependencies.
-func NewService(logger *zap.Logger, repo Repository) Service {
+func NewService(logger *zap.Logger, repo Repository, refreshService refresh.Service) Service {
 	return &service{
-		logger: logger,
-		repo:   repo,
+		logger:         logger,
+		repo:           repo,
+		refreshService: refreshService,
 	}
 }
 
@@ -120,7 +123,7 @@ func (s *service) LoginCustomer(ctx context.Context, input LoginCustomerInput) (
 		return LoginCustomerOutput{}, ErrInvalidCredentials
 	}
 
-	token, err := jwt.GenerateTokenPair(customer.ID, jwt.Config{
+	accessToken, err := jwt.GenerateToken(customer.ID, jwt.Config{
 		Expiration: DefaultTokenExpiration,
 		Role:       DefaultTokenRole,
 	})
@@ -129,9 +132,18 @@ func (s *service) LoginCustomer(ctx context.Context, input LoginCustomerInput) (
 		return LoginCustomerOutput{}, err
 	}
 
+	refreshToken, err := s.refreshService.Generate(ctx, refresh.GenerateTokenInput{
+		UserID: customer.ID,
+		Role:   DefaultTokenRole,
+	})
+	if err != nil {
+		logctx.LoggerWithRequestInfo(ctx, s.logger).Error("failed to generate refresh token", zap.Error(err))
+		return LoginCustomerOutput{}, err
+	}
+
 	output := LoginCustomerOutput{
-		AccessToken:  token.AccessToken,
-		RefreshToken: token.RefreshToken,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken.RefreshToken,
 		TokenType:    jwt.DefaultTokenType,
 		ExpiresIn:    DefaultTokenExpiration,
 	}
