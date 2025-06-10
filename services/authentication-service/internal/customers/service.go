@@ -2,31 +2,40 @@ package customers
 
 import (
 	"context"
+	"errors"
 	"time"
+
+	"go.uber.org/zap"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/jwt"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/logctx"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/password"
-	"go.uber.org/zap"
 )
 
 const (
-	DefaultTokenExpiration = 3600 // 1 hour in seconds
-	DefaultTokenRole       = "customer"
+	// DefaultTokenExpiration defines the duration in seconds for which a JWT token remains valid
+	// after being issued during customer authentication. The default value is 3600 seconds (1 hour).
+	DefaultTokenExpiration = 3600
+	// DefaultTokenRole represents the default role assigned to a generated JWT token for customers.
+	DefaultTokenRole = "customer"
 )
 
+// Service defines the interface for customer authentication management service.
+//
 //go:generate mockgen -destination=./mocks/service_mock.go -package=mocks github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers Service
 type Service interface {
 	RegisterCustomer(ctx context.Context, input RegisterCustomerInput) (RegisterCustomerOutput, error)
 	LoginCustomer(ctx context.Context, input LoginCustomerInput) (LoginCustomerOutput, error)
 }
 
+// RegisterCustomerInput defines the input structure required for registering a new customer.
 type RegisterCustomerInput struct {
 	Email    string
 	Password string
 	Name     string
 }
 
+// RegisterCustomerOutput represents the output data returned after successfully registering a new customer.
 type RegisterCustomerOutput struct {
 	ID        string
 	Email     string
@@ -34,15 +43,18 @@ type RegisterCustomerOutput struct {
 	CreatedAt time.Time
 }
 
+// LoginCustomerInput represents the input required for the customer login process.
 type LoginCustomerInput struct {
 	Email    string
 	Password string
 }
 
+// LoginCustomerOutput represents the output returned upon successful login of a customer.
 type LoginCustomerOutput struct {
-	Token     string
-	ExpiresIn int // Number of seconds until the token expires
-	TokenType string
+	AccessToken  string
+	RefreshToken string
+	ExpiresIn    int // Number of seconds until the token expires
+	TokenType    string
 }
 
 type service struct {
@@ -50,6 +62,7 @@ type service struct {
 	repo   Repository
 }
 
+// NewService creates a new instance of Service with the provided logger and repository dependencies.
 func NewService(logger *zap.Logger, repo Repository) Service {
 	return &service{
 		logger: logger,
@@ -93,7 +106,7 @@ func (s *service) LoginCustomer(ctx context.Context, input LoginCustomerInput) (
 	logctx.LoggerWithRequestInfo(ctx, s.logger).Info("logging in", zap.String("email", input.Email))
 	customer, err := s.repo.FindByEmail(ctx, input.Email)
 	if err != nil {
-		if err == ErrCustomerNotFound {
+		if errors.Is(err, ErrCustomerNotFound) {
 			logctx.LoggerWithRequestInfo(ctx, s.logger).Warn("customer not found", zap.String("email", input.Email))
 			return LoginCustomerOutput{}, ErrInvalidCredentials
 		}
@@ -107,7 +120,7 @@ func (s *service) LoginCustomer(ctx context.Context, input LoginCustomerInput) (
 		return LoginCustomerOutput{}, ErrInvalidCredentials
 	}
 
-	token, err := jwt.GenerateToken(customer.ID, jwt.Config{
+	token, err := jwt.GenerateTokenPair(customer.ID, jwt.Config{
 		Expiration: DefaultTokenExpiration,
 		Role:       DefaultTokenRole,
 	})
@@ -117,9 +130,10 @@ func (s *service) LoginCustomer(ctx context.Context, input LoginCustomerInput) (
 	}
 
 	output := LoginCustomerOutput{
-		TokenType: jwt.DefaultTokenType,
-		Token:     token,
-		ExpiresIn: DefaultTokenExpiration,
+		AccessToken:  token.AccessToken,
+		RefreshToken: token.RefreshToken,
+		TokenType:    jwt.DefaultTokenType,
+		ExpiresIn:    DefaultTokenExpiration,
 	}
 	return output, nil
 }

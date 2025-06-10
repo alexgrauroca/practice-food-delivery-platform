@@ -8,18 +8,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers/mocks"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/password"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
+
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers/mocks"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/password"
 )
 
 var (
-	repoError = errors.New("repository error")
-	logger    = zap.NewNop()
+	errRepo = errors.New("repository error")
+	logger  = zap.NewNop()
 )
 
 func TestService_RegisterCustomer(t *testing.T) {
@@ -55,10 +56,10 @@ func TestService_RegisterCustomer(t *testing.T) {
 			},
 			mocksSetup: func(repo *mocks.MockRepository) {
 				repo.EXPECT().CreateCustomer(gomock.Any(), gomock.Any()).
-					Return(customers.Customer{}, repoError)
+					Return(customers.Customer{}, errRepo)
 			},
 			expectedOutput: customers.RegisterCustomerOutput{},
-			expectError:    repoError,
+			expectError:    errRepo,
 		},
 		{
 			name: "when the customer can be created, then it should return the created customer",
@@ -169,10 +170,10 @@ func TestService_LoginCustomer(t *testing.T) {
 			},
 			mocksSetup: func(repo *mocks.MockRepository) {
 				repo.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).
-					Return(customers.Customer{}, repoError)
+					Return(customers.Customer{}, errRepo)
 			},
 			expectedOutput: customers.LoginCustomerOutput{},
-			expectError:    repoError,
+			expectError:    errRepo,
 		},
 		{
 			name: "when there is an active customer with the same email and password, then it should return its token",
@@ -222,9 +223,10 @@ func TestService_LoginCustomer(t *testing.T) {
 				assert.Equal(t, tt.expectedOutput.TokenType, output.TokenType)
 				assert.Equal(t, tt.expectedOutput.ExpiresIn, output.ExpiresIn)
 
-				// As tokens are generated depending on the moment of the time, we just need to check if token
+				// As tokens are generated depending on the moment of the time, we just need to check if the token
 				// is not empty
-				assert.NotEmpty(t, output.Token)
+				assert.NotEmpty(t, output.AccessToken)
+				assert.NotEmpty(t, output.RefreshToken)
 			}
 		})
 	}
