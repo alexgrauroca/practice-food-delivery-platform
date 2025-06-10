@@ -23,13 +23,18 @@ const (
 	TokenStatusActive TokenStatus = "active"
 	// TokenStatusRevoked represents a token that has been invalidated and can no longer be used.
 	TokenStatusRevoked TokenStatus = "revoked"
+
+	// FieldToken represents the database field name for storing token values.
+	FieldToken = "token"
+	// FieldUserID defines the database field name for storing user identifier values.
+	FieldUserID = "user_id"
 )
 
 // Repository defines a contract for storing and managing refresh tokens in a persistence layer.
 //
 //go:generate mockgen -destination=./mocks/repository_mock.go -package=refresh_mocks github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh Repository
 type Repository interface {
-	Store(ctx context.Context, params CreateTokenParams) (Token, error)
+	Create(ctx context.Context, params CreateTokenParams) (Token, error)
 }
 
 // Token represents a token used to refresh authentication credentials for a specific user and role.
@@ -67,7 +72,7 @@ func NewRepository(logger *zap.Logger, db *mongo.Database, clk clock.Clock) Repo
 	}
 }
 
-func (r *repository) Store(ctx context.Context, params CreateTokenParams) (Token, error) {
+func (r *repository) Create(ctx context.Context, params CreateTokenParams) (Token, error) {
 	now := r.clock.Now()
 	token := Token{
 		UserID:    params.UserID,

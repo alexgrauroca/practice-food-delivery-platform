@@ -34,7 +34,7 @@ func TestService_Generate(t *testing.T) {
 				Role:   "fake-role",
 			},
 			mocksSetup: func(repo *refreshmocks.MockRepository) {
-				repo.EXPECT().Store(gomock.Any(), gomock.Any()).
+				repo.EXPECT().Create(gomock.Any(), gomock.Any()).
 					Return(refresh.Token{}, errRepo)
 			},
 			expectedOutput: refresh.GenerateTokenOutput{},
@@ -47,7 +47,7 @@ func TestService_Generate(t *testing.T) {
 				Role:   "fake-role",
 			},
 			mocksSetup: func(repo *refreshmocks.MockRepository) {
-				repo.EXPECT().Store(gomock.Any(), gomock.Any()).
+				repo.EXPECT().Create(gomock.Any(), gomock.Any()).
 					DoAndReturn(func(_ context.Context, params refresh.CreateTokenParams) (refresh.Token, error) {
 						require.Equal(t, "fake-user-id", params.UserID)
 						require.Equal(t, "fake-role", params.Role)
