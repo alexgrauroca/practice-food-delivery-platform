@@ -185,11 +185,22 @@ func TestService_LoginCustomer(t *testing.T) {
 				Password: "ValidPassword123",
 			},
 			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService) {
-				repo.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).
-					Return(customers.Customer{}, nil)
+				hashedPassword, err := password.Hash("ValidPassword123")
+				require.NoError(t, err)
+
+				repo.EXPECT().FindByEmail(gomock.Any(), "test@example.com").
+					Return(customers.Customer{
+						ID:        "fake-id",
+						Email:     "test@example.com",
+						Name:      "John Doe",
+						Password:  hashedPassword, // This should be a hashed password
+						CreatedAt: now,
+						UpdatedAt: now,
+						Active:    true,
+					}, nil)
 
 				refreshService.EXPECT().Generate(gomock.Any(), gomock.Any()).
-					Return("", errToken)
+					Return(refresh.GenerateTokenOutput{}, errToken)
 			},
 			expectedOutput: customers.LoginCustomerOutput{},
 			expectError:    errToken,
@@ -218,7 +229,7 @@ func TestService_LoginCustomer(t *testing.T) {
 				refreshService.EXPECT().Generate(gomock.Any(), refresh.GenerateTokenInput{
 					UserID: "fake-id",
 					Role:   "customer",
-				}).Return("fake-refresh-token", nil)
+				}).Return(refresh.GenerateTokenOutput{RefreshToken: "fake-refresh-token"}, nil)
 			},
 			expectedOutput: customers.LoginCustomerOutput{
 				ExpiresIn:    3600, // 1 hour
