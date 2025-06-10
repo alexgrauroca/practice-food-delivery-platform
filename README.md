@@ -4,6 +4,33 @@ This is a practical exercise to improve my own skills with Kubernetes, Docker, G
 
 This project simulates a simplified food delivery platform and is used as a training ground for infrastructure design, clean architecture, service boundaries, and automation.
 
+- [practice-food-delivery-platform](#practice-food-delivery-platform)
+  - [Linter](#linter)
+  - [Methodology](#methodology)
+  - [Actors](#actors)
+  - [Services (Go microservices, each exposing a REST API)](#services-go-microservices-each-exposing-a-rest-api)
+    - [1. Authentication Service](#1-authentication-service)
+    - [2. Customer Service](#2-customer-service)
+    - [3. Restaurant Service](#3-restaurant-service)
+    - [4. Order Service](#4-order-service)
+    - [5. Delivery Service](#5-delivery-service)
+    - [6. API Gateway](#6-api-gateway)
+  - [Data Storage](#data-storage)
+  - [Communication](#communication)
+  - [Example Workflow](#example-workflow)
+  - [JWT \& Security](#jwt--security)
+  - [Concurrency \& Performance](#concurrency--performance)
+  - [CI/CD Pipeline (GitHub Actions)](#cicd-pipeline-github-actions)
+  - [Planned Improvements](#planned-improvements)
+
+## Linter
+
+It is recommended to use golangci-lint in the project. To install it globaly use the following command:
+
+```bash
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+```
+
 ## Methodology
 
 This project follows a Lean Agile development style with quick, incremental iterations to minimize risk and continuously improve the solution.
