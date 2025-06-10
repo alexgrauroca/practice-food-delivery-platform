@@ -1,3 +1,5 @@
+//go:build !integration
+
 package refresh_test
 
 import (
