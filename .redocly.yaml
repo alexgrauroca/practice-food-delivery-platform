@@ -2,8 +2,14 @@ organization: AlexGrauRoca
 extends:
   - recommended
 rules:
-  no-unused-components: error
-  no-server-example.com: off
+  no-unused-components: error      # Flags unused schema components
+  no-server-example.com: off       # Allows example.com in server URLs
+  operation-4xx-response: error    # Requires 4xx error responses
+  no-empty-servers: error          # Prevents empty server lists
+  operation-description: error     # Requires operation descriptions
 theme:
   openapi:
-    sortPropsAlphabetically: true
+    sortPropsAlphabetically: true   # Sorts schema properties alphabetically
+    expandResponses: "200,201"      # Auto-expands 200 and 201 responses
+    noAutoAuth: true                # Disables automatic auth section
+    hideDownloadButton: true        # Hides the download button

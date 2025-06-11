@@ -6,3 +6,7 @@ CustomerExists:
   $ref: './CustomerExists.yaml'
 InternalError:
   $ref: './InternalError.yaml'
+InvalidRefreshToken:
+  $ref: './InvalidRefreshToken.yaml'
+TokenMismatch:
+  $ref: './TokenMismatch.yaml'

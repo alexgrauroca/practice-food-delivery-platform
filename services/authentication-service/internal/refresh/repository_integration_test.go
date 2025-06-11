@@ -152,13 +152,9 @@ func setupTestRefreshTokenCollection(t *testing.T, db *mongo.Database) *mongo.Co
 
 	coll := db.Collection(refresh.CollectionName)
 
-	// Create unique index on token, user and device.
+	// Create unique index on token.
 	indexModel := mongo.IndexModel{
-		Keys: bson.D{
-			{Key: refresh.FieldToken, Value: 1},
-			{Key: refresh.FieldUserID, Value: 1},
-			{Key: refresh.FieldDevice, Value: 1},
-		},
+		Keys:    bson.D{{Key: refresh.FieldToken, Value: 1}},
 		Options: options.Index().SetUnique(true),
 	}
 	if _, err := coll.Indexes().CreateOne(ctx, indexModel); err != nil {

@@ -8,3 +8,7 @@ LoginCustomerRequest:
   $ref: './LoginCustomerRequest.yaml'
 LoginCustomerResponse:
   $ref: './LoginCustomerResponse.yaml'
+RefreshCustomerRequest:
+  $ref: './RefreshCustomerRequest.yaml'
+RefreshCustomerResponse:
+  $ref: './RefreshCustomerResponse.yaml'
