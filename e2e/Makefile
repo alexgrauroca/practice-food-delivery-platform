@@ -3,11 +3,11 @@ run-e2e-tests: start-docker
 	@go test -v -tags=e2e ./...
 
 run-e2e-auth-tests: start-docker
-	@echo "Running end-to-end tests..."
+	@echo "Running authentication end-to-end tests..."
 	@go test -v -tags=authentication ./...
 
 run-e2e-customers-tests: start-docker
-	@echo "Running end-to-end tests..."
+	@echo "Running customers end-to-end tests..."
 	@go test -v -tags=customers ./...
 
 start-docker:
