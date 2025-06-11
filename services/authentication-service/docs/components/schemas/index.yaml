@@ -1,14 +1,17 @@
+# Request schemas
 RegisterCustomerRequest:
-  $ref: './register-customer-request.yaml'
-RegisterCustomerResponse:
-  $ref: './register-customer-response.yaml'
-ErrorResponse:
-  $ref: './error-response.yaml'
+  $ref: './requests/register-customer-request.yaml'
 LoginCustomerRequest:
-  $ref: './login-customer-request.yaml'
-LoginCustomerResponse:
-  $ref: './login-customer-response.yaml'
+  $ref: './requests/login-customer-request.yaml'
 RefreshCustomerRequest:
-  $ref: './refresh-customer-request.yaml'
+  $ref: './requests/refresh-customer-request.yaml'
+
+# Response schemas
+RegisterCustomerResponse:
+  $ref: './responses/register-customer-response.yaml'
+ErrorResponse:
+  $ref: './responses/error-response.yaml'
+LoginCustomerResponse:
+  $ref: './responses/login-customer-response.yaml'
 RefreshCustomerResponse:
-  $ref: './refresh-customer-response.yaml'
+  $ref: './responses/refresh-customer-response.yaml'

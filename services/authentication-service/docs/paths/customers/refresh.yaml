@@ -9,20 +9,20 @@ post:
     content:
       application/json:
         schema:
-          $ref: './../../components/schemas/refresh-customer-request.yaml'
+          $ref: './../../components/schemas/requests/refresh-customer-request.yaml'
   responses:
     '200':
       description: New access token generated successfully
       content:
         application/json:
           schema:
-            $ref: './../../components/schemas/refresh-customer-response.yaml'
+            $ref: './../../components/schemas/responses/refresh-customer-response.yaml'
     '401':
       description: Invalid or expired refresh token
       content:
         application/json:
           schema:
-            $ref: './../../components/schemas/error-response.yaml'
+            $ref: './../../components/schemas/responses/error-response.yaml'
           examples:
             invalidRefreshToken:
               $ref: './../../components/examples/invalid-refresh-token.yaml'
@@ -31,7 +31,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: './../../components/schemas/error-response.yaml'
+            $ref: './../../components/schemas/responses/error-response.yaml'
           examples:
             tokenMismatch:
               $ref: './../../components/examples/token-mismatch.yaml'
