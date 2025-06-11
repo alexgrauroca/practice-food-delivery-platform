@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Validate OpenAPI distribution file is synced with source files
+# Usage: ./openapi-validate-sync.sh <service-base-path>
+# Example: ./openapi-validate-sync.sh services/authentication-service
+
 set -e
 
 if [ -z "$1" ]; then
