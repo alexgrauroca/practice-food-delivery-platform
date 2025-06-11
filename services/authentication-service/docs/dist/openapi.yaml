@@ -122,6 +122,46 @@ paths:
                   $ref: '#/components/examples/InvalidCredentials'
         '500':
           $ref: '#/components/responses/InternalError'
+  /v1.0/customers/refresh:
+    post:
+      summary: Refresh access token
+      description: Generates a new access token using a valid refresh token
+      operationId: refreshCustomer
+      tags:
+        - Customers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshCustomerRequest'
+      responses:
+        '200':
+          description: New access token generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshCustomerResponse'
+        '401':
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidRefreshToken:
+                  $ref: '#/components/examples/InvalidRefreshToken'
+        '403':
+          description: Token mismatch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                tokenMismatch:
+                  $ref: '#/components/examples/TokenMismatch'
+        '500':
+          $ref: '#/components/responses/InternalError'
 components:
   securitySchemes:
     BearerAuth:
@@ -163,6 +203,18 @@ components:
       value:
         code: INVALID_CREDENTIALS
         message: invalid credentials
+        details: []
+    InvalidRefreshToken:
+      summary: Invalid Refresh Token
+      value:
+        code: INVALID_REFRESH_TOKEN
+        message: invalid or expired refresh token
+        details: []
+    TokenMismatch:
+      summary: Token Mismatch
+      value:
+        code: TOKEN_MISMATCH
+        message: token mismatch
         details: []
   schemas:
     RegisterCustomerRequest:
@@ -259,6 +311,51 @@ components:
           example: strongpassword123
           writeOnly: true
     LoginCustomerResponse:
+      type: object
+      required:
+        - access_token
+        - refresh_token
+        - expires_in
+        - token_type
+      properties:
+        access_token:
+          type: string
+          description: JWT access token for API authentication
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+          minLength: 1
+        refresh_token:
+          type: string
+          description: Token used to obtain a new access token when it expires
+          example: dGhpc2lzYXJlZnJlc2h0b2tlbg==
+          minLength: 1
+        expires_in:
+          type: integer
+          description: Access token expiration time in seconds
+          example: 3600
+          minimum: 1
+        token_type:
+          type: string
+          description: Access token type
+          enum:
+            - Bearer
+          example: Bearer
+    RefreshCustomerRequest:
+      type: object
+      required:
+        - access_token
+        - refresh_token
+      properties:
+        access_token:
+          type: string
+          description: The expired JWT access token
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+          minLength: 1
+        refresh_token:
+          type: string
+          description: The refresh token to use
+          example: dGhpc2lzYXJlZnJlc2h0b2tlbg==
+          minLength: 1
+    RefreshCustomerResponse:
       type: object
       required:
         - access_token

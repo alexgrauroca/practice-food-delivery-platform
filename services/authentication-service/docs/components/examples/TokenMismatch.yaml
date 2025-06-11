@@ -1,0 +1,5 @@
+summary: Token Mismatch
+value:
+  code: TOKEN_MISMATCH
+  message: token mismatch
+  details: [ ]

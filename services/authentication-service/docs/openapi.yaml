@@ -16,6 +16,8 @@ paths:
     $ref: './paths/customers/register.yaml'
   /v1.0/customers/login:
     $ref: './paths/customers/login.yaml'
+  /v1.0/customers/refresh:
+    $ref: './paths/customers/refresh.yaml'
 
 components:
   securitySchemes:

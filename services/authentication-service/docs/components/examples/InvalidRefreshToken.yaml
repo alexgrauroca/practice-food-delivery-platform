@@ -1,0 +1,5 @@
+summary: Invalid Refresh Token
+value:
+  code: INVALID_REFRESH_TOKEN
+  message: invalid or expired refresh token
+  details: [ ]
