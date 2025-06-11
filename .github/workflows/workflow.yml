@@ -53,9 +53,12 @@ jobs:
 
   validate-openapi-docs:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/authentication-service
     steps:
       - uses: actions/checkout@v4
       - name: Validate OpenAPI sync
-        run: ./scripts/openapi-validate-sync.sh services/authentication-service
+        run: make openapi-validate-sync
       - name: Validate OpenAPI documentation
-        run: ./scripts/openapi-validate-docs.sh services/authentication-service
+        run: make openapi-validate-docs

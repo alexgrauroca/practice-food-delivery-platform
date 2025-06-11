@@ -14,9 +14,11 @@ if [ -z "$1" ]; then
 fi
 
 SERVICE_PATH="$1"
-DIST_PATH="$SERVICE_PATH/dist"
 
 echo "Validating OpenAPI documentation for $SERVICE_PATH..."
-docker run --rm -v "$(pwd)":/spec redocly/cli lint "/spec/$DIST_PATH/openapi.yaml"
+docker run --rm \
+    -v "$(pwd)":/spec \
+    redocly/cli lint \
+    "/spec/$SERVICE_PATH/docs/dist/openapi.yaml"
 
 echo "OpenAPI documentation is valid"

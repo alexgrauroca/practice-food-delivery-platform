@@ -1,0 +1,10 @@
+RegisterCustomerRequest:
+  $ref: './RegisterCustomerRequest.yaml'
+RegisterCustomerResponse:
+  $ref: './RegisterCustomerResponse.yaml'
+ErrorResponse:
+  $ref: './ErrorResponse.yaml'
+LoginCustomerRequest:
+  $ref: './LoginCustomerRequest.yaml'
+LoginCustomerResponse:
+  $ref: './LoginCustomerResponse.yaml'

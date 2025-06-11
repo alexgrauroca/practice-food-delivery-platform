@@ -1,9 +1,8 @@
-InternalError:
-  description: Internal server error
-  content:
-    application/json:
-      schema:
-        $ref: '#/components/schemas/ErrorResponse'
-      examples:
-        internalError:
-          $ref: '#/components/examples/InternalError'
+description: Internal server error
+content:
+  application/json:
+    schema:
+      $ref: './../schemas/ErrorResponse.yaml'
+    examples:
+      internalError:
+        $ref: './../examples/InternalError.yaml'

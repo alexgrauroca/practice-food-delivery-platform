@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# Validate that the distribution file is in sync with source files by comparing hashes
-# Usage: ./openapi-validate-sync.sh <service-base-path>
-# Example: ./openapi-validate-sync.sh services/authentication-service
-
 set -e
 
 if [ -z "$1" ]; then
@@ -13,7 +9,6 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-# Verify sha256sum is available
 if ! command -v sha256sum &> /dev/null; then
     echo "Error: sha256sum command not found"
     echo "Please install coreutils or equivalent package"
@@ -21,9 +16,7 @@ if ! command -v sha256sum &> /dev/null; then
 fi
 
 SERVICE_PATH="$1"
-DOCS_PATH="$SERVICE_PATH/docs"
-DIST_PATH="$SERVICE_PATH/docs/dist"
-DIST_FILE="$DIST_PATH/openapi.yaml"
+DIST_FILE="$SERVICE_PATH/docs/dist/openapi.yaml"
 
 if [ ! -f "$DIST_FILE" ]; then
     echo "Error: Distribution file not found at $DIST_FILE"
@@ -31,12 +24,11 @@ if [ ! -f "$DIST_FILE" ]; then
     exit 1
 fi
 
-# Get hash of current distribution file
 DIST_HASH=$(sha256sum "$DIST_FILE" | cut -d' ' -f1)
-
-# Calculate expected hash by bundling source files and calculating hash directly from stdout
-EXPECTED_HASH=$(docker run --rm -v "$(pwd)":/spec redocly/cli bundle \
-    "/spec/$DOCS_PATH/openapi.yaml" --format=yaml 2>/dev/null | sha256sum | cut -d' ' -f1)
+EXPECTED_HASH=$(docker run --rm \
+    -v "$(pwd)":/spec \
+    redocly/cli bundle \
+    "/spec/$SERVICE_PATH/docs/openapi.yaml" 2>/dev/null | sha256sum | cut -d' ' -f1)
 
 if [ "$DIST_HASH" != "$EXPECTED_HASH" ]; then
     echo "Error: OpenAPI distribution file is out of sync with source files"
