@@ -50,3 +50,12 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
       - name: Run E2E Tests
         run: make run-e2e-tests
+
+  validate-openapi-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate OpenAPI sync
+        run: ./scripts/openapi-validate-sync.sh services/authentication-service
+      - name: Validate OpenAPI documentation
+        run: ./scripts/openapi-validate-docs.sh services/authentication-service

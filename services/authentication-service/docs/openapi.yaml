@@ -1,0 +1,266 @@
+openapi: 3.0.3
+info:
+  title: Authentication Service API
+  version: 1.0.0
+  description: |
+    API documentation for the authentication service.
+    
+    This service provides endpoints for customer and staff registration and authentication.
+  contact:
+    name: Àlex Grau Roca
+    url: https://github.com/alexgrauroca
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:80
+    description: Local server
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Customers
+    description: Operations related to customer registration and authentication
+
+paths:
+  /v1.0/customers/register:
+    post:
+      summary: Register a new customer
+      description: Creates a new customer account with the provided information
+      operationId: registerCustomer
+      tags:
+        - Customers
+      security: []  # No authentication required for registration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterCustomerRequest'
+      responses:
+        '201':
+          description: Customer registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterCustomerResponse'
+        '400':
+          description: Invalid input or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidRequest:
+                  $ref: '#/components/examples/InvalidRequest'
+                validationError:
+                  summary: Validation error
+                  value:
+                    code: VALIDATION_ERROR
+                    message: validation failed
+                    details:
+                      - email is required
+                      - password is required
+                      - name is required
+                      - email must be a valid email address
+                      - password must be a valid password with at least 8 characters long
+        '409':
+          description: Customer already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                customerExists:
+                  $ref: '#/components/examples/CustomerExists'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /v1.0/customers/login:
+    post:
+      summary: Login as a customer
+      description: Authenticates a customer and returns access and refresh tokens
+      operationId: loginCustomer
+      tags:
+        - Customers
+      security: []  # No authentication required for login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginCustomerRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginCustomerResponse'
+        '400':
+          description: Invalid input or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidRequest:
+                  $ref: '#/components/examples/InvalidRequest'
+                validationError:
+                  summary: Validation error
+                  value:
+                    code: VALIDATION_ERROR
+                    message: validation failed
+                    details:
+                      - email is required
+                      - password is required
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidCredentials:
+                  $ref: '#/components/examples/InvalidCredentials'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    $ref: './components/security/BearerAuth.yaml'
+
+  responses:
+    $ref: './components/responses/InternalError.yaml'
+
+  examples:
+    $ref: './components/examples/index.yaml'
+
+  schemas:
+    RegisterCustomerRequest:
+      type: object
+      required:
+        - email
+        - password
+        - name
+      properties:
+        email:
+          type: string
+          format: email
+          pattern: '^[\w\.-]+@[\w\.-]+\.\w{2,}$'
+          description: Customer's email address
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          description: Password must be at least 8 characters long
+          example: strongpassword123
+          writeOnly: true
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Customer's full name
+          example: John Doe
+
+    RegisterCustomerResponse:
+      type: object
+      required:
+        - id
+        - email
+        - name
+        - created_at
+      properties:
+        id:
+          type: string
+          pattern: '^[a-zA-Z0-9\-]+$'
+          description: Unique customer identifier
+          example: cust-123abc
+        email:
+          type: string
+          format: email
+          description: Customer's email address
+          example: user@example.com
+        name:
+          type: string
+          description: Customer's full name
+          example: John Doe
+        created_at:
+          type: string
+          format: date-time
+          description: Account creation timestamp
+          example: 2025-01-01T00:00:00Z
+
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Error code identifier
+          example: VALIDATION_ERROR
+        message:
+          type: string
+          description: Human-readable error message
+          example: validation failed
+        details:
+          type: array
+          description: Additional error details
+          items:
+            type: string
+          example:
+            - email is required
+            - password is required
+
+    LoginCustomerRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: Customer's email address
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          description: Customer's password
+          example: strongpassword123
+          writeOnly: true
+
+    LoginCustomerResponse:
+      type: object
+      required:
+        - access_token
+        - refresh_token
+        - expires_in
+        - token_type
+      properties:
+        access_token:
+          type: string
+          description: JWT access token for API authentication
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+          minLength: 1
+        refresh_token:
+          type: string
+          description: Token used to obtain a new access token when it expires
+          example: dGhpc2lzYXJlZnJlc2h0b2tlbg==
+          minLength: 1
+        expires_in:
+          type: integer
+          description: Access token expiration time in seconds
+          example: 3600
+          minimum: 1
+        token_type:
+          type: string
+          description: Access token type
+          enum: [Bearer]
+          example: Bearer

@@ -1,0 +1,9 @@
+InternalError:
+  description: Internal server error
+  content:
+    application/json:
+      schema:
+        $ref: '#/components/schemas/ErrorResponse'
+      examples:
+        internalError:
+          $ref: '#/components/examples/InternalError'
