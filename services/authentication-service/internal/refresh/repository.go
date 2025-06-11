@@ -28,6 +28,8 @@ const (
 	FieldToken = "token"
 	// FieldUserID defines the database field name for storing user identifier values.
 	FieldUserID = "user_id"
+	// FieldDevice specifies the database field name for storing device information.
+	FieldDevice = "device_info"
 )
 
 // Repository defines a contract for storing and managing refresh tokens in a persistence layer.
@@ -37,16 +39,26 @@ type Repository interface {
 	Create(ctx context.Context, params CreateTokenParams) (Token, error)
 }
 
+// DeviceInfo represents information about a device.
+type DeviceInfo struct {
+	DeviceID    string    `bson:"device_id"`
+	UserAgent   string    `bson:"user_agent"`
+	IP          string    `bson:"ip"`
+	FirstUsedAt time.Time `bson:"first_used_at"`
+	LastUsedAt  time.Time `bson:"last_used_at"`
+}
+
 // Token represents a token used to refresh authentication credentials for a specific user and role.
 type Token struct {
-	ID        string      `bson:"_id,omitempty"`
-	UserID    string      `bson:"user_id"`
-	Role      string      `bson:"role"`
-	Token     string      `bson:"token"`
-	Status    TokenStatus `bson:"status"`
-	ExpiresAt time.Time   `bson:"expires_at"`
-	CreatedAt time.Time   `bson:"created_at"`
-	UpdatedAt time.Time   `bson:"updated_at"`
+	ID         string      `bson:"_id,omitempty"`
+	UserID     string      `bson:"user_id"`
+	Role       string      `bson:"role"`
+	Token      string      `bson:"token"`
+	Status     TokenStatus `bson:"status"`
+	DeviceInfo DeviceInfo  `bson:"device_info"`
+	ExpiresAt  time.Time   `bson:"expires_at"`
+	CreatedAt  time.Time   `bson:"created_at"`
+	UpdatedAt  time.Time   `bson:"updated_at"`
 }
 
 // CreateTokenParams defines the parameters required to create a new token for a user.
@@ -54,6 +66,7 @@ type CreateTokenParams struct {
 	UserID    string
 	Role      string
 	Token     string
+	Device    DeviceInfo
 	ExpiresAt time.Time
 }
 
@@ -75,14 +88,17 @@ func NewRepository(logger *zap.Logger, db *mongo.Database, clk clock.Clock) Repo
 func (r *repository) Create(ctx context.Context, params CreateTokenParams) (Token, error) {
 	now := r.clock.Now()
 	token := Token{
-		UserID:    params.UserID,
-		Role:      params.Role,
-		Token:     params.Token,
-		ExpiresAt: params.ExpiresAt,
-		CreatedAt: now,
-		UpdatedAt: now,
-		Status:    TokenStatusActive,
+		UserID:     params.UserID,
+		Role:       params.Role,
+		Token:      params.Token,
+		Status:     TokenStatusActive,
+		DeviceInfo: params.Device,
+		ExpiresAt:  params.ExpiresAt,
+		CreatedAt:  now,
+		UpdatedAt:  now,
 	}
+	token.DeviceInfo.FirstUsedAt = now
+	token.DeviceInfo.LastUsedAt = now
 
 	res, err := r.collection.InsertOne(ctx, token)
 	if err != nil {
