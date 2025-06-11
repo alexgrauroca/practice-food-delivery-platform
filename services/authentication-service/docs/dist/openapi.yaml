@@ -34,23 +34,23 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/register-customer-request'
+              $ref: '#/components/schemas/RegisterCustomerRequest'
       responses:
         '201':
           description: Customer registered successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/register-customer-response'
+                $ref: '#/components/schemas/RegisterCustomerResponse'
         '400':
           description: Invalid input or validation error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/error-response'
+                $ref: '#/components/schemas/ErrorResponse'
               examples:
                 invalidRequest:
-                  $ref: '#/components/examples/invalid-request'
+                  $ref: '#/components/examples/InvalidRequest'
                 validationError:
                   summary: Validation error
                   value:
@@ -67,12 +67,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/error-response'
+                $ref: '#/components/schemas/ErrorResponse'
               examples:
                 customerExists:
-                  $ref: '#/components/examples/customer-exists'
+                  $ref: '#/components/examples/CustomerExists'
         '500':
-          $ref: '#/components/responses/internal-error'
+          $ref: '#/components/responses/InternalError'
   /v1.0/customers/login:
     post:
       summary: Login as a customer
@@ -86,23 +86,23 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/login-customer-request'
+              $ref: '#/components/schemas/LoginCustomerRequest'
       responses:
         '200':
           description: Login successful
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/login-customer-response'
+                $ref: '#/components/schemas/LogincCustomerResponse'
         '400':
           description: Invalid input or validation error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/error-response'
+                $ref: '#/components/schemas/ErrorResponse'
               examples:
                 invalidRequest:
-                  $ref: '#/components/examples/invalid-request'
+                  $ref: '#/components/examples/InvalidRequest'
                 validationError:
                   summary: Validation error
                   value:
@@ -116,12 +116,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/error-response'
+                $ref: '#/components/schemas/ErrorResponse'
               examples:
                 invalidCredentials:
-                  $ref: '#/components/examples/invalid-credentials'
+                  $ref: '#/components/examples/InvalidCredentials'
         '500':
-          $ref: '#/components/responses/internal-error'
+          $ref: '#/components/responses/InternalError'
   /v1.0/customers/refresh:
     post:
       summary: Refresh access token
@@ -134,34 +134,34 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/refresh-customer-request'
+              $ref: '#/components/schemas/RefreshCustomerRequest'
       responses:
         '200':
           description: New access token generated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/refresh-customer-response'
+                $ref: '#/components/schemas/RefreshCustomerResponse'
         '401':
           description: Invalid or expired refresh token
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/error-response'
+                $ref: '#/components/schemas/ErrorResponse'
               examples:
                 invalidRefreshToken:
-                  $ref: '#/components/examples/invalid-refresh-token'
+                  $ref: '#/components/examples/InvalidRefreshToken'
         '403':
           description: Token mismatch
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/error-response'
+                $ref: '#/components/schemas/ErrorResponse'
               examples:
                 tokenMismatch:
-                  $ref: '#/components/examples/token-mismatch'
+                  $ref: '#/components/examples/TokenMismatch'
         '500':
-          $ref: '#/components/responses/internal-error'
+          $ref: '#/components/responses/InternalError'
 components:
   securitySchemes:
     BearerAuth:
@@ -170,56 +170,44 @@ components:
       bearerFormat: JWT
       description: JWT token obtained from the login endpoint
   examples:
-    invalid-request:
+    InvalidRequest:
       summary: Invalid JSON
       value:
         code: INVALID_REQUEST
         message: invalid request
         details: []
-    customer-exists:
+    CustomerExists:
       summary: Customer already exists
       value:
         code: CUSTOMER_ALREADY_EXISTS
         message: customer already exists
         details: []
-    internal-error:
+    InternalError:
       summary: Unexpected error
       value:
         code: INTERNAL_ERROR
         message: An unexpected error occurred
         details: []
-    invalid-credentials:
+    InvalidCredentials:
       summary: Invalid credentials
       value:
         code: INVALID_CREDENTIALS
         message: invalid credentials
         details: []
-    invalid-refresh-token:
+    InvalidRefreshToken:
       summary: Invalid Refresh Token
       value:
         code: INVALID_REFRESH_TOKEN
         message: invalid or expired refresh token
         details: []
-    token-mismatch:
+    TokenMismatch:
       summary: Token Mismatch
       value:
         code: TOKEN_MISMATCH
         message: token mismatch
         details: []
-    InvalidRequest:
-      $ref: '#/components/examples/invalid-request'
-    InvalidCredentials:
-      $ref: '#/components/examples/invalid-credentials'
-    CustomerExists:
-      $ref: '#/components/examples/customer-exists'
-    InternalError:
-      $ref: '#/components/examples/internal-error'
-    InvalidRefreshToken:
-      $ref: '#/components/examples/invalid-refresh-token'
-    TokenMismatch:
-      $ref: '#/components/examples/token-mismatch'
   schemas:
-    register-customer-request:
+    RegisterCustomerRequest:
       type: object
       required:
         - email
@@ -245,7 +233,7 @@ components:
           maxLength: 100
           description: Customer's full name
           example: John Doe
-    register-customer-response:
+    RegisterCustomerResponse:
       type: object
       required:
         - id
@@ -272,7 +260,7 @@ components:
           format: date-time
           description: Account creation timestamp
           example: '2025-01-01T00:00:00Z'
-    error-response:
+    ErrorResponse:
       type: object
       required:
         - code
@@ -294,7 +282,7 @@ components:
           example:
             - email is required
             - password is required
-    login-customer-request:
+    LoginCustomerRequest:
       type: object
       required:
         - email
@@ -312,7 +300,7 @@ components:
           description: Customer's password
           example: strongpassword123
           writeOnly: true
-    login-customer-response:
+    LogincCustomerResponse:
       type: object
       required:
         - access_token
@@ -341,7 +329,7 @@ components:
           enum:
             - Bearer
           example: Bearer
-    refresh-customer-request:
+    RefreshCustomerRequest:
       type: object
       required:
         - access_token
@@ -357,7 +345,7 @@ components:
           description: The refresh token to use
           example: dGhpc2lzYXJlZnJlc2h0b2tlbg==
           minLength: 1
-    refresh-customer-response:
+    RefreshCustomerResponse:
       type: object
       required:
         - access_token
@@ -386,29 +374,15 @@ components:
           enum:
             - Bearer
           example: Bearer
-    RegisterCustomerRequest:
-      $ref: '#/components/schemas/register-customer-request'
-    LoginCustomerRequest:
-      $ref: '#/components/schemas/login-customer-request'
-    RefreshCustomerRequest:
-      $ref: '#/components/schemas/refresh-customer-request'
-    RegisterCustomerResponse:
-      $ref: '#/components/schemas/register-customer-response'
-    ErrorResponse:
-      $ref: '#/components/schemas/error-response'
     LoginCustomerResponse:
-      $ref: '#/components/schemas/login-customer-response'
-    RefreshCustomerResponse:
-      $ref: '#/components/schemas/refresh-customer-response'
+      $ref: '#/components/schemas/LogincCustomerResponse'
   responses:
-    internal-error:
+    InternalError:
       description: Internal server error
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/error-response'
+            $ref: '#/components/schemas/ErrorResponse'
           examples:
             internalError:
-              $ref: '#/components/examples/internal-error'
-    InternalError:
-      $ref: '#/components/responses/internal-error'
+              $ref: '#/components/examples/InternalError'
