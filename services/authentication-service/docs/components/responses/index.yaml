@@ -1,2 +1,2 @@
 InternalError:
-  $ref: './internal-error.yaml'
+  $ref: './InternalError.yaml'

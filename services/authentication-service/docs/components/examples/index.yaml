@@ -1,12 +1,12 @@
 InvalidRequest:
-  $ref: './invalid-request.yaml'
+  $ref: './InvalidRequest.yaml'
 InvalidCredentials:
-  $ref: './invalid-credentials.yaml'
+  $ref: './InvalidCredentials.yaml'
 CustomerExists:
-  $ref: './customer-exists.yaml'
+  $ref: './CustomerExists.yaml'
 InternalError:
-  $ref: './internal-error.yaml'
+  $ref: './InternalError.yaml'
 InvalidRefreshToken:
-  $ref: './invalid-refresh-token.yaml'
+  $ref: './InvalidRefreshToken.yaml'
 TokenMismatch:
-  $ref: './token-mismatch.yaml'
+  $ref: './TokenMismatch.yaml'

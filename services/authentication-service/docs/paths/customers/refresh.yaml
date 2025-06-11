@@ -9,31 +9,31 @@ post:
     content:
       application/json:
         schema:
-          $ref: './../../components/schemas/requests/refresh-customer-request.yaml'
+          $ref: './../../components/schemas/requests/RefreshCustomerRequest.yaml'
   responses:
     '200':
       description: New access token generated successfully
       content:
         application/json:
           schema:
-            $ref: './../../components/schemas/responses/refresh-customer-response.yaml'
+            $ref: './../../components/schemas/responses/RefreshCustomerResponse.yaml'
     '401':
       description: Invalid or expired refresh token
       content:
         application/json:
           schema:
-            $ref: './../../components/schemas/responses/error-response.yaml'
+            $ref: './../../components/schemas/responses/ErrorResponse.yaml'
           examples:
             invalidRefreshToken:
-              $ref: './../../components/examples/invalid-refresh-token.yaml'
+              $ref: './../../components/examples/InvalidRefreshToken.yaml'
     '403':
       description: Token mismatch
       content:
         application/json:
           schema:
-            $ref: './../../components/schemas/responses/error-response.yaml'
+            $ref: './../../components/schemas/responses/ErrorResponse.yaml'
           examples:
             tokenMismatch:
-              $ref: './../../components/examples/token-mismatch.yaml'
+              $ref: './../../components/examples/TokenMismatch.yaml'
     '500':
-      $ref: './../../components/responses/internal-error.yaml'
+      $ref: './../../components/responses/InternalError.yaml'

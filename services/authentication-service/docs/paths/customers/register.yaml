@@ -10,23 +10,23 @@ post:
     content:
       application/json:
         schema:
-          $ref: './../../components/schemas/requests/register-customer-request.yaml'
+          $ref: './../../components/schemas/requests/RegisterCustomerRequest.yaml'
   responses:
     '201':
       description: Customer registered successfully
       content:
         application/json:
           schema:
-            $ref: './../../components/schemas/responses/register-customer-response.yaml'
+            $ref: './../../components/schemas/responses/RegisterCustomerResponse.yaml'
     '400':
       description: Invalid input or validation error
       content:
         application/json:
           schema:
-            $ref: './../../components/schemas/responses/error-response.yaml'
+            $ref: './../../components/schemas/responses/ErrorResponse.yaml'
           examples:
             invalidRequest:
-              $ref: './../../components/examples/invalid-request.yaml'
+              $ref: './../../components/examples/InvalidRequest.yaml'
             validationError:
               summary: Validation error
               value:
@@ -43,9 +43,9 @@ post:
       content:
         application/json:
           schema:
-            $ref: './../../components/schemas/responses/error-response.yaml'
+            $ref: './../../components/schemas/responses/ErrorResponse.yaml'
           examples:
             customerExists:
-              $ref: './../../components/examples/customer-exists.yaml'
+              $ref: './../../components/examples/CustomerExists.yaml'
     '500':
-      $ref: './../../components/responses/internal-error.yaml'
+      $ref: './../../components/responses/InternalError.yaml'
