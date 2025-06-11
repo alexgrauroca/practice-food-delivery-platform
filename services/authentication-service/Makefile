@@ -1,6 +1,6 @@
 run-unit-tests: generate-mocks
 	@echo "Running unit tests for authentication service..."
-	@go test -v ./...
+	@go test -v -tags=unit ./...
 
 generate-mocks: install-mockgen
 	@echo "Generating mocks for authentication service..."

@@ -1,3 +1,5 @@
+//go:build e2e || authentication || customers
+
 package customers
 
 import (
