@@ -1,14 +1,14 @@
 RegisterCustomerRequest:
-  $ref: './RegisterCustomerRequest.yaml'
+  $ref: './register-customer-request.yaml'
 RegisterCustomerResponse:
-  $ref: './RegisterCustomerResponse.yaml'
+  $ref: './register-customer-response.yaml'
 ErrorResponse:
-  $ref: './ErrorResponse.yaml'
+  $ref: './error-response.yaml'
 LoginCustomerRequest:
-  $ref: './LoginCustomerRequest.yaml'
+  $ref: './login-customer-request.yaml'
 LoginCustomerResponse:
-  $ref: './LoginCustomerResponse.yaml'
+  $ref: './login-customer-response.yaml'
 RefreshCustomerRequest:
-  $ref: './RefreshCustomerRequest.yaml'
+  $ref: './refresh-customer-request.yaml'
 RefreshCustomerResponse:
-  $ref: './RefreshCustomerResponse.yaml'
+  $ref: './refresh-customer-response.yaml'
