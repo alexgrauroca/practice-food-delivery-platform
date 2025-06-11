@@ -22,9 +22,9 @@ paths:
 components:
   securitySchemes:
     $ref: './components/security/index.yaml'
-  responses:
-    $ref: './components/responses/index.yaml'
   examples:
     $ref: './components/examples/index.yaml'
   schemas:
     $ref: './components/schemas/index.yaml'
+  responses:
+    $ref: './components/responses/index.yaml'

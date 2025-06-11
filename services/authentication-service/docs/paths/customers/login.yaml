@@ -10,20 +10,20 @@ post:
     content:
       application/json:
         schema:
-          $ref: './../../components/schemas/LoginCustomerRequest.yaml'
+          $ref: './../../components/schemas/requests/LoginCustomerRequest.yaml'
   responses:
     '200':
       description: Login successful
       content:
         application/json:
           schema:
-            $ref: './../../components/schemas/LoginCustomerResponse.yaml'
+            $ref: './../../components/schemas/responses/LogincCustomerResponse.yaml'
     '400':
       description: Invalid input or validation error
       content:
         application/json:
           schema:
-            $ref: './../../components/schemas/ErrorResponse.yaml'
+            $ref: './../../components/schemas/responses/ErrorResponse.yaml'
           examples:
             invalidRequest:
               $ref: './../../components/examples/InvalidRequest.yaml'
@@ -40,7 +40,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: './../../components/schemas/ErrorResponse.yaml'
+            $ref: './../../components/schemas/responses/ErrorResponse.yaml'
           examples:
             invalidCredentials:
               $ref: './../../components/examples/InvalidCredentials.yaml'

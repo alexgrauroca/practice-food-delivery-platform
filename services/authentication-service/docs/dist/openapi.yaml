@@ -93,7 +93,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LoginCustomerResponse'
+                $ref: '#/components/schemas/LogincCustomerResponse'
         '400':
           description: Invalid input or validation error
           content:
@@ -169,16 +169,6 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: JWT token obtained from the login endpoint
-  responses:
-    InternalError:
-      description: Internal server error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-          examples:
-            internalError:
-              $ref: '#/components/examples/InternalError'
   examples:
     InvalidRequest:
       summary: Invalid JSON
@@ -310,7 +300,7 @@ components:
           description: Customer's password
           example: strongpassword123
           writeOnly: true
-    LoginCustomerResponse:
+    LogincCustomerResponse:
       type: object
       required:
         - access_token
@@ -384,3 +374,15 @@ components:
           enum:
             - Bearer
           example: Bearer
+    LoginCustomerResponse:
+      $ref: '#/components/schemas/LogincCustomerResponse'
+  responses:
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            internalError:
+              $ref: '#/components/examples/InternalError'

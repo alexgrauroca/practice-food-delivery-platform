@@ -10,20 +10,20 @@ post:
     content:
       application/json:
         schema:
-          $ref: './../../components/schemas/RegisterCustomerRequest.yaml'
+          $ref: './../../components/schemas/requests/RegisterCustomerRequest.yaml'
   responses:
     '201':
       description: Customer registered successfully
       content:
         application/json:
           schema:
-            $ref: './../../components/schemas/RegisterCustomerResponse.yaml'
+            $ref: './../../components/schemas/responses/RegisterCustomerResponse.yaml'
     '400':
       description: Invalid input or validation error
       content:
         application/json:
           schema:
-            $ref: './../../components/schemas/ErrorResponse.yaml'
+            $ref: './../../components/schemas/responses/ErrorResponse.yaml'
           examples:
             invalidRequest:
               $ref: './../../components/examples/InvalidRequest.yaml'
@@ -43,7 +43,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: './../../components/schemas/ErrorResponse.yaml'
+            $ref: './../../components/schemas/responses/ErrorResponse.yaml'
           examples:
             customerExists:
               $ref: './../../components/examples/CustomerExists.yaml'
