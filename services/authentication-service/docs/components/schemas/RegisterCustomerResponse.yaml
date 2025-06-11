@@ -1,0 +1,26 @@
+type: object
+required:
+  - id
+  - email
+  - name
+  - created_at
+properties:
+  id:
+    type: string
+    pattern: '^[a-zA-Z0-9\-]+$'
+    description: Unique customer identifier
+    example: cust-123abc
+  email:
+    type: string
+    format: email
+    description: Customer's email address
+    example: user@example.com
+  name:
+    type: string
+    description: Customer's full name
+    example: John Doe
+  created_at:
+    type: string
+    format: date-time
+    description: Account creation timestamp
+    example: 2025-01-01T00:00:00Z

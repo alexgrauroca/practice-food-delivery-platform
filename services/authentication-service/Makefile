@@ -16,3 +16,12 @@ run-integration-tests: start-mongodb
 start-mongodb:
 	@echo "Starting MongoDB Docker containers for integration tests..."
 	@docker compose -f ../../docker-compose.yml up -d mongodb
+
+openapi-validate-sync:
+	@cd ../.. && ./scripts/openapi-validate-sync.sh services/authentication-service
+
+openapi-validate-docs:
+	@cd ../.. && ./scripts/openapi-validate-docs.sh services/authentication-service
+
+openapi-generate:
+	@cd ../.. && ./scripts/openapi-bundle.sh services/authentication-service

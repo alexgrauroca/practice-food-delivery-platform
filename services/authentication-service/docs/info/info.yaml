@@ -1,0 +1,12 @@
+title: Authentication Service API
+version: 1.0.0
+description: |
+  API documentation for the authentication service.
+  
+  This service provides endpoints for customer and staff registration and authentication.
+contact:
+  name: Àlex Grau Roca
+  url: https://github.com/alexgrauroca
+license:
+  name: MIT
+  url: https://opensource.org/licenses/MIT

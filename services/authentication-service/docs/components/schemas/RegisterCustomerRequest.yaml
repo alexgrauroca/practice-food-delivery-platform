@@ -1,0 +1,25 @@
+type: object
+required:
+  - email
+  - password
+  - name
+properties:
+  email:
+    type: string
+    format: email
+    pattern: '^[\w\.-]+@[\w\.-]+\.\w{2,}$'
+    description: Customer's email address
+    example: user@example.com
+  password:
+    type: string
+    format: password
+    minLength: 8
+    description: Password must be at least 8 characters long
+    example: strongpassword123
+    writeOnly: true
+  name:
+    type: string
+    minLength: 1
+    maxLength: 100
+    description: Customer's full name
+    example: John Doe
