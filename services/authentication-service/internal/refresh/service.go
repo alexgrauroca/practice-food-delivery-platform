@@ -5,7 +5,10 @@ package refresh
 import (
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
+	"fmt"
 	"time"
 
 	"go.uber.org/zap"
@@ -56,11 +59,23 @@ func (s *service) Generate(ctx context.Context, input GenerateTokenInput) (Gener
 		return GenerateTokenOutput{}, err
 	}
 
+	ip := logctx.RealIPFromContext(ctx)
+	userAgent := logctx.UserAgentFromContext(ctx)
+	deviceID := generateDeviceID(userAgent, ip)
+
+	device := DeviceInfo{
+		DeviceID:    deviceID,
+		UserAgent:   userAgent,
+		IP:          ip,
+		FirstUsedAt: time.Now(),
+		LastUsedAt:  time.Now(),
+	}
 	params := CreateTokenParams{
 		UserID:    input.UserID,
 		Role:      input.Role,
 		Token:     token,
 		ExpiresAt: time.Now().Add(DefaultTokenExpiration),
+		Device:    device,
 	}
 
 	refreshToken, err := s.repo.Create(ctx, params)
@@ -81,4 +96,10 @@ func generateToken() (string, error) {
 		return "", err
 	}
 	return base64.URLEncoding.EncodeToString(b), nil
+}
+
+func generateDeviceID(userAgent, ip string) string {
+	data := fmt.Sprintf("%s|%s", userAgent, ip)
+	hash := sha256.Sum256([]byte(data))
+	return hex.EncodeToString(hash[:])
 }
