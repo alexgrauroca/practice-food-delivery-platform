@@ -27,6 +27,8 @@ const (
 	CodeInvalidCredentials = "INVALID_CREDENTIALS"
 	// CodeInvalidRefreshToken represents the error code for an invalid or expired refresh token used in authentication processes.
 	CodeInvalidRefreshToken = "INVALID_REFRESH_TOKEN"
+	// CodeTokenMismatch represents an error code indicating a mismatch between the provided token and the expected value.
+	CodeTokenMismatch = "TOKEN_MISMATCH"
 
 	// MsgValidationError represents the error message for validation failures during input validation checks.
 	MsgValidationError = "validation failed"
@@ -40,6 +42,8 @@ const (
 	MsgInternalError = "an unexpected error occurred"
 	// MsgInvalidRefreshToken represents an error message indicating an invalid or expired refresh token.
 	MsgInvalidRefreshToken = "invalid or expired refresh token"
+	// MsgTokenMismatch represents the error message for a token mismatch scenario.
+	MsgTokenMismatch = "token mismatch"
 )
 
 // RegisterCustomerRequest represents the request payload for registering a new customer.
@@ -196,11 +200,16 @@ func (h *Handler) RefreshCustomer(c *gin.Context) {
 			logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).Warn("Invalid refresh token provided")
 			c.JSON(http.StatusUnauthorized, newErrorResponse(CodeInvalidRefreshToken, MsgInvalidRefreshToken))
 			return
+		} else if errors.Is(err, ErrTokenMismatch) {
+			logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).Warn("Token mismatch")
+			c.JSON(http.StatusForbidden, newErrorResponse(CodeTokenMismatch, MsgTokenMismatch))
+			return
 		}
 
 		logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).
 			Error("Failed to refresh customer", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, newErrorResponse(CodeInternalError, MsgInternalError))
+		return
 	}
 
 	resp := RefreshCustomerResponse{

@@ -338,10 +338,10 @@ func TestHandler_RefreshCustomer(t *testing.T) {
 			jsonPayload: `{"access_token": "invalid-access-token", "refresh_token": "valid-refresh-token"}`,
 			mocksSetup: func(service *customersmocks.MockService) {
 				service.EXPECT().RefreshCustomer(gomock.Any(), gomock.Any()).
-					Return(customers.RefreshCustomerOutput{}, customers.ErrInvalidRefreshToken)
+					Return(customers.RefreshCustomerOutput{}, customers.ErrTokenMismatch)
 			},
 			wantJSON: `{
-				"code": "TOKEN_MISMATCH",,
+				"code": "TOKEN_MISMATCH",
 				"message": "token mismatch",
 				"details": []
 			}`,
@@ -365,17 +365,19 @@ func TestHandler_RefreshCustomer(t *testing.T) {
 		{
 			name:        "when the customer token is refreshed, then it should return a 200 with the new token",
 			jsonPayload: `{"access_token": "valid-access-token", "refresh_token": "valid-refresh-token"}`,
-			/*mocksSetup: func(service *customersmocks.MockService) {
-				service.EXPECT().LoginCustomer(gomock.Any(), customers.LoginCustomerInput{
-					Email:    "test@example.com",
-					Password: "ValidPassword123",
-				}).Return(customers.LoginCustomerOutput{
-					AccessToken:  "fake-token",
-					RefreshToken: "fake-refresh-token",
-					ExpiresIn:    customers.DefaultTokenExpiration,
-					TokenType:    jwt.DefaultTokenType,
+			mocksSetup: func(service *customersmocks.MockService) {
+				service.EXPECT().RefreshCustomer(gomock.Any(), customers.RefreshCustomerInput{
+					AccessToken:  "valid-access-token",
+					RefreshToken: "valid-refresh-token",
+				}).Return(customers.RefreshCustomerOutput{
+					LoginCustomerOutput: customers.LoginCustomerOutput{
+						AccessToken:  "fake-token",
+						RefreshToken: "fake-refresh-token",
+						ExpiresIn:    customers.DefaultTokenExpiration,
+						TokenType:    jwt.DefaultTokenType,
+					},
 				}, nil)
-			},*/
+			},
 			wantJSON: `{
 			  "access_token": "fake-token",
 			  "refresh_token": "fake-refresh-token",
