@@ -15,6 +15,7 @@ import (
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/clock"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/config"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/jwt"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/middleware"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh"
 )
@@ -44,7 +45,8 @@ func main() {
 
 	// Initialize features
 	refreshService := initRefreshFeature(logger, db)
-	initCustomersFeature(logger, db, router, refreshService)
+	jwtService := initJWTFeature(logger)
+	initCustomersFeature(logger, db, router, refreshService, jwtService)
 
 	logger.Info("Starting http server")
 	// Start the server
@@ -86,12 +88,19 @@ func initRefreshFeature(logger *zap.Logger, db *mongo.Database) refresh.Service 
 	return refresh.NewService(logger, repo)
 }
 
-func initCustomersFeature(logger *zap.Logger, db *mongo.Database, router *gin.Engine, refreshService refresh.Service) {
+func initJWTFeature(logger *zap.Logger) jwt.Service {
+	/// Initialize the jwt service
+	//TODO configure secret by env vars
+	return jwt.NewService(logger, []byte("your-fancy-secret"))
+}
+
+func initCustomersFeature(logger *zap.Logger, db *mongo.Database, router *gin.Engine, refreshService refresh.Service,
+	jwtService jwt.Service) {
 	// Initialize the customer's repository
 	repo := customers.NewRepository(logger, db, clock.RealClock{})
 
 	// Initialize the customer's service
-	service := customers.NewService(logger, repo, refreshService)
+	service := customers.NewService(logger, repo, refreshService, jwtService)
 
 	// Initialize the customer's handler and register routes
 	handler := customers.NewHandler(logger, service)

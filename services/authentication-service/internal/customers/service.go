@@ -72,14 +72,16 @@ type service struct {
 	logger         *zap.Logger
 	repo           Repository
 	refreshService refresh.Service
+	jwtService     jwt.Service
 }
 
 // NewService creates a new instance of Service with the provided logger and repository dependencies.
-func NewService(logger *zap.Logger, repo Repository, refreshService refresh.Service) Service {
+func NewService(logger *zap.Logger, repo Repository, refreshService refresh.Service, jwtService jwt.Service) Service {
 	return &service{
 		logger:         logger,
 		repo:           repo,
 		refreshService: refreshService,
+		jwtService:     jwtService,
 	}
 }
 
@@ -133,7 +135,7 @@ func (s *service) LoginCustomer(ctx context.Context, input LoginCustomerInput) (
 		return LoginCustomerOutput{}, ErrInvalidCredentials
 	}
 
-	accessToken, err := jwt.GenerateToken(customer.ID, jwt.Config{
+	accessToken, err := s.jwtService.GenerateToken(customer.ID, jwt.Config{
 		Expiration: DefaultTokenExpiration,
 		Role:       DefaultTokenRole,
 	})
