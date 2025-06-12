@@ -27,6 +27,7 @@ const (
 type Service interface {
 	RegisterCustomer(ctx context.Context, input RegisterCustomerInput) (RegisterCustomerOutput, error)
 	LoginCustomer(ctx context.Context, input LoginCustomerInput) (LoginCustomerOutput, error)
+	RefreshCustomer(ctx context.Context, input RefreshCustomerInput) (RefreshCustomerOutput, error)
 }
 
 // RegisterCustomerInput defines the input structure required for registering a new customer.
@@ -56,6 +57,15 @@ type LoginCustomerOutput struct {
 	RefreshToken string
 	ExpiresIn    int // Number of seconds until the token expires
 	TokenType    string
+}
+
+type RefreshCustomerInput struct {
+	RefreshToken string
+	AccessToken  string
+}
+
+type RefreshCustomerOutput struct {
+	LoginCustomerOutput
 }
 
 type service struct {
@@ -148,4 +158,9 @@ func (s *service) LoginCustomer(ctx context.Context, input LoginCustomerInput) (
 		ExpiresIn:    DefaultTokenExpiration,
 	}
 	return output, nil
+}
+
+func (s *service) RefreshCustomer(ctx context.Context, input RefreshCustomerInput) (RefreshCustomerOutput, error) {
+	//TODO implement me
+	panic("implement me")
 }

@@ -28,6 +28,8 @@ type customerHandlerTestCase struct {
 	wantStatus  int
 }
 
+var errUnexpected = errors.New("unexpected error")
+
 func TestHandler_RegisterCustomer(t *testing.T) {
 	logger := setupTestEnv()
 	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -136,11 +138,11 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 			jsonPayload: `{"email": "test@example.com", "name": "John Doe", "password": "ValidPassword123"}`,
 			mocksSetup: func(service *customersmocks.MockService) {
 				service.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
-					Return(customers.RegisterCustomerOutput{}, errors.New("unexpected error"))
+					Return(customers.RegisterCustomerOutput{}, errUnexpected)
 			},
 			wantJSON: `{
 				"code": "INTERNAL_ERROR",
-				"message": "failed to register the customer",
+				"message": "an unexpected error occurred",
 				"details": []
 			}`,
 			wantStatus: http.StatusInternalServerError,
@@ -248,11 +250,11 @@ func TestHandler_LoginCustomer(t *testing.T) {
 			jsonPayload: `{"email": "test@example.com", "password": "ValidPassword123"}`,
 			mocksSetup: func(service *customersmocks.MockService) {
 				service.EXPECT().LoginCustomer(gomock.Any(), gomock.Any()).
-					Return(customers.LoginCustomerOutput{}, errors.New("unexpected error"))
+					Return(customers.LoginCustomerOutput{}, errUnexpected)
 			},
 			wantJSON: `{
 				"code": "INTERNAL_ERROR",
-				"message": "failed to login the customer",
+				"message": "an unexpected error occurred",
 				"details": []
 			}`,
 			wantStatus: http.StatusInternalServerError,
@@ -284,6 +286,109 @@ func TestHandler_LoginCustomer(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			runCustomerHandlerTestCase(t, logger, "/v1.0/customers/login", tt)
+		})
+	}
+}
+
+func TestHandler_RefreshCustomer(t *testing.T) {
+	logger := setupTestEnv()
+
+	tests := []customerHandlerTestCase{
+		{
+			name:        "when invalid payload is provided, then it should return a 400 with invalid request error",
+			jsonPayload: `{"access_token": 1.2, "refresh_token": true}`,
+			wantJSON: `{
+				"code": "INVALID_REQUEST",
+				"message": "invalid request",
+				"details": []
+			}`,
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name:        "when empty payload is provided, then it should return a 400 with the validation error",
+			jsonPayload: `{}`,
+			wantJSON: `{
+				"code": "VALIDATION_ERROR",
+				"message": "validation failed",
+				"details": [
+					"refresh_token is required",
+					"access_token is required"
+				]
+			}`,
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name: "when invalid refresh token provided, " +
+				"then it should return a 401 with the invalid refresh token error",
+			jsonPayload: `{"access_token": "valid-access-token", "refresh_token": "invalid-refresh-token"}`,
+			mocksSetup: func(service *customersmocks.MockService) {
+				service.EXPECT().RefreshCustomer(gomock.Any(), gomock.Any()).
+					Return(customers.RefreshCustomerOutput{}, customers.ErrInvalidRefreshToken)
+			},
+			wantJSON: `{
+				"code": "INVALID_REFRESH_TOKEN",
+				"message": "invalid or expired refresh token",
+				"details": []
+			}`,
+			wantStatus: http.StatusUnauthorized,
+		},
+		{
+			name: "when there is a token mismatch between the access token and the refresh token, " +
+				"then it should return a 403 with the token mismatch error",
+			jsonPayload: `{"access_token": "invalid-access-token", "refresh_token": "valid-refresh-token"}`,
+			mocksSetup: func(service *customersmocks.MockService) {
+				service.EXPECT().RefreshCustomer(gomock.Any(), gomock.Any()).
+					Return(customers.RefreshCustomerOutput{}, customers.ErrInvalidRefreshToken)
+			},
+			wantJSON: `{
+				"code": "TOKEN_MISMATCH",,
+				"message": "token mismatch",
+				"details": []
+			}`,
+			wantStatus: http.StatusForbidden,
+		},
+		{
+			name: "when unexpected error when refreshing the customer token, " +
+				"then it should return a 500 with the internal error",
+			jsonPayload: `{"access_token": "valid-access-token", "refresh_token": "valid-refresh-token"}`,
+			mocksSetup: func(service *customersmocks.MockService) {
+				service.EXPECT().RefreshCustomer(gomock.Any(), gomock.Any()).
+					Return(customers.RefreshCustomerOutput{}, errUnexpected)
+			},
+			wantJSON: `{
+				"code": "INTERNAL_ERROR",
+				"message": "an unexpected error occurred",
+				"details": []
+			}`,
+			wantStatus: http.StatusInternalServerError,
+		},
+		{
+			name:        "when the customer token is refreshed, then it should return a 200 with the new token",
+			jsonPayload: `{"access_token": "valid-access-token", "refresh_token": "valid-refresh-token"}`,
+			/*mocksSetup: func(service *customersmocks.MockService) {
+				service.EXPECT().LoginCustomer(gomock.Any(), customers.LoginCustomerInput{
+					Email:    "test@example.com",
+					Password: "ValidPassword123",
+				}).Return(customers.LoginCustomerOutput{
+					AccessToken:  "fake-token",
+					RefreshToken: "fake-refresh-token",
+					ExpiresIn:    customers.DefaultTokenExpiration,
+					TokenType:    jwt.DefaultTokenType,
+				}, nil)
+			},*/
+			wantJSON: `{
+			  "access_token": "fake-token",
+			  "refresh_token": "fake-refresh-token",
+			  "expires_in": 3600,
+			  "token_type": "Bearer"
+			}`,
+			wantStatus: http.StatusOK,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			runCustomerHandlerTestCase(t, logger, "/v1.0/customers/refresh", tt)
 		})
 	}
 }

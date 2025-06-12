@@ -17,6 +17,23 @@ post:
         application/json:
           schema:
             $ref: './../../components/schemas/responses/RefreshCustomerResponse.yaml'
+    '400':
+      description: Invalid input or validation error
+      content:
+        application/json:
+          schema:
+            $ref: './../../components/schemas/responses/ErrorResponse.yaml'
+          examples:
+            invalidRequest:
+              $ref: './../../components/examples/InvalidRequest.yaml'
+            validationError:
+              summary: Validation error
+              value:
+                code: VALIDATION_ERROR
+                message: validation failed
+                details:
+                  - access_token is required
+                  - refresh_token is required
     '401':
       description: Invalid or expired refresh token
       content:
