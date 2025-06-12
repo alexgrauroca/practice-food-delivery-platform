@@ -23,11 +23,11 @@ var (
 
 func TestService_Generate(t *testing.T) {
 	tests := []struct {
-		name           string
-		input          refresh.GenerateTokenInput
-		mocksSetup     func(repo *refreshmocks.MockRepository)
-		expectedOutput refresh.GenerateTokenOutput
-		expectedErr    error
+		name       string
+		input      refresh.GenerateTokenInput
+		mocksSetup func(repo *refreshmocks.MockRepository)
+		want       refresh.GenerateTokenOutput
+		wantErr    error
 	}{
 		{
 			name: "when there is an error storing the refresh token, then it propagates the error",
@@ -39,8 +39,8 @@ func TestService_Generate(t *testing.T) {
 				repo.EXPECT().Create(gomock.Any(), gomock.Any()).
 					Return(refresh.Token{}, errRepo)
 			},
-			expectedOutput: refresh.GenerateTokenOutput{},
-			expectedErr:    errRepo,
+			want:    refresh.GenerateTokenOutput{},
+			wantErr: errRepo,
 		},
 		{
 			name: "when the refresh token is generated and stored, then it returns the token",
@@ -60,8 +60,8 @@ func TestService_Generate(t *testing.T) {
 						return refresh.Token{Token: "fake-token"}, nil
 					})
 			},
-			expectedOutput: refresh.GenerateTokenOutput{RefreshToken: "fake-token"},
-			expectedErr:    nil,
+			want:    refresh.GenerateTokenOutput{RefreshToken: "fake-token"},
+			wantErr: nil,
 		},
 	}
 
@@ -76,10 +76,10 @@ func TestService_Generate(t *testing.T) {
 			}
 
 			service := refresh.NewService(logger, repo)
-			output, err := service.Generate(context.Background(), tt.input)
+			got, err := service.Generate(context.Background(), tt.input)
 
-			assert.ErrorIs(t, err, tt.expectedErr)
-			assert.Equal(t, tt.expectedOutput, output)
+			assert.ErrorIs(t, err, tt.wantErr)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

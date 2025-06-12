@@ -21,11 +21,11 @@ import (
 )
 
 type customerHandlerTestCase struct {
-	name                 string
-	jsonPayload          string
-	mocksSetup           func(service *customersmocks.MockService)
-	expectedJSONResponse string
-	expectedStatusCode   int
+	name        string
+	jsonPayload string
+	mocksSetup  func(service *customersmocks.MockService)
+	wantJSON    string
+	wantStatus  int
 }
 
 func TestHandler_RegisterCustomer(t *testing.T) {
@@ -36,17 +36,17 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 		{
 			name:        "when invalid payload is provided, then it should return a 400 with invalid request error",
 			jsonPayload: `{"name": 1.2, "email": true}`,
-			expectedJSONResponse: `{
+			wantJSON: `{
 				"code": "INVALID_REQUEST",
 				"message": "invalid request",
 				"details": []
 			}`,
-			expectedStatusCode: http.StatusBadRequest,
+			wantStatus: http.StatusBadRequest,
 		},
 		{
 			name:        "when empty payload is provided, then it should return a 400 with the validation error",
 			jsonPayload: `{}`,
-			expectedJSONResponse: `{
+			wantJSON: `{
 				"code": "VALIDATION_ERROR",
 				"message": "validation failed",
 				"details": [
@@ -55,67 +55,67 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 					"name is required"
 				]
 			}`,
-			expectedStatusCode: http.StatusBadRequest,
+			wantStatus: http.StatusBadRequest,
 		},
 		{
 			name:        "when invalid email is provided, then it should return a 400 with the email validation error",
 			jsonPayload: `{"email": "invalid-email", "name": "John Doe", "password": "ValidPassword123"}`,
-			expectedJSONResponse: `{
+			wantJSON: `{
 				"code": "VALIDATION_ERROR",
 				"message": "validation failed",
 				"details": [
 					"email must be a valid email address"
 				]
 			}`,
-			expectedStatusCode: http.StatusBadRequest,
+			wantStatus: http.StatusBadRequest,
 		},
 		{
 			name:        "when invalid password is provided, then it should return a 400 with the pwd validation error",
 			jsonPayload: `{"email":"test@example.com", "name": "John Doe", "password": "short"}`,
-			expectedJSONResponse: `{
+			wantJSON: `{
 				"code": "VALIDATION_ERROR",
 				"message": "validation failed",
 				"details": [
 					"password must be a valid password with at least 8 characters long"
 				]
 			}`,
-			expectedStatusCode: http.StatusBadRequest,
+			wantStatus: http.StatusBadRequest,
 		},
 		{
 			name:        "when no name is provided, then it should return a 400 with the name validation error",
 			jsonPayload: `{"email":"test@example.com", "password": "ValidPassword123"}`,
-			expectedJSONResponse: `{
+			wantJSON: `{
 				"code":"VALIDATION_ERROR",
 				"message":"validation failed",
 				"details":[
 					"name is required"
 				]
 			}`,
-			expectedStatusCode: http.StatusBadRequest,
+			wantStatus: http.StatusBadRequest,
 		},
 		{
 			name:        "when no email is provided, then it should return a 400 with the email validation error",
 			jsonPayload: `{"name": "John Doe", "password": "ValidPassword123"}`,
-			expectedJSONResponse: `{
+			wantJSON: `{
 				"code":"VALIDATION_ERROR",
 				"message":"validation failed",
 				"details":[
 					"email is required"
 				]
 			}`,
-			expectedStatusCode: http.StatusBadRequest,
+			wantStatus: http.StatusBadRequest,
 		},
 		{
 			name:        "when no password is provided, then it should return a 400 with the email validation error",
 			jsonPayload: `{"email": "test@example.com", "name": "John Doe"}`,
-			expectedJSONResponse: `{
+			wantJSON: `{
 				"code":"VALIDATION_ERROR",
 				"message":"validation failed",
 				"details":[
 					"password is required"
 				]
 			}`,
-			expectedStatusCode: http.StatusBadRequest,
+			wantStatus: http.StatusBadRequest,
 		},
 		{
 			name:        "when the customer already exists, then it should return a 409 with the customer already exists error",
@@ -124,12 +124,12 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 				service.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.RegisterCustomerOutput{}, customers.ErrCustomerAlreadyExists)
 			},
-			expectedJSONResponse: `{
+			wantJSON: `{
 				"code": "CUSTOMER_ALREADY_EXISTS",
 				"message": "customer already exists",
 				"details": []
 			}`,
-			expectedStatusCode: http.StatusConflict,
+			wantStatus: http.StatusConflict,
 		},
 		{
 			name:        "when unexpected error when registering the customer, then it should return a 500 with the internal error",
@@ -138,12 +138,12 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 				service.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.RegisterCustomerOutput{}, errors.New("unexpected error"))
 			},
-			expectedJSONResponse: `{
+			wantJSON: `{
 				"code": "INTERNAL_ERROR",
 				"message": "failed to register the customer",
 				"details": []
 			}`,
-			expectedStatusCode: http.StatusInternalServerError,
+			wantStatus: http.StatusInternalServerError,
 		},
 		{
 			name:        "when the customer is successfully registered, then it should return a 201 with the customer details",
@@ -160,13 +160,13 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 					CreatedAt: now,
 				}, nil)
 			},
-			expectedJSONResponse: `{
+			wantJSON: `{
 				"created_at":"2025-01-01T00:00:00Z",
 				"email":"test@example.com",
 				"id":"fake-id",
 				"name":"John Doe"
 			}`,
-			expectedStatusCode: http.StatusCreated,
+			wantStatus: http.StatusCreated,
 		},
 	}
 
@@ -184,17 +184,17 @@ func TestHandler_LoginCustomer(t *testing.T) {
 		{
 			name:        "when invalid payload is provided, then it should return a 400 with invalid request error",
 			jsonPayload: `{"name": 1.2, "email": true}`,
-			expectedJSONResponse: `{
+			wantJSON: `{
 				"code": "INVALID_REQUEST",
 				"message": "invalid request",
 				"details": []
 			}`,
-			expectedStatusCode: http.StatusBadRequest,
+			wantStatus: http.StatusBadRequest,
 		},
 		{
 			name:        "when empty payload is provided, then it should return a 400 with the validation error",
 			jsonPayload: `{}`,
-			expectedJSONResponse: `{
+			wantJSON: `{
 				"code": "VALIDATION_ERROR",
 				"message": "validation failed",
 				"details": [
@@ -202,31 +202,31 @@ func TestHandler_LoginCustomer(t *testing.T) {
 					"password is required"
 				]
 			}`,
-			expectedStatusCode: http.StatusBadRequest,
+			wantStatus: http.StatusBadRequest,
 		},
 		{
 			name:        "when invalid email is provided, then it should return a 400 with the email validation error",
 			jsonPayload: `{"email": "invalid-email", "password": "ValidPassword123"}`,
-			expectedJSONResponse: `{
+			wantJSON: `{
 				"code": "VALIDATION_ERROR",
 				"message": "validation failed",
 				"details": [
 					"email must be a valid email address"
 				]
 			}`,
-			expectedStatusCode: http.StatusBadRequest,
+			wantStatus: http.StatusBadRequest,
 		},
 		{
 			name:        "when invalid password is provided, then it should return a 400 with the pwd validation error",
 			jsonPayload: `{"email":"test@example.com", "password": "short"}`,
-			expectedJSONResponse: `{
+			wantJSON: `{
 				"code": "VALIDATION_ERROR",
 				"message": "validation failed",
 				"details": [
 					"password must be a valid password with at least 8 characters long"
 				]
 			}`,
-			expectedStatusCode: http.StatusBadRequest,
+			wantStatus: http.StatusBadRequest,
 		},
 
 		{
@@ -236,12 +236,12 @@ func TestHandler_LoginCustomer(t *testing.T) {
 				service.EXPECT().LoginCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.LoginCustomerOutput{}, customers.ErrInvalidCredentials)
 			},
-			expectedJSONResponse: `{
+			wantJSON: `{
 				"code": "INVALID_CREDENTIALS",
 				"message": "invalid credentials",
 				"details": []
 			}`,
-			expectedStatusCode: http.StatusUnauthorized,
+			wantStatus: http.StatusUnauthorized,
 		},
 		{
 			name:        "when unexpected error when login the customer, then it should return a 500 with the internal error",
@@ -250,12 +250,12 @@ func TestHandler_LoginCustomer(t *testing.T) {
 				service.EXPECT().LoginCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.LoginCustomerOutput{}, errors.New("unexpected error"))
 			},
-			expectedJSONResponse: `{
+			wantJSON: `{
 				"code": "INTERNAL_ERROR",
 				"message": "failed to login the customer",
 				"details": []
 			}`,
-			expectedStatusCode: http.StatusInternalServerError,
+			wantStatus: http.StatusInternalServerError,
 		},
 		{
 			name:        "when an active customer has the same email and password, then it should return a 200 with the token",
@@ -271,13 +271,13 @@ func TestHandler_LoginCustomer(t *testing.T) {
 					TokenType:    jwt.DefaultTokenType,
 				}, nil)
 			},
-			expectedJSONResponse: `{
+			wantJSON: `{
 			  "access_token": "fake-token",
 			  "refresh_token": "fake-refresh-token",
 			  "expires_in": 3600,
 			  "token_type": "Bearer"
 			}`,
-			expectedStatusCode: http.StatusOK,
+			wantStatus: http.StatusOK,
 		},
 	}
 
@@ -324,6 +324,6 @@ func runCustomerHandlerTestCase(
 	// Make the request to the handler
 	router.ServeHTTP(w, req)
 
-	assert.Equal(t, tt.expectedStatusCode, w.Code)
-	assert.JSONEq(t, tt.expectedJSONResponse, w.Body.String())
+	assert.Equal(t, tt.wantStatus, w.Code)
+	assert.JSONEq(t, tt.wantJSON, w.Body.String())
 }

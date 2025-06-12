@@ -51,48 +51,80 @@ Coverage reports will not be generated at this stage. Ideally the pipelines shou
 
 ---
 
-## Services (Go microservices, each exposing a REST API)
+## Services
 
 ### 1. Authentication Service
-- Handles identity and session management for:
-    - **Customers**
-    - **Restaurant Users**
-- Issues JWTs (access & refresh tokens)
-- Manages independent auth flows for each user type
+- Handles identity and access management for all users:
+  - Customers
+  - Staff (Restaurant Users)
+  - Couriers
+- Core responsibilities:
+  - User registration and authentication
+  - JWT issuance (access & refresh tokens)
+  - Session management
 - Example Endpoints:
-    - `POST /customers/register`
-    - `POST /restaurants/login`
-    - `POST /customers/refresh-token`
+  - `POST /auth/customers/register`
+  - `POST /auth/restaurants/login`
+  - `POST /auth/refresh-token`
 
 ### 2. Customer Service
-- Manages domain data and behavior for customers:
-    - Profile (address, preferences, etc.)
-    - Order history (linked by user ID from JWT)
+- Manages customer-specific domain data:
+  - Customer profiles
+  - Delivery addresses
+  - Preferences
+  - Payment methods
+- Example Endpoints:
+  - `GET /customers/profile`
+  - `PUT /customers/addresses`
+  - `GET /customers/payment-methods`
 
 ### 3. Restaurant Service
-- Manages restaurants and their menus:
-    - Restaurant profile
-    - Menu management (CRUD)
-    - Order status updates (preparing, ready)
+- Manages restaurant domain:
+  - Restaurant profiles and details
+  - Menu management (CRUD)
+  - Operating hours
+  - Available locations
+- Example Endpoints:
+  - `GET /restaurants`
+  - `GET /restaurants/{id}/menu`
+  - `PUT /restaurants/{id}/menu-items`
+  - `GET /restaurants/search`
 
 ### 4. Order Service
-- Handles full order lifecycle:
-    - Order placement
-    - Order status tracking
-    - Delivery assignment
-    - Menu validation (via Restaurant Service)
+- Central coordination for order lifecycle:
+  - Order creation and validation
+  - Order status management
+  - Order history
+  - Coordinates communication between Restaurant and Delivery services
+- Status tracking through order lifecycle
+- Example Endpoints:
+  - `POST /orders`
+  - `GET /orders/{id}`
+  - `GET /orders/history`
+  - `GET /orders/{id}/status`
 
 ### 5. Delivery Service
-- Manages delivery personnel and tasks:
-    - Registration and login (via Auth Service)
-    - Assigned deliveries
-    - Delivery status updates
+- Manages delivery operations:
+  - Courier management
+  - Delivery task assignment
+  - Real-time delivery tracking
+  - Delivery status updates
+- Example Endpoints:
+  - `GET /deliveries/active`
+  - `PUT /deliveries/{id}/status`
+  - `GET /couriers/available`
+  - `POST /deliveries/assignments`
 
 ### 6. API Gateway
-- The only publicly exposed entrypoint
-- Routes requests to the appropriate internal service
-- Optionally validates JWTs
-- Manages CORS, rate limiting, logging, etc.
+- Single entry point for external clients
+- Core responsibilities:
+  - Request routing
+  - Authentication (JWT validation)
+  - Rate limiting
+  - CORS management
+  - Request/Response logging
+  - Basic request validation
+
 
 ---
 
@@ -106,24 +138,39 @@ Coverage reports will not be generated at this stage. Ideally the pipelines shou
 
 ---
 
-## Communication
+## Service Communication
 
-- Services communicate via REST over HTTP
-- API Gateway maps external routes (e.g., `/customers/login`) to the appropriate service
-- Services remain stateless and communicate using secure JWT tokens
+Services communicate through well-defined interfaces following these principles:
 
----
+1. **Domain Ownership**
+  - Each service owns and manages its domain data
+  - No direct database access across service boundaries
+
+2. **Event Notification**
+  - Services notify relevant changes to interested parties
+  - Example: Restaurant Service notifies Order Service about preparation status
+
+3. **Status Management**
+  - Order Service acts as the central coordinator for order status
+  - Other services report status changes to Order Service
+
+4. **Data Consistency**
+  - Each service maintains its data consistency
+  - Cross-service consistency through eventual consistency patterns
 
 ## Example Workflow
 
-1. A **customer** registers via `POST /customers/register` (Auth Service)
-2. They log in and receive JWT tokens
-3. They browse restaurants and menus (`Customer Service → Restaurant Service`)
-4. They place an order (`Customer Service → Order Service`)
-5. Order is validated, stored, and assigned a delivery person
-6. Restaurant updates order status as it prepares
-7. Delivery person picks up and updates delivery status
-8. Customer tracks delivery in real-time (via Redis-backed status from Order Service)
+1. Customer authenticates via Authentication Service
+2. Customer browses restaurants and menus directly through Restaurant Service
+3. Customer places order through Order Service
+4. Order Service:
+  - Validates menu items with Restaurant Service
+  - Creates order record
+  - Requests delivery assignment from Delivery Service
+5. Restaurant Service updates order preparation status to Order Service
+6. Delivery Service updates delivery status to Order Service
+7. Customer tracks order status through Order Service
+
 
 ---
 
