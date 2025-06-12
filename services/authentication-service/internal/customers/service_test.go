@@ -29,11 +29,11 @@ var (
 func TestService_RegisterCustomer(t *testing.T) {
 	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 	tests := []struct {
-		name           string
-		input          customers.RegisterCustomerInput
-		mocksSetup     func(repo *customersmocks.MockRepository)
-		expectedOutput customers.RegisterCustomerOutput
-		expectError    error
+		name       string
+		input      customers.RegisterCustomerInput
+		mocksSetup func(repo *customersmocks.MockRepository)
+		want       customers.RegisterCustomerOutput
+		wantErr    error
 	}{
 		{
 			name: "when there is an active customer with the same email, then it should return a customer already exists error",
@@ -46,8 +46,8 @@ func TestService_RegisterCustomer(t *testing.T) {
 				repo.EXPECT().CreateCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, customers.ErrCustomerAlreadyExists)
 			},
-			expectedOutput: customers.RegisterCustomerOutput{},
-			expectError:    customers.ErrCustomerAlreadyExists,
+			want:    customers.RegisterCustomerOutput{},
+			wantErr: customers.ErrCustomerAlreadyExists,
 		},
 		{
 			name: "when there is an unexpected error when creating the customer, then it should propagate the error",
@@ -60,8 +60,8 @@ func TestService_RegisterCustomer(t *testing.T) {
 				repo.EXPECT().CreateCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, errRepo)
 			},
-			expectedOutput: customers.RegisterCustomerOutput{},
-			expectError:    errRepo,
+			want:    customers.RegisterCustomerOutput{},
+			wantErr: errRepo,
 		},
 		{
 			name: "when the customer can be created, then it should return the created customer",
@@ -88,13 +88,13 @@ func TestService_RegisterCustomer(t *testing.T) {
 						}, nil
 					})
 			},
-			expectedOutput: customers.RegisterCustomerOutput{
+			want: customers.RegisterCustomerOutput{
 				ID:        "fake-id",
 				Email:     "test@example.com",
 				Name:      "John Doe",
 				CreatedAt: now,
 			},
-			expectError: nil,
+			wantErr: nil,
 		},
 	}
 
@@ -110,10 +110,10 @@ func TestService_RegisterCustomer(t *testing.T) {
 			}
 
 			service := customers.NewService(logger, repo, refreshService)
-			output, err := service.RegisterCustomer(context.Background(), tt.input)
+			got, err := service.RegisterCustomer(context.Background(), tt.input)
 
-			assert.ErrorIs(t, err, tt.expectError)
-			assert.Equal(t, tt.expectedOutput, output)
+			assert.ErrorIs(t, err, tt.wantErr)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -122,11 +122,11 @@ func TestService_LoginCustomer(t *testing.T) {
 	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	tests := []struct {
-		name           string
-		input          customers.LoginCustomerInput
-		mocksSetup     func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService)
-		expectedOutput customers.LoginCustomerOutput
-		expectError    error
+		name       string
+		input      customers.LoginCustomerInput
+		mocksSetup func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService)
+		want       customers.LoginCustomerOutput
+		wantErr    error
 	}{
 		{
 			name: "when there is not an active customer with the same email, then it should an invalid credentials error",
@@ -138,8 +138,8 @@ func TestService_LoginCustomer(t *testing.T) {
 				repo.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, customers.ErrCustomerNotFound)
 			},
-			expectedOutput: customers.LoginCustomerOutput{},
-			expectError:    customers.ErrInvalidCredentials,
+			want:    customers.LoginCustomerOutput{},
+			wantErr: customers.ErrInvalidCredentials,
 		},
 		{
 			name: "when there is not an active customer with the same password, then it should an invalid credentials error",
@@ -162,8 +162,8 @@ func TestService_LoginCustomer(t *testing.T) {
 						Active:    true,
 					}, nil)
 			},
-			expectedOutput: customers.LoginCustomerOutput{},
-			expectError:    customers.ErrInvalidCredentials,
+			want:    customers.LoginCustomerOutput{},
+			wantErr: customers.ErrInvalidCredentials,
 		},
 		{
 			name: "when there is an unexpected error when fetching the customer, then it should propagate the error",
@@ -175,8 +175,8 @@ func TestService_LoginCustomer(t *testing.T) {
 				repo.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, errRepo)
 			},
-			expectedOutput: customers.LoginCustomerOutput{},
-			expectError:    errRepo,
+			want:    customers.LoginCustomerOutput{},
+			wantErr: errRepo,
 		},
 		{
 			name: "when there is an error generating the refresh token, then it should propagate the error",
@@ -202,8 +202,8 @@ func TestService_LoginCustomer(t *testing.T) {
 				refreshService.EXPECT().Generate(gomock.Any(), gomock.Any()).
 					Return(refresh.GenerateTokenOutput{}, errToken)
 			},
-			expectedOutput: customers.LoginCustomerOutput{},
-			expectError:    errToken,
+			want:    customers.LoginCustomerOutput{},
+			wantErr: errToken,
 		},
 		{
 			name: "when there is an active customer with the same email and password, then it should return its token",
@@ -231,7 +231,7 @@ func TestService_LoginCustomer(t *testing.T) {
 					Role:   "customer",
 				}).Return(refresh.GenerateTokenOutput{RefreshToken: "fake-refresh-token"}, nil)
 			},
-			expectedOutput: customers.LoginCustomerOutput{
+			want: customers.LoginCustomerOutput{
 				ExpiresIn:    3600, // 1 hour
 				TokenType:    "Bearer",
 				RefreshToken: "fake-refresh-token",
@@ -251,19 +251,18 @@ func TestService_LoginCustomer(t *testing.T) {
 			}
 
 			service := customers.NewService(logger, repo, refreshService)
-			output, err := service.LoginCustomer(context.Background(), tt.input)
+			got, err := service.LoginCustomer(context.Background(), tt.input)
 
-			assert.ErrorIs(t, err, tt.expectError)
+			assert.ErrorIs(t, err, tt.wantErr)
 
-			// We only assert the expectedOutput if there is any error
-			if tt.expectError == nil {
-				assert.Equal(t, tt.expectedOutput.TokenType, output.TokenType)
-				assert.Equal(t, tt.expectedOutput.ExpiresIn, output.ExpiresIn)
-				assert.Equal(t, tt.expectedOutput.RefreshToken, output.RefreshToken)
-
+			// We only assert the want if there is any error
+			if tt.wantErr == nil {
 				// As tokens are generated depending on the moment of the time, we just need to check if the token
 				// is not empty
-				assert.NotEmpty(t, output.AccessToken)
+				assert.NotEmpty(t, got.AccessToken)
+
+				tt.want.AccessToken = got.AccessToken
+				assert.Equal(t, tt.want, got)
 			}
 		})
 	}
