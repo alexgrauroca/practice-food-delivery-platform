@@ -93,7 +93,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LogincCustomerResponse'
+                $ref: '#/components/schemas/LoginCustomerResponse'
         '400':
           description: Invalid input or validation error
           content:
@@ -300,7 +300,7 @@ components:
           description: Customer's password
           example: strongpassword123
           writeOnly: true
-    LogincCustomerResponse:
+    LoginCustomerResponse:
       type: object
       required:
         - access_token
@@ -374,8 +374,6 @@ components:
           enum:
             - Bearer
           example: Bearer
-    LoginCustomerResponse:
-      $ref: '#/components/schemas/LogincCustomerResponse'
   responses:
     InternalError:
       description: Internal server error

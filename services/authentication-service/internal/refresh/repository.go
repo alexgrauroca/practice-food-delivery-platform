@@ -26,10 +26,6 @@ const (
 
 	// FieldToken represents the database field name for storing token values.
 	FieldToken = "token"
-	// FieldUserID defines the database field name for storing user identifier values.
-	FieldUserID = "user_id"
-	// FieldDevice specifies the database field name for storing device information.
-	FieldDevice = "device_info"
 )
 
 // Repository defines a contract for storing and managing refresh tokens in a persistence layer.

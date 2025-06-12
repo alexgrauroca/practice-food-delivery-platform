@@ -12,6 +12,6 @@ RegisterCustomerResponse:
 ErrorResponse:
   $ref: './responses/ErrorResponse.yaml'
 LoginCustomerResponse:
-  $ref: './responses/LogincCustomerResponse.yaml'
+  $ref: './responses/LoginCustomerResponse.yaml'
 RefreshCustomerResponse:
   $ref: './responses/RefreshCustomerResponse.yaml'
