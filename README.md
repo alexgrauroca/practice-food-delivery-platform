@@ -117,7 +117,7 @@ Coverage reports will not be generated at this stage. Ideally the pipelines shou
 ## Example Workflow
 
 1. A **customer** registers via `POST /customers/register` (Auth Service)
-2. They login and receive JWT tokens
+2. They log in and receive JWT tokens
 3. They browse restaurants and menus (`Customer Service → Restaurant Service`)
 4. They place an order (`Customer Service → Order Service`)
 5. Order is validated, stored, and assigned a delivery person

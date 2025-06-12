@@ -17,7 +17,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: './../../components/schemas/responses/LogincCustomerResponse.yaml'
+            $ref: './../../components/schemas/responses/LoginCustomerResponse.yaml'
     '400':
       description: Invalid input or validation error
       content:

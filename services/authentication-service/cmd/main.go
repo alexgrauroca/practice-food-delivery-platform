@@ -1,3 +1,6 @@
+// Package main is the entry point for the authentication service.
+// It initializes and coordinates core components.
+
 package main
 
 import (
