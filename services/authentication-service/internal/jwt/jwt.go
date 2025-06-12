@@ -10,20 +10,38 @@ import (
 // DefaultTokenType represents the default type of token used for authorization, typically set to "Bearer".
 const DefaultTokenType = "Bearer"
 
-var jwtSecret = []byte("your-very-secret-key")
+// Service defines the interface for JWT token operations
+//
+//go:generate mockgen -destination=./mocks/service_mock.go -package=jwt_mocks github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/jwt Service
+type Service interface {
+	GenerateToken(id string, cfg Config) (string, error)
+}
 
-// Config represents configuration settings for token generation.
-// Expiration defines the token's lifetime in seconds.
-// Role specifies the role assigned to the generated token.
+// Claims represents a JWT payload.
+type Claims struct {
+	Subject   string    // "sub" claim
+	Role      string    // "role" claim
+	ExpiresAt time.Time // "exp" claim
+}
+
+// Config represents configuration settings for token generation
 type Config struct {
 	Expiration int // AccessToken expiration duration in seconds
 	Role       string
 }
 
-// GenerateToken generates a JWT token with claims based on the provided ID and configuration settings.
-// It includes the ID as the subject, assigns the specified role, and sets the expiration time.
-// Returns the signed JWT token string or an error in case of token creation failure.
-func GenerateToken(id string, cfg Config) (string, error) {
+type service struct {
+	secret []byte // jwt secret key
+}
+
+// NewService creates a new JWT service instance
+func NewService(secret []byte) Service {
+	return &service{
+		secret: secret,
+	}
+}
+
+func (s *service) GenerateToken(id string, cfg Config) (string, error) {
 	claims := jwt.MapClaims{
 		"sub":  id,
 		"role": cfg.Role,
@@ -31,5 +49,5 @@ func GenerateToken(id string, cfg Config) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtSecret)
+	return token.SignedString(s.secret)
 }
