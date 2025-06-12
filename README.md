@@ -33,13 +33,24 @@ go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
 ## Methodology
 
-This project follows a Lean Agile development style with quick, incremental iterations to minimize risk and continuously improve the solution.
+This project follows a Lean Agile development style with quick, incremental iterations to minimize risk and 
+continuously improve the solution.
 
-A **Domain Service Architecture** is used, where each microservice encapsulates a clear and distinct domain. This improves separation of concerns and system maintainability.
+A **Domain Service Architecture** is used, where each microservice encapsulates a clear and distinct domain. This 
+improves separation of concerns and system maintainability.
 
-Testing follows **TDD (Test-Driven Development)** and **BDD (Behavior-Driven Development)** principles, ensuring behavior and correctness are covered through automation.
+Testing follows **TDD (Test-Driven Development)** and **BDD (Behavior-Driven Development)** principles, ensuring 
+behavior and correctness are covered through automation.
 
-Coverage reports will not be generated at this stage. Ideally the pipelines should generate coverage reports with tools like courtney and gocovmerge, to then upload them to an analysis tool like Sonar. Setting up 100% coverage is considered a bad practice, as testing should focus on quality not quantity, but coverage reports can help to detect missed cases scenarios. During the development of this project the Goland coverage tool was used to detect those cases. TDD should help to reduce those cases as much as possible, because we just create the needed code based on the expected behaviour.
+Coverage reports will not be generated at this stage. Ideally, the pipelines should generate coverage reports with 
+tools like courtney and gocovmerge, to then upload them to an analysis tool like Sonar. Setting up 100% coverage is 
+considered a bad practice, as testing should focus on quality not quantity, but coverage reports can help to detect 
+missed cases scenarios. During the development of this project, the Goland coverage tool was used to detect those 
+cases. TDD should help to reduce those cases as much as possible because we just create the necessary code based on 
+the expected behavior.
+
+I have discarded to implement mutation tests, as Go libraries are not still mature enough, and I was having problems 
+with how I've implemented the code. For simpler projects it can work well, but for projects like this one it is not. 
 
 ---
 

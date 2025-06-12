@@ -51,21 +51,28 @@ type LoginCustomerInput struct {
 	Password string
 }
 
-// LoginCustomerOutput represents the output returned upon successful login of a customer.
-type LoginCustomerOutput struct {
+// TokenPair represents a pair of tokens typically used for authentication and session management.
+type TokenPair struct {
 	AccessToken  string
 	RefreshToken string
 	ExpiresIn    int // Number of seconds until the token expires
 	TokenType    string
 }
 
+// LoginCustomerOutput represents the output returned upon successful login of a customer.
+type LoginCustomerOutput struct {
+	TokenPair
+}
+
+// RefreshCustomerInput represents the input required to refresh a customer's authentication tokens.
 type RefreshCustomerInput struct {
 	RefreshToken string
 	AccessToken  string
 }
 
+// RefreshCustomerOutput wraps the response of a successful customer token refresh operation.
 type RefreshCustomerOutput struct {
-	LoginCustomerOutput
+	TokenPair
 }
 
 type service struct {
@@ -135,13 +142,66 @@ func (s *service) LoginCustomer(ctx context.Context, input LoginCustomerInput) (
 		return LoginCustomerOutput{}, ErrInvalidCredentials
 	}
 
+	tokenPair, err := s.generateTokenPair(ctx, customer)
+	if err != nil {
+		logctx.LoggerWithRequestInfo(ctx, s.logger).Error("failed to generate token pair", zap.Error(err))
+		return LoginCustomerOutput{}, err
+	}
+
+	return LoginCustomerOutput{TokenPair: tokenPair}, nil
+}
+
+func (s *service) RefreshCustomer(ctx context.Context, input RefreshCustomerInput) (RefreshCustomerOutput, error) {
+	logctx.LoggerWithRequestInfo(ctx, s.logger).Info("refreshing customer token")
+	refreshToken, err := s.refreshService.FindActiveToken(ctx, refresh.FindActiveTokenInput{
+		Token: input.RefreshToken,
+	})
+	if err != nil {
+		if errors.Is(err, refresh.ErrRefreshTokenNotFound) {
+			logctx.LoggerWithRequestInfo(ctx, s.logger).Warn("refresh token not found")
+			return RefreshCustomerOutput{}, ErrInvalidRefreshToken
+		}
+		logctx.LoggerWithRequestInfo(ctx, s.logger).Error("failed to find active refresh token", zap.Error(err))
+		return RefreshCustomerOutput{}, err
+	}
+
+	claims, err := s.jwtService.GetClaims(input.AccessToken)
+	if err != nil {
+		if errors.Is(err, jwt.ErrInvalidToken) {
+			logctx.LoggerWithRequestInfo(ctx, s.logger).Warn("access token is invalid")
+			return RefreshCustomerOutput{}, ErrTokenMismatch
+		}
+		logctx.LoggerWithRequestInfo(ctx, s.logger).Error("failed to get claims from access token", zap.Error(err))
+		return RefreshCustomerOutput{}, err
+	}
+	if claims.Subject != refreshToken.UserID || claims.Role != refreshToken.Role {
+		logctx.LoggerWithRequestInfo(ctx, s.logger).Warn("token mismatch")
+		return RefreshCustomerOutput{}, ErrTokenMismatch
+	}
+
+	tokenPair, err := s.generateTokenPair(ctx, Customer{ID: refreshToken.UserID})
+	if err != nil {
+		logctx.LoggerWithRequestInfo(ctx, s.logger).Error("failed to generate token pair", zap.Error(err))
+		return RefreshCustomerOutput{}, err
+	}
+
+	err = s.refreshService.Expire(ctx, refresh.ExpireInput{Token: input.RefreshToken})
+	if err != nil {
+		logctx.LoggerWithRequestInfo(ctx, s.logger).Error("failed to expire refresh token", zap.Error(err))
+		return RefreshCustomerOutput{}, err
+	}
+
+	return RefreshCustomerOutput{TokenPair: tokenPair}, nil
+}
+
+func (s *service) generateTokenPair(ctx context.Context, customer Customer) (TokenPair, error) {
 	accessToken, err := s.jwtService.GenerateToken(customer.ID, jwt.Config{
 		Expiration: DefaultTokenExpiration,
 		Role:       DefaultTokenRole,
 	})
 	if err != nil {
 		logctx.LoggerWithRequestInfo(ctx, s.logger).Error("failed to generate JWT", zap.Error(err))
-		return LoginCustomerOutput{}, err
+		return TokenPair{}, err
 	}
 
 	refreshToken, err := s.refreshService.Generate(ctx, refresh.GenerateTokenInput{
@@ -150,19 +210,13 @@ func (s *service) LoginCustomer(ctx context.Context, input LoginCustomerInput) (
 	})
 	if err != nil {
 		logctx.LoggerWithRequestInfo(ctx, s.logger).Error("failed to generate refresh token", zap.Error(err))
-		return LoginCustomerOutput{}, err
+		return TokenPair{}, err
 	}
 
-	output := LoginCustomerOutput{
+	return TokenPair{
 		AccessToken:  accessToken,
-		RefreshToken: refreshToken.RefreshToken,
+		RefreshToken: refreshToken.Token,
 		TokenType:    jwt.DefaultTokenType,
 		ExpiresIn:    DefaultTokenExpiration,
-	}
-	return output, nil
-}
-
-func (s *service) RefreshCustomer(ctx context.Context, input RefreshCustomerInput) (RefreshCustomerOutput, error) {
-	//TODO implement me
-	panic("implement me")
+	}, nil
 }

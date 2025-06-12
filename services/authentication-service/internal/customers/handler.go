@@ -175,7 +175,7 @@ func (h *Handler) LoginCustomer(c *gin.Context) {
 		return
 	}
 
-	resp := LoginCustomerResponse(output)
+	resp := LoginCustomerResponse(output.TokenPair)
 	logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).
 		Info("Customer logged in successfully")
 	c.JSON(http.StatusOK, resp)
@@ -213,7 +213,7 @@ func (h *Handler) RefreshCustomer(c *gin.Context) {
 	}
 
 	resp := RefreshCustomerResponse{
-		LoginCustomerResponse(output.LoginCustomerOutput),
+		LoginCustomerResponse(output.TokenPair),
 	}
 	logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).Info("Customer refreshed successfully")
 	c.JSON(http.StatusOK, resp)

@@ -16,6 +16,7 @@ const DefaultTokenType = "Bearer"
 //go:generate mockgen -destination=./mocks/service_mock.go -package=jwt_mocks github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/jwt Service
 type Service interface {
 	GenerateToken(id string, cfg Config) (string, error)
+	GetClaims(token string) (Claims, error)
 }
 
 // Claims represents a JWT payload.
@@ -53,4 +54,9 @@ func (s *service) GenerateToken(id string, cfg Config) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(s.secret)
+}
+
+func (s *service) GetClaims(token string) (Claims, error) {
+	//TODO implement me
+	panic("implement me")
 }

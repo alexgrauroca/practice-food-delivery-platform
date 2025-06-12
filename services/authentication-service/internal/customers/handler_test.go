@@ -267,10 +267,12 @@ func TestHandler_LoginCustomer(t *testing.T) {
 					Email:    "test@example.com",
 					Password: "ValidPassword123",
 				}).Return(customers.LoginCustomerOutput{
-					AccessToken:  "fake-token",
-					RefreshToken: "fake-refresh-token",
-					ExpiresIn:    customers.DefaultTokenExpiration,
-					TokenType:    jwt.DefaultTokenType,
+					customers.TokenPair{
+						AccessToken:  "fake-token",
+						RefreshToken: "fake-refresh-token",
+						ExpiresIn:    customers.DefaultTokenExpiration,
+						TokenType:    jwt.DefaultTokenType,
+					},
 				}, nil)
 			},
 			wantJSON: `{
@@ -370,7 +372,7 @@ func TestHandler_RefreshCustomer(t *testing.T) {
 					AccessToken:  "valid-access-token",
 					RefreshToken: "valid-refresh-token",
 				}).Return(customers.RefreshCustomerOutput{
-					LoginCustomerOutput: customers.LoginCustomerOutput{
+					TokenPair: customers.TokenPair{
 						AccessToken:  "fake-token",
 						RefreshToken: "fake-refresh-token",
 						ExpiresIn:    customers.DefaultTokenExpiration,

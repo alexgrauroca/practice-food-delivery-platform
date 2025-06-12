@@ -60,7 +60,7 @@ func TestService_Generate(t *testing.T) {
 						return refresh.Token{Token: "fake-token"}, nil
 					})
 			},
-			want:    refresh.GenerateTokenOutput{RefreshToken: "fake-token"},
+			want:    refresh.GenerateTokenOutput{Token: "fake-token"},
 			wantErr: nil,
 		},
 	}

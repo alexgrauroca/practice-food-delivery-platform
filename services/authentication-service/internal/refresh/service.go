@@ -29,6 +29,8 @@ const (
 //go:generate mockgen -destination=./mocks/service_mock.go -package=refresh_mocks github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh Service
 type Service interface {
 	Generate(ctx context.Context, input GenerateTokenInput) (GenerateTokenOutput, error)
+	FindActiveToken(ctx context.Context, input FindActiveTokenInput) (FindActiveTokenOutput, error)
+	Expire(ctx context.Context, input ExpireInput) error
 }
 
 // GenerateTokenInput represents the input data required for generating a token.
@@ -39,7 +41,26 @@ type GenerateTokenInput struct {
 
 // GenerateTokenOutput represents the output result of a token generation operation.
 type GenerateTokenOutput struct {
-	RefreshToken string
+	Token string
+}
+
+// FindActiveTokenInput represents the input required to locate an active refresh token.
+type FindActiveTokenInput struct {
+	Token string
+}
+
+// FindActiveTokenOutput represents the result of a query to locate an active refresh token associated with a user.
+type FindActiveTokenOutput struct {
+	ID     string
+	Token  string
+	UserID string
+	Role   string
+	Device DeviceInfo
+}
+
+// ExpireInput represents the input required to mark a token as expired.
+type ExpireInput struct {
+	Token string
 }
 
 type service struct {
@@ -83,7 +104,17 @@ func (s *service) Generate(ctx context.Context, input GenerateTokenInput) (Gener
 		logctx.LoggerWithRequestInfo(ctx, s.logger).Error("failed to store refresh token", zap.Error(err))
 		return GenerateTokenOutput{}, err
 	}
-	return GenerateTokenOutput{RefreshToken: refreshToken.Token}, nil
+	return GenerateTokenOutput{Token: refreshToken.Token}, nil
+}
+
+func (s *service) FindActiveToken(ctx context.Context, input FindActiveTokenInput) (FindActiveTokenOutput, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s *service) Expire(ctx context.Context, input ExpireInput) error {
+	//TODO implement me
+	panic("implement me")
 }
 
 func generateToken() (string, error) {
