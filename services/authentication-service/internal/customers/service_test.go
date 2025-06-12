@@ -15,6 +15,7 @@ import (
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
 	customersmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers/mocks"
+	jwtmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/jwt/mocks"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/password"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh"
 	refreshmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh/mocks"
@@ -105,11 +106,12 @@ func TestService_RegisterCustomer(t *testing.T) {
 
 			repo := customersmocks.NewMockRepository(ctrl)
 			refreshService := refreshmocks.NewMockService(ctrl)
+			jwtService := jwtmocks.NewMockService(ctrl)
 			if tt.mocksSetup != nil {
 				tt.mocksSetup(repo)
 			}
 
-			service := customers.NewService(logger, repo, refreshService)
+			service := customers.NewService(logger, repo, refreshService, jwtService)
 			got, err := service.RegisterCustomer(context.Background(), tt.input)
 
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -124,9 +126,10 @@ func TestService_LoginCustomer(t *testing.T) {
 	tests := []struct {
 		name       string
 		input      customers.LoginCustomerInput
-		mocksSetup func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService)
-		want       customers.LoginCustomerOutput
-		wantErr    error
+		mocksSetup func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
+			jwtService *jwtmocks.MockService)
+		want    customers.LoginCustomerOutput
+		wantErr error
 	}{
 		{
 			name: "when there is not an active customer with the same email, then it should an invalid credentials error",
@@ -134,7 +137,8 @@ func TestService_LoginCustomer(t *testing.T) {
 				Email:    "test@example.com",
 				Password: "ValidPassword123",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService) {
+			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
+				jwtService *jwtmocks.MockService) {
 				repo.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, customers.ErrCustomerNotFound)
 			},
@@ -147,7 +151,8 @@ func TestService_LoginCustomer(t *testing.T) {
 				Email:    "test@example.com",
 				Password: "InvalidPassword123",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService) {
+			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
+				jwtService *jwtmocks.MockService) {
 				hashedPassword, err := password.Hash("ValidPassword123")
 				require.NoError(t, err)
 
@@ -171,7 +176,8 @@ func TestService_LoginCustomer(t *testing.T) {
 				Email:    "test@example.com",
 				Password: "ValidPassword123",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService) {
+			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
+				jwtService *jwtmocks.MockService) {
 				repo.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, errRepo)
 			},
@@ -179,12 +185,13 @@ func TestService_LoginCustomer(t *testing.T) {
 			wantErr: errRepo,
 		},
 		{
-			name: "when there is an error generating the refresh token, then it should propagate the error",
+			name: "when there is an error generating the jwt, then it should propagate the error",
 			input: customers.LoginCustomerInput{
 				Email:    "test@example.com",
 				Password: "ValidPassword123",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService) {
+			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
+				jwtService *jwtmocks.MockService) {
 				hashedPassword, err := password.Hash("ValidPassword123")
 				require.NoError(t, err)
 
@@ -198,6 +205,37 @@ func TestService_LoginCustomer(t *testing.T) {
 						UpdatedAt: now,
 						Active:    true,
 					}, nil)
+
+				jwtService.EXPECT().GenerateToken(gomock.Any(), gomock.Any()).
+					Return("", errToken)
+			},
+			want:    customers.LoginCustomerOutput{},
+			wantErr: errToken,
+		},
+		{
+			name: "when there is an error generating the refresh token, then it should propagate the error",
+			input: customers.LoginCustomerInput{
+				Email:    "test@example.com",
+				Password: "ValidPassword123",
+			},
+			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
+				jwtService *jwtmocks.MockService) {
+				hashedPassword, err := password.Hash("ValidPassword123")
+				require.NoError(t, err)
+
+				repo.EXPECT().FindByEmail(gomock.Any(), "test@example.com").
+					Return(customers.Customer{
+						ID:        "fake-id",
+						Email:     "test@example.com",
+						Name:      "John Doe",
+						Password:  hashedPassword, // This should be a hashed password
+						CreatedAt: now,
+						UpdatedAt: now,
+						Active:    true,
+					}, nil)
+
+				jwtService.EXPECT().GenerateToken(gomock.Any(), gomock.Any()).
+					Return("fake-token", nil)
 
 				refreshService.EXPECT().Generate(gomock.Any(), gomock.Any()).
 					Return(refresh.GenerateTokenOutput{}, errToken)
@@ -211,7 +249,8 @@ func TestService_LoginCustomer(t *testing.T) {
 				Email:    "test@example.com",
 				Password: "ValidPassword123",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService) {
+			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
+				jwtService *jwtmocks.MockService) {
 				hashedPassword, err := password.Hash("ValidPassword123")
 				require.NoError(t, err)
 
@@ -226,12 +265,16 @@ func TestService_LoginCustomer(t *testing.T) {
 						Active:    true,
 					}, nil)
 
+				jwtService.EXPECT().GenerateToken(gomock.Any(), gomock.Any()).
+					Return("fake-token", nil)
+
 				refreshService.EXPECT().Generate(gomock.Any(), refresh.GenerateTokenInput{
 					UserID: "fake-id",
 					Role:   "customer",
 				}).Return(refresh.GenerateTokenOutput{RefreshToken: "fake-refresh-token"}, nil)
 			},
 			want: customers.LoginCustomerOutput{
+				AccessToken:  "fake-token",
 				ExpiresIn:    3600, // 1 hour
 				TokenType:    "Bearer",
 				RefreshToken: "fake-refresh-token",
@@ -246,24 +289,16 @@ func TestService_LoginCustomer(t *testing.T) {
 
 			repo := customersmocks.NewMockRepository(ctrl)
 			refreshService := refreshmocks.NewMockService(ctrl)
+			jwtService := jwtmocks.NewMockService(ctrl)
 			if tt.mocksSetup != nil {
-				tt.mocksSetup(repo, refreshService)
+				tt.mocksSetup(repo, refreshService, jwtService)
 			}
 
-			service := customers.NewService(logger, repo, refreshService)
+			service := customers.NewService(logger, repo, refreshService, jwtService)
 			got, err := service.LoginCustomer(context.Background(), tt.input)
 
 			assert.ErrorIs(t, err, tt.wantErr)
-
-			// We only assert the want if there is any error
-			if tt.wantErr == nil {
-				// As tokens are generated depending on the moment of the time, we just need to check if the token
-				// is not empty
-				assert.NotEmpty(t, got.AccessToken)
-
-				tt.want.AccessToken = got.AccessToken
-				assert.Equal(t, tt.want, got)
-			}
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
