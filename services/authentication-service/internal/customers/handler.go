@@ -3,11 +3,11 @@ package customers
 import (
 	"errors"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/iancoleman/strcase"
 	"go.uber.org/zap"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/logctx"
@@ -25,6 +25,10 @@ const (
 	CodeInternalError = "INTERNAL_ERROR"
 	// CodeInvalidCredentials represents the error code for failed authentication due to invalid login credentials.
 	CodeInvalidCredentials = "INVALID_CREDENTIALS"
+	// CodeInvalidRefreshToken represents the error code for an invalid or expired refresh token used in authentication processes.
+	CodeInvalidRefreshToken = "INVALID_REFRESH_TOKEN"
+	// CodeTokenMismatch represents an error code indicating a mismatch between the provided token and the expected value.
+	CodeTokenMismatch = "TOKEN_MISMATCH"
 
 	// MsgValidationError represents the error message for validation failures during input validation checks.
 	MsgValidationError = "validation failed"
@@ -32,12 +36,14 @@ const (
 	MsgInvalidRequest = "invalid request"
 	// MsgCustomerAlreadyExists represents the error message indicating that the customer already exists in the system.
 	MsgCustomerAlreadyExists = "customer already exists"
-	// MsgFailedToRegisterCustomer indicates an error occurred while attempting to register a new customer.
-	MsgFailedToRegisterCustomer = "failed to register the customer"
 	// MsgInvalidCredentials represents the error message returned when login authentication fails due to invalid credentials.
 	MsgInvalidCredentials = "invalid credentials"
-	// MsgFailedToLoginCustomer represents the error message returned when the system fails to log in a customer.
-	MsgFailedToLoginCustomer = "failed to login the customer"
+	// MsgInternalError represents the error message returned when the system fails to log in a customer.
+	MsgInternalError = "an unexpected error occurred"
+	// MsgInvalidRefreshToken represents an error message indicating an invalid or expired refresh token.
+	MsgInvalidRefreshToken = "invalid or expired refresh token"
+	// MsgTokenMismatch represents the error message for a token mismatch scenario.
+	MsgTokenMismatch = "token mismatch"
 )
 
 // RegisterCustomerRequest represents the request payload for registering a new customer.
@@ -69,6 +75,17 @@ type LoginCustomerResponse struct {
 	TokenType    string `json:"token_type"`
 }
 
+// RefreshCustomerRequest represents a request to refresh customer information using tokens.
+type RefreshCustomerRequest struct {
+	RefreshToken string `json:"refresh_token" binding:"required"`
+	AccessToken  string `json:"access_token" binding:"required"`
+}
+
+// RefreshCustomerResponse represents the response returned when refreshing a customer's token.
+type RefreshCustomerResponse struct {
+	LoginCustomerResponse
+}
+
 // ErrorResponse represents a standardized structure for API error responses containing code, message, and optional details.
 type ErrorResponse struct {
 	Code    string   `json:"code"`
@@ -94,6 +111,7 @@ func NewHandler(logger *zap.Logger, service Service) *Handler {
 func (h *Handler) RegisterRoutes(router *gin.Engine) {
 	router.POST("/v1.0/customers/register", h.RegisterCustomer)
 	router.POST("/v1.0/customers/login", h.LoginCustomer)
+	router.POST("v1.0/customers/refresh", h.RefreshCustomer)
 }
 
 // RegisterCustomer handles the registration of a new customer.
@@ -120,7 +138,7 @@ func (h *Handler) RegisterCustomer(c *gin.Context) {
 		}
 		logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).
 			Error("Failed to register customer", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, newErrorResponse(CodeInternalError, MsgFailedToRegisterCustomer))
+		c.JSON(http.StatusInternalServerError, newErrorResponse(CodeInternalError, MsgInternalError))
 		return
 	}
 
@@ -153,13 +171,51 @@ func (h *Handler) LoginCustomer(c *gin.Context) {
 		}
 		logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).
 			Error("Failed to login customer", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, newErrorResponse(CodeInternalError, MsgFailedToLoginCustomer))
+		c.JSON(http.StatusInternalServerError, newErrorResponse(CodeInternalError, MsgInternalError))
 		return
 	}
 
 	resp := LoginCustomerResponse(output)
 	logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).
 		Info("Customer logged in successfully")
+	c.JSON(http.StatusOK, resp)
+}
+
+// RefreshCustomer handles the refreshing of a customer's authentication token.
+func (h *Handler) RefreshCustomer(c *gin.Context) {
+	logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).Info("RefreshCustomer handler called")
+
+	var req RefreshCustomerRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).Warn("Failed to bind request", zap.Error(err))
+		errResp := getErrorResponseFromValidationErr(err)
+		c.JSON(http.StatusBadRequest, errResp)
+		return
+	}
+
+	input := RefreshCustomerInput(req)
+	output, err := h.service.RefreshCustomer(c.Request.Context(), input)
+	if err != nil {
+		if errors.Is(err, ErrInvalidRefreshToken) {
+			logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).Warn("Invalid refresh token provided")
+			c.JSON(http.StatusUnauthorized, newErrorResponse(CodeInvalidRefreshToken, MsgInvalidRefreshToken))
+			return
+		} else if errors.Is(err, ErrTokenMismatch) {
+			logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).Warn("Token mismatch")
+			c.JSON(http.StatusForbidden, newErrorResponse(CodeTokenMismatch, MsgTokenMismatch))
+			return
+		}
+
+		logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).
+			Error("Failed to refresh customer", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, newErrorResponse(CodeInternalError, MsgInternalError))
+		return
+	}
+
+	resp := RefreshCustomerResponse{
+		LoginCustomerResponse(output.LoginCustomerOutput),
+	}
+	logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).Info("Customer refreshed successfully")
 	c.JSON(http.StatusOK, resp)
 }
 
@@ -190,7 +246,7 @@ func getErrorResponseFromValidationErr(err error) ErrorResponse {
 
 // getValidationErrorDetail returns a detailed error message based on the field error
 func getValidationErrorDetail(fe validator.FieldError) string {
-	field := strings.ToLower(fe.Field())
+	field := strcase.ToSnake(fe.Field())
 	switch fe.Tag() {
 	case "required":
 		return field + " is required"
