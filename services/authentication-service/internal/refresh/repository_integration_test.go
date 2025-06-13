@@ -117,14 +117,14 @@ func TestRepository_FindActiveToken(t *testing.T) {
 		wantErr         error
 	}{
 		{
-			name:    "when the refresh token does not exist, then it should return a refresh token not found error",
+			name: "when the refresh token does not exist, then it should return a refresh token not found error",
 			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
 				insertTestRefreshToken(t, coll, refresh.Token{
 					UserID:    "fake-user-id",
 					Role:      "fake-role",
 					Token:     "active-token",
 					Status:    refresh.TokenStatusActive,
-					ExpiresAt: expiredAt,
+					ExpiresAt: expiresAt,
 					CreatedAt: now,
 					UpdatedAt: now,
 					DeviceInfo: refresh.DeviceInfo{
