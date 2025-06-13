@@ -25,6 +25,7 @@ const (
 //go:generate mockgen -destination=./mocks/repository_mock.go -package=refresh_mocks github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh Repository
 type Repository interface {
 	Create(ctx context.Context, params CreateTokenParams) (Token, error)
+	FindActiveToken(ctx context.Context, token string) (Token, error)
 }
 
 // CreateTokenParams defines the parameters required to create a new token for a user.
@@ -74,4 +75,9 @@ func (r *repository) Create(ctx context.Context, params CreateTokenParams) (Toke
 
 	token.ID = res.InsertedID.(primitive.ObjectID).Hex()
 	return token, nil
+}
+
+func (r *repository) FindActiveToken(ctx context.Context, token string) (Token, error) {
+	//TODO implement me
+	panic("implement me")
 }
