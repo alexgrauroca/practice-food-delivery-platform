@@ -2,8 +2,10 @@ package refresh
 
 import (
 	"context"
+	"errors"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
@@ -18,6 +20,10 @@ const (
 
 	// FieldToken represents the database field name for storing token values.
 	FieldToken = "token"
+	// FieldStatus represents the database field name for storing token status information.
+	FieldStatus = "status"
+	// FieldExpiresAt represents the database field name for storing the expiration time of a token.
+	FieldExpiresAt = "expires_at"
 )
 
 // Repository defines a contract for storing and managing refresh tokens in a persistence layer.
@@ -25,7 +31,7 @@ const (
 //go:generate mockgen -destination=./mocks/repository_mock.go -package=refresh_mocks github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh Repository
 type Repository interface {
 	Create(ctx context.Context, params CreateTokenParams) (Token, error)
-	FindActiveToken(ctx context.Context, token string) (Token, error)
+	FindActiveToken(ctx context.Context, refreshToken string) (Token, error)
 }
 
 // CreateTokenParams defines the parameters required to create a new token for a user.
@@ -77,7 +83,24 @@ func (r *repository) Create(ctx context.Context, params CreateTokenParams) (Toke
 	return token, nil
 }
 
-func (r *repository) FindActiveToken(ctx context.Context, token string) (Token, error) {
-	//TODO implement me
-	panic("implement me")
+func (r *repository) FindActiveToken(ctx context.Context, refreshToken string) (Token, error) {
+	token := Token{}
+	searchParams := bson.M{
+		FieldToken:  refreshToken,
+		FieldStatus: TokenStatusActive,
+		FieldExpiresAt: bson.M{
+			"$gt": r.clock.Now(),
+		},
+	}
+	err := r.collection.FindOne(ctx, searchParams).Decode(&token)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			logctx.LoggerWithRequestInfo(ctx, r.logger).Warn("Refresh token not found")
+			return Token{}, ErrRefreshTokenNotFound
+		}
+		logctx.LoggerWithRequestInfo(ctx, r.logger).Error("Failed to find active refresh refreshToken", zap.Error(err))
+		return Token{}, err
+	}
+
+	return token, nil
 }

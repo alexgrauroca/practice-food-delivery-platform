@@ -118,6 +118,24 @@ func TestRepository_FindActiveToken(t *testing.T) {
 	}{
 		{
 			name:    "when the refresh token does not exist, then it should return a refresh token not found error",
+			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
+				insertTestRefreshToken(t, coll, refresh.Token{
+					UserID:    "fake-user-id",
+					Role:      "fake-role",
+					Token:     "active-token",
+					Status:    refresh.TokenStatusActive,
+					ExpiresAt: expiredAt,
+					CreatedAt: now,
+					UpdatedAt: now,
+					DeviceInfo: refresh.DeviceInfo{
+						DeviceID:    "fake-device-id",
+						UserAgent:   "fake-user-agent",
+						IP:          "fake-ip",
+						FirstUsedAt: now,
+						LastUsedAt:  now,
+					},
+				})
+			},
 			token:   "unexisting-token",
 			want:    refresh.Token{},
 			wantErr: refresh.ErrRefreshTokenNotFound,
