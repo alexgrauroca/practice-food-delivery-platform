@@ -78,7 +78,7 @@ func (s *service) validateToken(tokenString string) (Claims, error) {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		return s.secret, nil
-	}, jwt.WithValidMethods([]string{"HS256"}))
+	}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Name}))
 	if err != nil {
 		return Claims{}, ErrInvalidToken
 	}
