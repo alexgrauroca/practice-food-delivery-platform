@@ -80,17 +80,7 @@ func (s *service) Generate(ctx context.Context, input GenerateTokenInput) (Gener
 		return GenerateTokenOutput{}, err
 	}
 
-	ip := logctx.RealIPFromContext(ctx)
-	userAgent := logctx.UserAgentFromContext(ctx)
-	deviceID := generateDeviceID(userAgent, ip)
-
-	device := DeviceInfo{
-		DeviceID:    deviceID,
-		UserAgent:   userAgent,
-		IP:          ip,
-		FirstUsedAt: time.Now(),
-		LastUsedAt:  time.Now(),
-	}
+	device := getDeviceFromContext(ctx)
 	params := CreateTokenParams{
 		UserID:    input.UserID,
 		Role:      input.Role,
@@ -108,8 +98,18 @@ func (s *service) Generate(ctx context.Context, input GenerateTokenInput) (Gener
 }
 
 func (s *service) FindActiveToken(ctx context.Context, input FindActiveTokenInput) (FindActiveTokenOutput, error) {
-	//TODO implement me
-	panic("implement me")
+	token, err := s.repo.FindActiveToken(ctx, input.Token)
+	if err != nil {
+		return FindActiveTokenOutput{}, err
+	}
+
+	return FindActiveTokenOutput{
+		ID:     token.ID,
+		Token:  token.Token,
+		UserID: token.UserID,
+		Role:   token.Role,
+		Device: token.DeviceInfo,
+	}, nil
 }
 
 func (s *service) Expire(ctx context.Context, input ExpireInput) error {
@@ -133,4 +133,18 @@ func generateDeviceID(userAgent, ip string) string {
 	data := fmt.Sprintf("%s|%s", userAgent, ip)
 	hash := sha256.Sum256([]byte(data))
 	return hex.EncodeToString(hash[:])
+}
+
+func getDeviceFromContext(ctx context.Context) DeviceInfo {
+	ip := logctx.RealIPFromContext(ctx)
+	userAgent := logctx.UserAgentFromContext(ctx)
+	deviceID := generateDeviceID(userAgent, ip)
+
+	return DeviceInfo{
+		DeviceID:    deviceID,
+		UserAgent:   userAgent,
+		IP:          ip,
+		FirstUsedAt: time.Now(),
+		LastUsedAt:  time.Now(),
+	}
 }
