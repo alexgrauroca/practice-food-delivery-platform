@@ -2,6 +2,7 @@
 package jwt
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -21,9 +22,8 @@ type Service interface {
 
 // Claims represents a JWT payload.
 type Claims struct {
-	Subject   string    // "sub" claim
-	Role      string    // "role" claim
-	ExpiresAt time.Time // "exp" claim
+	jwt.RegisteredClaims
+	Role string `json:"role"`
 }
 
 // Config represents configuration settings for token generation
@@ -46,10 +46,15 @@ func NewService(logger *zap.Logger, secret []byte) Service {
 }
 
 func (s *service) GenerateToken(id string, cfg Config) (string, error) {
-	claims := jwt.MapClaims{
-		"sub":  id,
-		"role": cfg.Role,
-		"exp":  time.Now().Add(time.Duration(cfg.Expiration) * time.Second).Unix(),
+	now := time.Now()
+	claims := &Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   id,
+			ExpiresAt: jwt.NewNumericDate(now.Add(time.Duration(cfg.Expiration) * time.Second)),
+			IssuedAt:  jwt.NewNumericDate(now),
+			NotBefore: jwt.NewNumericDate(now),
+		},
+		Role: cfg.Role,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -57,6 +62,32 @@ func (s *service) GenerateToken(id string, cfg Config) (string, error) {
 }
 
 func (s *service) GetClaims(token string) (Claims, error) {
-	//TODO implement me
-	panic("implement me")
+	claims, err := s.validateToken(token)
+	if err != nil {
+		return Claims{}, err
+	}
+
+	return claims, nil
+}
+
+func (s *service) validateToken(tokenString string) (Claims, error) {
+	// Parse and validate the token with explicit validation options
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (any, error) {
+		// Validate the signing method
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return s.secret, nil
+	}, jwt.WithValidMethods([]string{"HS256"}))
+	if err != nil {
+		return Claims{}, ErrInvalidToken
+	}
+
+	// Type assertion of the claims
+	claims, ok := token.Claims.(Claims)
+	if !ok || !token.Valid {
+		return Claims{}, ErrInvalidToken
+	}
+
+	return claims, nil
 }
