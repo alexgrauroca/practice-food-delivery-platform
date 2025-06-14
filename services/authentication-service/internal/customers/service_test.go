@@ -507,10 +507,53 @@ func TestService_RefreshCustomer(t *testing.T) {
 				refreshService.EXPECT().Generate(gomock.Any(), gomock.Any()).
 					Return(refresh.GenerateTokenOutput{Token: "fake-refresh-token"}, nil)
 
-				refreshService.EXPECT().Expire(gomock.Any(), gomock.Any()).Return(errToken)
+				refreshService.EXPECT().Expire(gomock.Any(), gomock.Any()).Return(refresh.ExpireOutput{}, errToken)
 			},
 			want:    customers.RefreshCustomerOutput{},
 			wantErr: errToken,
+		},
+		{
+			name: "when refresh token expiration returns a not found error, then it should return the new token",
+			input: customers.RefreshCustomerInput{
+				RefreshToken: "ValidRefreshToken",
+				AccessToken:  "ValidAccessToken",
+			},
+			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
+				jwtService *jwtmocks.MockService) {
+
+				refreshService.EXPECT().FindActiveToken(gomock.Any(), refresh.FindActiveTokenInput{
+					Token: "ValidRefreshToken",
+				}).Return(refresh.FindActiveTokenOutput{
+					UserID: "fake-user-id",
+					Role:   "customer",
+				}, nil)
+
+				claims := jwt.Claims{Role: "customer"}
+				claims.Subject = "fake-user-id"
+				jwtService.EXPECT().GetClaims("ValidAccessToken").Return(claims, nil)
+
+				jwtService.EXPECT().GenerateToken("fake-user-id", jwt.Config{
+					Expiration: 3600,
+					Role:       "customer",
+				}).Return("fake-token", nil)
+
+				refreshService.EXPECT().Generate(gomock.Any(), refresh.GenerateTokenInput{
+					UserID: "fake-user-id",
+					Role:   "customer",
+				}).Return(refresh.GenerateTokenOutput{Token: "fake-refresh-token"}, nil)
+
+				refreshService.EXPECT().Expire(gomock.Any(), refresh.ExpireInput{
+					Token: "ValidRefreshToken",
+				}).Return(refresh.ExpireOutput{}, refresh.ErrRefreshTokenNotFound)
+			},
+			want: customers.RefreshCustomerOutput{
+				TokenPair: customers.TokenPair{
+					AccessToken:  "fake-token",
+					RefreshToken: "fake-refresh-token",
+					ExpiresIn:    3600,
+					TokenType:    "Bearer",
+				},
+			},
 		},
 		{
 			name: "when the new access token is generated correctly, then it should return the new token",
@@ -544,7 +587,7 @@ func TestService_RefreshCustomer(t *testing.T) {
 
 				refreshService.EXPECT().Expire(gomock.Any(), refresh.ExpireInput{
 					Token: "ValidRefreshToken",
-				}).Return(nil)
+				}).Return(refresh.ExpireOutput{}, nil)
 			},
 			want: customers.RefreshCustomerOutput{
 				TokenPair: customers.TokenPair{
