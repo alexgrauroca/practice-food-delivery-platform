@@ -22,14 +22,16 @@ var (
 	errRepo = errors.New("repository error")
 )
 
+type refreshServiceTestCase[I, W any] struct {
+	name       string
+	input      I
+	mocksSetup func(repo *refreshmocks.MockRepository)
+	want       W
+	wantErr    error
+}
+
 func TestService_Generate(t *testing.T) {
-	tests := []struct {
-		name       string
-		input      refresh.GenerateTokenInput
-		mocksSetup func(repo *refreshmocks.MockRepository)
-		want       refresh.GenerateTokenOutput
-		wantErr    error
-	}{
+	tests := []refreshServiceTestCase[refresh.GenerateTokenInput, refresh.GenerateTokenOutput]{
 		{
 			name: "when there is an error storing the refresh token, then it propagates the error",
 			input: refresh.GenerateTokenInput{
@@ -90,13 +92,7 @@ func TestService_FindByActiveToken(t *testing.T) {
 	yesterday := time.Date(2025, 1, 6, 0, 0, 0, 0, time.UTC)
 	tomorrow := time.Date(2025, 1, 8, 0, 0, 0, 0, time.UTC)
 
-	tests := []struct {
-		name       string
-		input      refresh.FindActiveTokenInput
-		mocksSetup func(repo *refreshmocks.MockRepository)
-		want       refresh.FindActiveTokenOutput
-		wantErr    error
-	}{
+	tests := []refreshServiceTestCase[refresh.FindActiveTokenInput, refresh.FindActiveTokenOutput]{
 		{
 			name: "when unable to find the token active, then it returns a refresh token not found error",
 			input: refresh.FindActiveTokenInput{

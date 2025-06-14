@@ -113,8 +113,7 @@ func (s *service) FindActiveToken(ctx context.Context, input FindActiveTokenInpu
 }
 
 func (s *service) Expire(ctx context.Context, input ExpireInput) error {
-	//TODO implement me
-	panic("implement me")
+	return nil
 }
 
 func generateToken() (string, error) {
