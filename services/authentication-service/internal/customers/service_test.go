@@ -360,8 +360,7 @@ func TestService_RefreshCustomer(t *testing.T) {
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
 					Return(refresh.FindActiveTokenOutput{}, nil)
 
-				jwtService.EXPECT().GetClaims(gomock.Any()).
-					Return(jwt.Claims{}, jwt.ErrInvalidToken)
+				jwtService.EXPECT().GetClaims(gomock.Any()).Return(jwt.Claims{}, jwt.ErrInvalidToken)
 			},
 			want:    customers.RefreshCustomerOutput{},
 			wantErr: customers.ErrTokenMismatch,
@@ -379,8 +378,7 @@ func TestService_RefreshCustomer(t *testing.T) {
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
 					Return(refresh.FindActiveTokenOutput{}, nil)
 
-				jwtService.EXPECT().GetClaims(gomock.Any()).
-					Return(jwt.Claims{}, errToken)
+				jwtService.EXPECT().GetClaims(gomock.Any()).Return(jwt.Claims{}, errToken)
 			},
 			want:    customers.RefreshCustomerOutput{},
 			wantErr: errToken,
@@ -398,10 +396,12 @@ func TestService_RefreshCustomer(t *testing.T) {
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
 					Return(refresh.FindActiveTokenOutput{UserID: "fake-user-id-1"}, nil)
 
-				jwtService.EXPECT().GetClaims(gomock.Any()).
-					Return(jwt.Claims{
-						Subject: "fake-user-id-2",
-					}, nil)
+				//TODO As subject comes from the internal JWT library,
+				//I don't want to expose it here. As a quick mitigation I'm doing it in that way,
+				//but in long term I would like to do it in a better way.
+				claims := jwt.Claims{}
+				claims.Subject = "fake-user-id-2"
+				jwtService.EXPECT().GetClaims(gomock.Any()).Return(claims, nil)
 			},
 			want:    customers.RefreshCustomerOutput{},
 			wantErr: customers.ErrTokenMismatch,
@@ -422,11 +422,9 @@ func TestService_RefreshCustomer(t *testing.T) {
 						Role:   "role-1",
 					}, nil)
 
-				jwtService.EXPECT().GetClaims(gomock.Any()).
-					Return(jwt.Claims{
-						Subject: "fake-user-id-1",
-						Role:    "role-2",
-					}, nil)
+				claims := jwt.Claims{Role: "role-2"}
+				claims.Subject = "fake-user-id-1"
+				jwtService.EXPECT().GetClaims(gomock.Any()).Return(claims, nil)
 			},
 			want:    customers.RefreshCustomerOutput{},
 			wantErr: customers.ErrTokenMismatch,
@@ -446,11 +444,9 @@ func TestService_RefreshCustomer(t *testing.T) {
 						Role:   "fake-role",
 					}, nil)
 
-				jwtService.EXPECT().GetClaims(gomock.Any()).
-					Return(jwt.Claims{
-						Subject: "fake-user-id",
-						Role:    "fake-role",
-					}, nil)
+				claims := jwt.Claims{Role: "fake-role"}
+				claims.Subject = "fake-user-id"
+				jwtService.EXPECT().GetClaims(gomock.Any()).Return(claims, nil)
 
 				jwtService.EXPECT().GenerateToken(gomock.Any(), gomock.Any()).
 					Return("", errToken)
@@ -473,11 +469,9 @@ func TestService_RefreshCustomer(t *testing.T) {
 						Role:   "fake-role",
 					}, nil)
 
-				jwtService.EXPECT().GetClaims(gomock.Any()).
-					Return(jwt.Claims{
-						Subject: "fake-user-id",
-						Role:    "fake-role",
-					}, nil)
+				claims := jwt.Claims{Role: "fake-role"}
+				claims.Subject = "fake-user-id"
+				jwtService.EXPECT().GetClaims(gomock.Any()).Return(claims, nil)
 
 				jwtService.EXPECT().GenerateToken(gomock.Any(), gomock.Any()).
 					Return("fake-token", nil)
@@ -503,11 +497,9 @@ func TestService_RefreshCustomer(t *testing.T) {
 						Role:   "fake-role",
 					}, nil)
 
-				jwtService.EXPECT().GetClaims(gomock.Any()).
-					Return(jwt.Claims{
-						Subject: "fake-user-id",
-						Role:    "fake-role",
-					}, nil)
+				claims := jwt.Claims{Role: "fake-role"}
+				claims.Subject = "fake-user-id"
+				jwtService.EXPECT().GetClaims(gomock.Any()).Return(claims, nil)
 
 				jwtService.EXPECT().GenerateToken(gomock.Any(), gomock.Any()).
 					Return("fake-token", nil)
@@ -529,25 +521,30 @@ func TestService_RefreshCustomer(t *testing.T) {
 			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
 				jwtService *jwtmocks.MockService) {
 
-				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
-					Return(refresh.FindActiveTokenOutput{
-						UserID: "fake-user-id",
-						Role:   "fake-role",
-					}, nil)
+				refreshService.EXPECT().FindActiveToken(gomock.Any(), refresh.FindActiveTokenInput{
+					Token: "ValidRefreshToken",
+				}).Return(refresh.FindActiveTokenOutput{
+					UserID: "fake-user-id",
+					Role:   "customer",
+				}, nil)
 
-				jwtService.EXPECT().GetClaims(gomock.Any()).
-					Return(jwt.Claims{
-						Subject: "fake-user-id",
-						Role:    "fake-role",
-					}, nil)
+				claims := jwt.Claims{Role: "customer"}
+				claims.Subject = "fake-user-id"
+				jwtService.EXPECT().GetClaims("ValidAccessToken").Return(claims, nil)
 
-				jwtService.EXPECT().GenerateToken(gomock.Any(), gomock.Any()).
-					Return("fake-token", nil)
+				jwtService.EXPECT().GenerateToken("fake-user-id", jwt.Config{
+					Expiration: 3600,
+					Role:       "customer",
+				}).Return("fake-token", nil)
 
-				refreshService.EXPECT().Generate(gomock.Any(), gomock.Any()).
-					Return(refresh.GenerateTokenOutput{Token: "fake-refresh-token"}, nil)
+				refreshService.EXPECT().Generate(gomock.Any(), refresh.GenerateTokenInput{
+					UserID: "fake-user-id",
+					Role:   "customer",
+				}).Return(refresh.GenerateTokenOutput{Token: "fake-refresh-token"}, nil)
 
-				refreshService.EXPECT().Expire(gomock.Any(), gomock.Any()).Return(nil)
+				refreshService.EXPECT().Expire(gomock.Any(), refresh.ExpireInput{
+					Token: "ValidRefreshToken",
+				}).Return(nil)
 			},
 			want: customers.RefreshCustomerOutput{
 				TokenPair: customers.TokenPair{
