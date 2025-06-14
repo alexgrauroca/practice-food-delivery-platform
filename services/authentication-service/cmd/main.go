@@ -85,7 +85,7 @@ func initRefreshFeature(logger *zap.Logger, db *mongo.Database) refresh.Service 
 	repo := refresh.NewRepository(logger, db, clock.RealClock{})
 
 	// Initialize the refresh service
-	return refresh.NewService(logger, repo)
+	return refresh.NewService(logger, repo, clock.RealClock{})
 }
 
 func initJWTFeature(logger *zap.Logger) jwt.Service {

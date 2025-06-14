@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/clock"
@@ -24,6 +25,8 @@ const (
 	FieldStatus = "status"
 	// FieldExpiresAt represents the database field name for storing the expiration time of a token.
 	FieldExpiresAt = "expires_at"
+	// FieldUpdatedAt represents the database field name for storing the timestamp of the last update.
+	FieldUpdatedAt = "updated_at"
 )
 
 // Repository defines a contract for storing and managing refresh tokens in a persistence layer.
@@ -32,6 +35,7 @@ const (
 type Repository interface {
 	Create(ctx context.Context, params CreateTokenParams) (Token, error)
 	FindActiveToken(ctx context.Context, refreshToken string) (Token, error)
+	Expire(ctx context.Context, params ExpireParams) (Token, error)
 }
 
 // CreateTokenParams defines the parameters required to create a new token for a user.
@@ -40,6 +44,11 @@ type CreateTokenParams struct {
 	Role      string
 	Token     string
 	Device    DeviceInfo
+	ExpiresAt time.Time
+}
+
+type ExpireParams struct {
+	Token     string
 	ExpiresAt time.Time
 }
 
@@ -102,5 +111,37 @@ func (r *repository) FindActiveToken(ctx context.Context, refreshToken string) (
 		return Token{}, err
 	}
 
+	return token, nil
+}
+
+func (r *repository) Expire(ctx context.Context, params ExpireParams) (Token, error) {
+	var token Token
+	filter := bson.M{
+		FieldToken:  params.Token,
+		FieldStatus: TokenStatusActive,
+		// If the token was already expired, then we do nothing
+		FieldExpiresAt: bson.M{
+			"$gt": params.ExpiresAt,
+		},
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			FieldExpiresAt: params.ExpiresAt,
+			FieldUpdatedAt: r.clock.Now(),
+		},
+	}
+
+	// Returning the updated document
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
+	err := r.collection.FindOneAndUpdate(ctx, filter, update, opts).Decode(&token)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			logctx.LoggerWithRequestInfo(ctx, r.logger).Warn("Refresh token not found")
+			return Token{}, ErrRefreshTokenNotFound
+		}
+		logctx.LoggerWithRequestInfo(ctx, r.logger).Error("Failed to expire refresh token", zap.Error(err))
+		return Token{}, err
+	}
 	return token, nil
 }
