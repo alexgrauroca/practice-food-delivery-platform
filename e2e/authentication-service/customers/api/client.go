@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	apierrors "github.com/alexgrauroca/practice-food-delivery-platform/e2e/authentication-service/customers/api/errors"
 )
 
 const (
@@ -29,32 +31,40 @@ var (
 func DoPost[T any](endpoint string, payload any) (*T, error) {
 	body, err := json.Marshal(payload)
 	if err != nil {
-		return nil, fmt.Errorf("error marshaling payload: %w", err)
+		return nil, fmt.Errorf("errors marshaling payload: %w", err)
 	}
 
 	resp, err := http.Post(endpoint, contentTypeJSON, bytes.NewReader(body))
 	if err != nil {
-		return nil, fmt.Errorf("error making POST request: %w", err)
+		return nil, fmt.Errorf("errors making POST request: %w", err)
 	}
 	defer func(Body io.ReadCloser) {
 		_ = Body.Close()
 	}(resp.Body)
 
+	responseBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("errors reading response body: %w", err)
+	}
+
 	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read error response body: %v", err)
+		// Try to parse as API errors first
+		if apiError, err := apierrors.ParseErrorResponse(responseBody); err == nil {
+			return nil, apiError
 		}
-		defer func(Body io.ReadCloser) {
-			_ = Body.Close()
-		}(resp.Body)
-		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode, string(body))
+		// Fallback to generic errors
+		return nil, &apierrors.APIError{
+			Code:    "UNEXPECTED_ERROR",
+			Message: fmt.Sprintf("unexpected status code: %d", resp.StatusCode),
+			Details: []string{string(responseBody)},
+		}
 	}
 
 	var result T
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, fmt.Errorf("error decoding response: %w", err)
+	if err := json.Unmarshal(responseBody, &result); err != nil {
+		return nil, fmt.Errorf("errors decoding response: %w", err)
 	}
 
 	return &result, nil
+
 }
