@@ -20,9 +20,10 @@ import (
 const (
 	// DefaultRefreshTokenLength defines the default length, in bytes, of a generated refresh token for authentication purposes.
 	DefaultRefreshTokenLength = 32
-
-	// DefaultTokenExpiration specifies the default duration for which a token remains valid, set to one hour.
+	// DefaultTokenExpiration specifies the default duration for which a token remains valid.
 	DefaultTokenExpiration = 7 * 24 * time.Hour
+	// DefaultTokenExpiresInSec represents when the token will be effectively expired from now, in seconds.
+	DefaultTokenExpiresInSec = 5
 )
 
 // Service represents the core interface for refresh tokens.
@@ -122,7 +123,10 @@ func (s *service) FindActiveToken(ctx context.Context, input FindActiveTokenInpu
 }
 
 func (s *service) Expire(ctx context.Context, input ExpireInput) (ExpireOutput, error) {
-	token, err := s.repo.Expire(ctx, ExpireParams{Token: input.Token})
+	token, err := s.repo.Expire(ctx, ExpireParams{
+		Token:     input.Token,
+		ExpiresAt: s.clock.Now().Add(DefaultTokenExpiresInSec * time.Second),
+	})
 	if err != nil {
 		return ExpireOutput{}, err
 	}

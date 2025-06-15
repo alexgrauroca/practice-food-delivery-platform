@@ -189,7 +189,7 @@ func TestService_Expire(t *testing.T) {
 				Token: "fake-token",
 			},
 			mocksSetup: func(repo *refreshmocks.MockRepository) {
-				repo.EXPECT().Expire(gomock.Any(), gomock.Any()).Return(gomock.Any(), errRepo)
+				repo.EXPECT().Expire(gomock.Any(), gomock.Any()).Return(refresh.Token{}, errRepo)
 			},
 			want:    refresh.ExpireOutput{},
 			wantErr: errRepo,
@@ -215,6 +215,7 @@ func TestService_Expire(t *testing.T) {
 			want: refresh.ExpireOutput{
 				ID:    "fake-token-id",
 				Token: "fake-token",
+				ExpiresAt: now.Add(5 * time.Second),
 			},
 			wantErr: nil,
 		},
