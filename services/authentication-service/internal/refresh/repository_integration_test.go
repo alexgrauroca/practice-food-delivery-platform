@@ -20,17 +20,22 @@ import (
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh"
 )
 
-var now = time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
-var expiresAt = time.Date(2025, 1, 7, 0, 0, 0, 0, time.UTC)
-var expiredAt = time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+var (
+	now       = time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	expiresAt = time.Date(2025, 1, 7, 0, 0, 0, 0, time.UTC)
+	expiredAt = time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+)
+
+type refreshRepositoryTestCase[P, W any] struct {
+	name            string
+	insertDocuments func(t *testing.T, coll *mongo.Collection)
+	params          P
+	want            W
+	wantErr         error
+}
 
 func TestRepository_Create(t *testing.T) {
-	tests := []struct {
-		name    string
-		params  refresh.CreateTokenParams
-		want    refresh.Token
-		wantErr error
-	}{
+	tests := []refreshRepositoryTestCase[refresh.CreateTokenParams, refresh.Token]{
 		{
 			name: "when the refresh token is stored successfully, it should return the stored token",
 			params: refresh.CreateTokenParams{
@@ -107,13 +112,7 @@ func TestRepository_Create_UnexpectedFailure(t *testing.T) {
 }
 
 func TestRepository_FindActiveToken(t *testing.T) {
-	tests := []struct {
-		name            string
-		insertDocuments func(t *testing.T, coll *mongo.Collection)
-		params          string
-		want            refresh.Token
-		wantErr         error
-	}{
+	tests := []refreshRepositoryTestCase[string, refresh.Token]{
 		{
 			name: "when the refresh token does not exist, then it should return a refresh token not found error",
 			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
