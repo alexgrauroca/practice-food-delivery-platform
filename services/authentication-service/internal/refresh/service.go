@@ -13,15 +13,17 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/clock"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/logctx"
 )
 
 const (
 	// DefaultRefreshTokenLength defines the default length, in bytes, of a generated refresh token for authentication purposes.
 	DefaultRefreshTokenLength = 32
-
-	// DefaultTokenExpiration specifies the default duration for which a token remains valid, set to one hour.
+	// DefaultTokenExpiration specifies the default duration for which a token remains valid.
 	DefaultTokenExpiration = 7 * 24 * time.Hour
+	// DefaultTokenExpiresInSec represents when the token will be effectively expired from now, in seconds.
+	DefaultTokenExpiresInSec = 5
 )
 
 // Service represents the core interface for refresh tokens.
@@ -30,7 +32,7 @@ const (
 type Service interface {
 	Generate(ctx context.Context, input GenerateTokenInput) (GenerateTokenOutput, error)
 	FindActiveToken(ctx context.Context, input FindActiveTokenInput) (FindActiveTokenOutput, error)
-	Expire(ctx context.Context, input ExpireInput) error
+	Expire(ctx context.Context, input ExpireInput) (ExpireOutput, error)
 }
 
 // GenerateTokenInput represents the input data required for generating a token.
@@ -63,14 +65,22 @@ type ExpireInput struct {
 	Token string
 }
 
+// ExpireOutput represents the output structure of a token expiration operation.
+type ExpireOutput struct {
+	ID        string
+	Token     string
+	ExpiresAt time.Time
+}
+
 type service struct {
 	logger *zap.Logger
 	repo   Repository
+	clock  clock.Clock
 }
 
 // NewService initializes and returns a new Service implementation.
-func NewService(logger *zap.Logger, repo Repository) Service {
-	return &service{logger: logger, repo: repo}
+func NewService(logger *zap.Logger, repo Repository, clk clock.Clock) Service {
+	return &service{logger: logger, repo: repo, clock: clk}
 }
 
 func (s *service) Generate(ctx context.Context, input GenerateTokenInput) (GenerateTokenOutput, error) {
@@ -112,9 +122,19 @@ func (s *service) FindActiveToken(ctx context.Context, input FindActiveTokenInpu
 	}, nil
 }
 
-func (s *service) Expire(ctx context.Context, input ExpireInput) error {
-	//TODO implement me
-	panic("implement me")
+func (s *service) Expire(ctx context.Context, input ExpireInput) (ExpireOutput, error) {
+	token, err := s.repo.Expire(ctx, ExpireParams{
+		Token:     input.Token,
+		ExpiresAt: s.clock.Now().Add(DefaultTokenExpiresInSec * time.Second),
+	})
+	if err != nil {
+		return ExpireOutput{}, err
+	}
+	return ExpireOutput{
+		ID:        token.ID,
+		Token:     token.Token,
+		ExpiresAt: token.ExpiresAt,
+	}, nil
 }
 
 func generateToken() (string, error) {

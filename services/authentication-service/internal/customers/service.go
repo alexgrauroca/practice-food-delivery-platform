@@ -185,8 +185,9 @@ func (s *service) RefreshCustomer(ctx context.Context, input RefreshCustomerInpu
 		return RefreshCustomerOutput{}, err
 	}
 
-	err = s.refreshService.Expire(ctx, refresh.ExpireInput{Token: input.RefreshToken})
-	if err != nil {
+	_, err = s.refreshService.Expire(ctx, refresh.ExpireInput{Token: input.RefreshToken})
+	// ErrRefreshTokenNotFound is silent because it does not affect the result of the workflow
+	if err != nil && !errors.Is(err, refresh.ErrRefreshTokenNotFound) {
 		logctx.LoggerWithRequestInfo(ctx, s.logger).Error("failed to expire refresh token", zap.Error(err))
 		return RefreshCustomerOutput{}, err
 	}

@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/clock"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh"
 	refreshmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh/mocks"
 )
@@ -22,14 +23,16 @@ var (
 	errRepo = errors.New("repository error")
 )
 
+type refreshServiceTestCase[I, W any] struct {
+	name       string
+	input      I
+	mocksSetup func(repo *refreshmocks.MockRepository)
+	want       W
+	wantErr    error
+}
+
 func TestService_Generate(t *testing.T) {
-	tests := []struct {
-		name       string
-		input      refresh.GenerateTokenInput
-		mocksSetup func(repo *refreshmocks.MockRepository)
-		want       refresh.GenerateTokenOutput
-		wantErr    error
-	}{
+	tests := []refreshServiceTestCase[refresh.GenerateTokenInput, refresh.GenerateTokenOutput]{
 		{
 			name: "when there is an error storing the refresh token, then it propagates the error",
 			input: refresh.GenerateTokenInput{
@@ -76,7 +79,7 @@ func TestService_Generate(t *testing.T) {
 				tt.mocksSetup(repo)
 			}
 
-			service := refresh.NewService(logger, repo)
+			service := refresh.NewService(logger, repo, clock.RealClock{})
 			got, err := service.Generate(context.Background(), tt.input)
 
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -90,13 +93,7 @@ func TestService_FindByActiveToken(t *testing.T) {
 	yesterday := time.Date(2025, 1, 6, 0, 0, 0, 0, time.UTC)
 	tomorrow := time.Date(2025, 1, 8, 0, 0, 0, 0, time.UTC)
 
-	tests := []struct {
-		name       string
-		input      refresh.FindActiveTokenInput
-		mocksSetup func(repo *refreshmocks.MockRepository)
-		want       refresh.FindActiveTokenOutput
-		wantErr    error
-	}{
+	tests := []refreshServiceTestCase[refresh.FindActiveTokenInput, refresh.FindActiveTokenOutput]{
 		{
 			name: "when unable to find the token active, then it returns a refresh token not found error",
 			input: refresh.FindActiveTokenInput{
@@ -172,8 +169,70 @@ func TestService_FindByActiveToken(t *testing.T) {
 				tt.mocksSetup(repo)
 			}
 
-			service := refresh.NewService(logger, repo)
+			service := refresh.NewService(logger, repo, clock.RealClock{})
 			got, err := service.FindActiveToken(context.Background(), tt.input)
+
+			assert.ErrorIs(t, err, tt.wantErr)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestService_Expire(t *testing.T) {
+	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	yesterday := time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC)
+
+	tests := []refreshServiceTestCase[refresh.ExpireInput, refresh.ExpireOutput]{
+		{
+			name: "when unable to expire the token, then it propagates the error",
+			input: refresh.ExpireInput{
+				Token: "fake-token",
+			},
+			mocksSetup: func(repo *refreshmocks.MockRepository) {
+				repo.EXPECT().Expire(gomock.Any(), gomock.Any()).Return(refresh.Token{}, errRepo)
+			},
+			want:    refresh.ExpireOutput{},
+			wantErr: errRepo,
+		},
+		{
+			name: "when the token is expired, then it returns the token",
+			input: refresh.ExpireInput{
+				Token: "fake-token",
+			},
+			mocksSetup: func(repo *refreshmocks.MockRepository) {
+				repo.EXPECT().Expire(gomock.Any(), refresh.ExpireParams{
+					Token:     "fake-token",
+					ExpiresAt: now.Add(5 * time.Second),
+				}).Return(refresh.Token{
+					ID:        "fake-token-id",
+					Token:     "fake-token",
+					Status:    refresh.TokenStatusActive,
+					ExpiresAt: now.Add(5 * time.Second),
+					CreatedAt: yesterday,
+					UpdatedAt: now,
+				}, nil)
+			},
+			want: refresh.ExpireOutput{
+				ID:    "fake-token-id",
+				Token: "fake-token",
+				ExpiresAt: now.Add(5 * time.Second),
+			},
+			wantErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			repo := refreshmocks.NewMockRepository(ctrl)
+			if tt.mocksSetup != nil {
+				tt.mocksSetup(repo)
+			}
+
+			service := refresh.NewService(logger, repo, clock.FixedClock{FixedTime: now})
+			got, err := service.Expire(context.Background(), tt.input)
 
 			assert.ErrorIs(t, err, tt.wantErr)
 			assert.Equal(t, tt.want, got)
