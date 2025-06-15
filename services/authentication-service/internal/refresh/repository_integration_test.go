@@ -21,9 +21,11 @@ import (
 )
 
 var (
-	now       = time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
-	expiresAt = time.Date(2025, 1, 7, 0, 0, 0, 0, time.UTC)
-	expiredAt = time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	now          = time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	yesterday    = time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC)
+	expiresAt    = time.Date(2025, 1, 7, 0, 0, 0, 0, time.UTC)
+	expiredAt    = time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	newExpiresAt = time.Date(2025, 1, 1, 0, 0, 5, 0, time.UTC)
 )
 
 type refreshRepositoryTestCase[P, W any] struct {
@@ -265,6 +267,169 @@ func TestRepository_FindActiveToken_UnexpectedFailure(t *testing.T) {
 	cleanup()
 
 	_, err := repo.FindActiveToken(context.Background(), "")
+	assert.Error(t, err, "Expected an error due to unexpected failure")
+}
+
+func TestRepository_Expire(t *testing.T) {
+	tests := []refreshRepositoryTestCase[refresh.ExpireParams, refresh.Token]{
+		{
+			name: "when the refresh token does not exist, then it should return a refresh token not found error",
+			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
+				insertTestRefreshToken(t, coll, refresh.Token{
+					UserID:    "fake-user-id",
+					Role:      "fake-role",
+					Token:     "active-token",
+					Status:    refresh.TokenStatusActive,
+					ExpiresAt: expiresAt,
+					CreatedAt: now,
+					UpdatedAt: now,
+					DeviceInfo: refresh.DeviceInfo{
+						DeviceID:    "fake-device-id",
+						UserAgent:   "fake-user-agent",
+						IP:          "fake-ip",
+						FirstUsedAt: now,
+						LastUsedAt:  now,
+					},
+				})
+			},
+			params:  refresh.ExpireParams{Token: "unexisting-token"},
+			want:    refresh.Token{},
+			wantErr: refresh.ErrRefreshTokenNotFound,
+		},
+		{
+			name: "when the refresh token is revoked, then it should return a refresh token not found error",
+			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
+				insertTestRefreshToken(t, coll, refresh.Token{
+					UserID:    "fake-user-id",
+					Role:      "fake-role",
+					Token:     "revoked-token",
+					Status:    refresh.TokenStatusRevoked,
+					ExpiresAt: expiresAt,
+					CreatedAt: now,
+					UpdatedAt: now,
+					DeviceInfo: refresh.DeviceInfo{
+						DeviceID:    "fake-device-id",
+						UserAgent:   "fake-user-agent",
+						IP:          "fake-ip",
+						FirstUsedAt: now,
+						LastUsedAt:  now,
+					},
+				})
+			},
+			params:  refresh.ExpireParams{Token: "revoked-token"},
+			want:    refresh.Token{},
+			wantErr: refresh.ErrRefreshTokenNotFound,
+		},
+		{
+			name: "when the refresh token is already expired, then it should return a refresh token not found error",
+			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
+				insertTestRefreshToken(t, coll, refresh.Token{
+					UserID:    "fake-user-id",
+					Role:      "fake-role",
+					Token:     "expired-token",
+					Status:    refresh.TokenStatusActive,
+					ExpiresAt: newExpiresAt,
+					CreatedAt: now,
+					UpdatedAt: now,
+					DeviceInfo: refresh.DeviceInfo{
+						DeviceID:    "fake-device-id",
+						UserAgent:   "fake-user-agent",
+						IP:          "fake-ip",
+						FirstUsedAt: now,
+						LastUsedAt:  now,
+					},
+				})
+			},
+			params: refresh.ExpireParams{
+				Token:     "expired-token",
+				ExpiresAt: newExpiresAt,
+			},
+			want:    refresh.Token{},
+			wantErr: refresh.ErrRefreshTokenNotFound,
+		},
+		{
+			name: "when the refresh token is active, then it should return the token expired",
+			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
+				insertTestRefreshToken(t, coll, refresh.Token{
+					UserID:    "fake-user-id",
+					Role:      "fake-role",
+					Token:     "active-token",
+					Status:    refresh.TokenStatusActive,
+					ExpiresAt: expiresAt,
+					CreatedAt: yesterday,
+					UpdatedAt: yesterday,
+					DeviceInfo: refresh.DeviceInfo{
+						DeviceID:    "fake-device-id",
+						UserAgent:   "fake-user-agent",
+						IP:          "fake-ip",
+						FirstUsedAt: yesterday,
+						LastUsedAt:  yesterday,
+					},
+				})
+			},
+			params: refresh.ExpireParams{
+				Token:     "active-token",
+				ExpiresAt: newExpiresAt,
+			},
+			want: refresh.Token{
+				UserID:    "fake-user-id",
+				Role:      "fake-role",
+				Token:     "active-token",
+				Status:    refresh.TokenStatusActive,
+				ExpiresAt: newExpiresAt,
+				CreatedAt: yesterday,
+				UpdatedAt: now,
+				DeviceInfo: refresh.DeviceInfo{
+					DeviceID:    "fake-device-id",
+					UserAgent:   "fake-user-agent",
+					IP:          "fake-ip",
+					FirstUsedAt: yesterday,
+					LastUsedAt:  yesterday,
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, cleanup := setupTestDB(t)
+			defer cleanup()
+
+			coll := setupTestRefreshTokenCollection(t, db)
+			if tt.insertDocuments != nil {
+				tt.insertDocuments(t, coll)
+			}
+
+			repo := refresh.NewRepository(zap.NewNop(), db, clock.FixedClock{FixedTime: now})
+			token, err := repo.Expire(context.Background(), tt.params)
+
+			// Error assertion
+			assert.ErrorIs(t, err, tt.wantErr)
+
+			// Validating the token only if there is no error expected
+			if tt.wantErr == nil {
+				// As the ID is generated by MongoDB, we just check that it is not empty
+				assert.NotEmpty(t, token.ID, "ID should not be empty")
+
+				// Doing this as in that way, I can do a direct equal assertion between the token and the expected, so
+				// I can detect changes in the struct while ignoring the ID value.
+				tt.want.ID = token.ID
+				assert.Equal(t, tt.want, token)
+			}
+		})
+	}
+}
+
+func TestRepository_Expire_UnexpectedFailure(t *testing.T) {
+	db, cleanup := setupTestDB(t)
+	setupTestRefreshTokenCollection(t, db)
+
+	repo := refresh.NewRepository(zap.NewNop(), db, clock.FixedClock{FixedTime: now})
+
+	// Simulating an unexpected failure by closing the opened connection
+	cleanup()
+
+	_, err := repo.Expire(context.Background(), refresh.ExpireParams{})
 	assert.Error(t, err, "Expected an error due to unexpected failure")
 }
 
