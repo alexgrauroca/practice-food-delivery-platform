@@ -7,8 +7,9 @@ This project simulates a simplified food delivery platform and is used as a trai
 - [practice-food-delivery-platform](#practice-food-delivery-platform)
   - [Linter](#linter)
   - [Methodology](#methodology)
+    - [E2E Example](#e2e-example)
   - [Actors](#actors)
-  - [Services (Go microservices, each exposing a REST API)](#services-go-microservices-each-exposing-a-rest-api)
+  - [Services](#services)
     - [1. Authentication Service](#1-authentication-service)
     - [2. Customer Service](#2-customer-service)
     - [3. Restaurant Service](#3-restaurant-service)
@@ -16,7 +17,7 @@ This project simulates a simplified food delivery platform and is used as a trai
     - [5. Delivery Service](#5-delivery-service)
     - [6. API Gateway](#6-api-gateway)
   - [Data Storage](#data-storage)
-  - [Communication](#communication)
+  - [Service Communication](#service-communication)
   - [Example Workflow](#example-workflow)
   - [JWT \& Security](#jwt--security)
   - [Concurrency \& Performance](#concurrency--performance)
@@ -50,7 +51,20 @@ cases. TDD should help to reduce those cases as much as possible because we just
 the expected behavior.
 
 I have discarded to implement mutation tests, as Go libraries are not still mature enough, and I was having problems 
-with how I've implemented the code. For simpler projects it can work well, but for projects like this one it is not. 
+with how I've implemented the code. For simpler projects it can work well, but for projects like this one it is not.
+
+For the E2E I am focusing too on behavior from the user's point of view. At the same time, considering that E2E are the 
+most expensive tests to run, I will only cover happy paths of the workflows and behaviors that are not possible to 
+be tested with integration or unit tests.
+
+### E2E Example
+
+An example of this approach is authentication E2E tests. From the user's point of view, an authentication process 
+involves registration, log in, and refresh token. This means that a single test case must be created to cover this 
+workflow, instead of a single one for registration, log ing, and refresh independently.
+
+At the same time, it becomes easier to check if the refresh token is properly expired with an E2E, as we can wait 
+the 5 seconds that this token is still active, and then we can check it back again.
 
 ---
 
