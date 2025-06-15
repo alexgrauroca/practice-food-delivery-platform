@@ -84,10 +84,10 @@ func (s *service) validateToken(tokenString string) (Claims, error) {
 	}
 
 	// Type assertion of the claims
-	claims, ok := token.Claims.(Claims)
+	claims, ok := token.Claims.(*Claims)
 	if !ok || !token.Valid {
 		return Claims{}, ErrInvalidToken
 	}
 
-	return claims, nil
+	return *claims, nil
 }

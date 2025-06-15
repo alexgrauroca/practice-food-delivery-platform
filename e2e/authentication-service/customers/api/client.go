@@ -12,17 +12,16 @@ import (
 
 const (
 	baseURL         = "http://localhost:80"
-	apiV1           = baseURL + "/v1.0"
 	contentTypeJSON = "application/json"
 )
 
 var (
-
 	// RegisterEndpoint defines the API endpoint URL for customer registration under version 1.0 of the API.
-	RegisterEndpoint = apiV1 + "/customers/register"
-
+	RegisterEndpoint = baseURL + "/v1.0/customers/register"
 	// LoginEndpoint defines the API endpoint URL for customer login under version 1.0 of the API.
-	LoginEndpoint = apiV1 + "/customers/login"
+	LoginEndpoint = baseURL + "/v1.0/customers/login"
+	// RefreshEndpoint defines the API endpoint URL for refreshing customer data under version 1.0 of the API.
+	RefreshEndpoint = baseURL + "/v1.0/customers/refresh"
 )
 
 // DoPost sends a POST request to the specified endpoint with the given payload, decoding the response into the generic type T.
@@ -42,7 +41,14 @@ func DoPost[T any](endpoint string, payload any) (*T, error) {
 	}(resp.Body)
 
 	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read error response body: %v", err)
+		}
+		defer func(Body io.ReadCloser) {
+			_ = Body.Close()
+		}(resp.Body)
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode, string(body))
 	}
 
 	var result T
