@@ -17,7 +17,6 @@ import (
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/clock"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/config"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/logctx"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh"
 )
 
@@ -27,11 +26,10 @@ var expiredAt = time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 
 func TestRepository_Create(t *testing.T) {
 	tests := []struct {
-		name        string
-		params      refresh.CreateTokenParams
-		requestInfo *logctx.RequestInfo
-		want        refresh.Token
-		wantErr     error
+		name    string
+		params  refresh.CreateTokenParams
+		want    refresh.Token
+		wantErr error
 	}{
 		{
 			name: "when the refresh token is stored successfully, it should return the stored token",
@@ -112,7 +110,7 @@ func TestRepository_FindActiveToken(t *testing.T) {
 	tests := []struct {
 		name            string
 		insertDocuments func(t *testing.T, coll *mongo.Collection)
-		token           string
+		params          string
 		want            refresh.Token
 		wantErr         error
 	}{
@@ -136,7 +134,7 @@ func TestRepository_FindActiveToken(t *testing.T) {
 					},
 				})
 			},
-			token:   "unexisting-token",
+			params:  "unexisting-token",
 			want:    refresh.Token{},
 			wantErr: refresh.ErrRefreshTokenNotFound,
 		},
@@ -160,7 +158,7 @@ func TestRepository_FindActiveToken(t *testing.T) {
 					},
 				})
 			},
-			token:   "revoked-token",
+			params:  "revoked-token",
 			want:    refresh.Token{},
 			wantErr: refresh.ErrRefreshTokenNotFound,
 		},
@@ -184,7 +182,7 @@ func TestRepository_FindActiveToken(t *testing.T) {
 					},
 				})
 			},
-			token:   "expired-token",
+			params:  "expired-token",
 			want:    refresh.Token{},
 			wantErr: refresh.ErrRefreshTokenNotFound,
 		},
@@ -208,7 +206,7 @@ func TestRepository_FindActiveToken(t *testing.T) {
 					},
 				})
 			},
-			token: "active-token",
+			params: "active-token",
 			want: refresh.Token{
 				UserID:    "fake-user-id",
 				Role:      "fake-role",
@@ -239,7 +237,7 @@ func TestRepository_FindActiveToken(t *testing.T) {
 			}
 
 			repo := refresh.NewRepository(zap.NewNop(), db, clock.FixedClock{FixedTime: now})
-			token, err := repo.FindActiveToken(context.Background(), tt.token)
+			token, err := repo.FindActiveToken(context.Background(), tt.params)
 
 			// Error assertion
 			assert.ErrorIs(t, err, tt.wantErr)
