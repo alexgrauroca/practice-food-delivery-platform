@@ -91,7 +91,7 @@ func initRefreshFeature(logger *zap.Logger, db *mongo.Database) refresh.Service 
 func initJWTFeature(logger *zap.Logger) jwt.Service {
 	/// Initialize the jwt service
 	//TODO configure secret by env vars
-	return jwt.NewService(logger, []byte("your-fancy-secret"))
+	return jwt.NewService(logger, []byte("a-string-secret-at-least-256-bits-long"))
 }
 
 func initCustomersFeature(logger *zap.Logger, db *mongo.Database, router *gin.Engine, refreshService refresh.Service,

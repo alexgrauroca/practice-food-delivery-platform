@@ -1,10 +1,13 @@
 package customer
 
+import "github.com/alexgrauroca/practice-food-delivery-platform/e2e/authentication-service/authentication"
+
 // TestCustomer represents a test customer with email, password, and name information.
 type TestCustomer struct {
 	Email    string
 	Password string
 	Name     string
+	Auth     authentication.Token
 }
 
 // RegisterResponse represents the response data structure for a successful user registration.
@@ -17,10 +20,12 @@ type RegisterResponse struct {
 
 // LoginResponse represents the response payload returned upon a successful login containing token information.
 type LoginResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	ExpiresIn    int    `json:"expires_in"`
-	TokenType    string `json:"token_type"`
+	authentication.Token
+}
+
+// RefreshResponse represents the response returned after refreshing an authentication token.
+type RefreshResponse struct {
+	authentication.Token
 }
 
 const (
