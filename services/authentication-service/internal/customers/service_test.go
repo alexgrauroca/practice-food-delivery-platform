@@ -28,15 +28,18 @@ var (
 	logger   = zap.NewNop()
 )
 
+type customersServiceTestCase[I, W any] struct {
+	name       string
+	input      I
+	mocksSetup func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
+		jwtService *jwtmocks.MockService)
+	want    W
+	wantErr error
+}
+
 func TestService_RegisterCustomer(t *testing.T) {
 	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
-	tests := []struct {
-		name       string
-		input      customers.RegisterCustomerInput
-		mocksSetup func(repo *customersmocks.MockRepository)
-		want       customers.RegisterCustomerOutput
-		wantErr    error
-	}{
+	tests := []customersServiceTestCase[customers.RegisterCustomerInput, customers.RegisterCustomerOutput]{
 		{
 			name: "when there is an active customer with the same email, then it should return a customer already exists error",
 			input: customers.RegisterCustomerInput{
@@ -44,7 +47,8 @@ func TestService_RegisterCustomer(t *testing.T) {
 				Password: "ValidPassword123",
 				Name:     "John Doe",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository) {
+			mocksSetup: func(repo *customersmocks.MockRepository, _ *refreshmocks.MockService,
+				_ *jwtmocks.MockService) {
 				repo.EXPECT().CreateCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, customers.ErrCustomerAlreadyExists)
 			},
@@ -58,7 +62,8 @@ func TestService_RegisterCustomer(t *testing.T) {
 				Password: "ValidPassword123",
 				Name:     "John Doe",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository) {
+			mocksSetup: func(repo *customersmocks.MockRepository, _ *refreshmocks.MockService,
+				_ *jwtmocks.MockService) {
 				repo.EXPECT().CreateCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, errRepo)
 			},
@@ -72,7 +77,8 @@ func TestService_RegisterCustomer(t *testing.T) {
 				Password: "ValidPassword123",
 				Name:     "John Doe",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository) {
+			mocksSetup: func(repo *customersmocks.MockRepository, _ *refreshmocks.MockService,
+				_ *jwtmocks.MockService) {
 				repo.EXPECT().CreateCustomer(gomock.Any(), gomock.Any()).
 					DoAndReturn(func(_ context.Context, params customers.CreateCustomerParams) (customers.Customer, error) {
 						// Assert that the password is hashed
@@ -109,7 +115,7 @@ func TestService_RegisterCustomer(t *testing.T) {
 			refreshService := refreshmocks.NewMockService(ctrl)
 			jwtService := jwtmocks.NewMockService(ctrl)
 			if tt.mocksSetup != nil {
-				tt.mocksSetup(repo)
+				tt.mocksSetup(repo, refreshService, jwtService)
 			}
 
 			service := customers.NewService(logger, repo, refreshService, jwtService)
@@ -124,14 +130,7 @@ func TestService_RegisterCustomer(t *testing.T) {
 func TestService_LoginCustomer(t *testing.T) {
 	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 
-	tests := []struct {
-		name       string
-		input      customers.LoginCustomerInput
-		mocksSetup func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
-			jwtService *jwtmocks.MockService)
-		want    customers.LoginCustomerOutput
-		wantErr error
-	}{
+	tests := []customersServiceTestCase[customers.LoginCustomerInput, customers.LoginCustomerOutput]{
 		{
 			name: "when there is not an active customer with the same email, " +
 				"then it should return an invalid credentials error",
@@ -309,22 +308,15 @@ func TestService_LoginCustomer(t *testing.T) {
 }
 
 func TestService_RefreshCustomer(t *testing.T) {
-	tests := []struct {
-		name       string
-		input      customers.RefreshCustomerInput
-		mocksSetup func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
-			jwtService *jwtmocks.MockService)
-		want    customers.RefreshCustomerOutput
-		wantErr error
-	}{
+	tests := []customersServiceTestCase[customers.RefreshCustomerInput, customers.RefreshCustomerOutput]{
 		{
 			name: "when there is not an active refresh token, then it should return an invalid refresh token error",
 			input: customers.RefreshCustomerInput{
 				RefreshToken: "InvalidRefreshToken",
 				AccessToken:  "ValidAccessToken",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
-				jwtService *jwtmocks.MockService) {
+			mocksSetup: func(_ *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
+				_ *jwtmocks.MockService) {
 
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
 					Return(refresh.FindActiveTokenOutput{}, refresh.ErrRefreshTokenNotFound)
@@ -339,8 +331,8 @@ func TestService_RefreshCustomer(t *testing.T) {
 				RefreshToken: "InvalidRefreshToken",
 				AccessToken:  "ValidAccessToken",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
-				jwtService *jwtmocks.MockService) {
+			mocksSetup: func(_ *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
+				_ *jwtmocks.MockService) {
 
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
 					Return(refresh.FindActiveTokenOutput{}, errToken)
@@ -354,7 +346,7 @@ func TestService_RefreshCustomer(t *testing.T) {
 				RefreshToken: "ValidRefreshToken",
 				AccessToken:  "InvalidAccessToken",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
+			mocksSetup: func(_ *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
 				jwtService *jwtmocks.MockService) {
 
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
@@ -372,7 +364,7 @@ func TestService_RefreshCustomer(t *testing.T) {
 				RefreshToken: "ValidRefreshToken",
 				AccessToken:  "InvalidAccessToken",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
+			mocksSetup: func(_ *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
 				jwtService *jwtmocks.MockService) {
 
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
@@ -390,7 +382,7 @@ func TestService_RefreshCustomer(t *testing.T) {
 				RefreshToken: "ValidRefreshToken",
 				AccessToken:  "ValidAccessToken",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
+			mocksSetup: func(_ *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
 				jwtService *jwtmocks.MockService) {
 
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
@@ -413,7 +405,7 @@ func TestService_RefreshCustomer(t *testing.T) {
 				RefreshToken: "ValidRefreshToken",
 				AccessToken:  "ValidAccessToken",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
+			mocksSetup: func(_ *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
 				jwtService *jwtmocks.MockService) {
 
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
@@ -435,7 +427,7 @@ func TestService_RefreshCustomer(t *testing.T) {
 				RefreshToken: "ValidRefreshToken",
 				AccessToken:  "ValidAccessToken",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
+			mocksSetup: func(_ *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
 				jwtService *jwtmocks.MockService) {
 
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
@@ -460,7 +452,7 @@ func TestService_RefreshCustomer(t *testing.T) {
 				RefreshToken: "ValidRefreshToken",
 				AccessToken:  "ValidAccessToken",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
+			mocksSetup: func(_ *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
 				jwtService *jwtmocks.MockService) {
 
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
@@ -488,7 +480,7 @@ func TestService_RefreshCustomer(t *testing.T) {
 				RefreshToken: "ValidRefreshToken",
 				AccessToken:  "ValidAccessToken",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
+			mocksSetup: func(_ *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
 				jwtService *jwtmocks.MockService) {
 
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
@@ -518,7 +510,7 @@ func TestService_RefreshCustomer(t *testing.T) {
 				RefreshToken: "ValidRefreshToken",
 				AccessToken:  "ValidAccessToken",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
+			mocksSetup: func(_ *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
 				jwtService *jwtmocks.MockService) {
 
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), refresh.FindActiveTokenInput{
@@ -561,7 +553,7 @@ func TestService_RefreshCustomer(t *testing.T) {
 				RefreshToken: "ValidRefreshToken",
 				AccessToken:  "ValidAccessToken",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
+			mocksSetup: func(_ *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
 				jwtService *jwtmocks.MockService) {
 
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), refresh.FindActiveTokenInput{
