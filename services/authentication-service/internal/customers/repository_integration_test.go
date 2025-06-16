@@ -22,14 +22,16 @@ import (
 
 var now = time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 
+type customersRepositoryTestCase[P, W any] struct {
+	name            string
+	insertDocuments func(t *testing.T, coll *mongo.Collection)
+	params          P
+	want            W
+	wantErr         error
+}
+
 func TestRepository_CreateCustomer(t *testing.T) {
-	tests := []struct {
-		name            string
-		insertDocuments func(t *testing.T, coll *mongo.Collection)
-		params          customers.CreateCustomerParams
-		want            customers.Customer
-		wantErr         error
-	}{
+	tests := []customersRepositoryTestCase[customers.CreateCustomerParams, customers.Customer]{
 		{
 			name: "when exists an active customer with the same email, it should return a customer already exists error",
 			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
@@ -104,19 +106,13 @@ func TestRepository_CreateCustomer_UnexpectedFailure(t *testing.T) {
 }
 
 func TestRepository_FindByEmail(t *testing.T) {
-	tests := []struct {
-		name            string
-		insertDocuments func(t *testing.T, coll *mongo.Collection)
-		email           string
-		want            customers.Customer
-		wantErr         error
-	}{
+	tests := []customersRepositoryTestCase[string, customers.Customer]{
 		{
 			name: "when there is not an active customer with the email, it should return a customer not found error",
 			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
 				insertTestCustomer(t, coll, "test@example.com", "John Doe", "fakehashedpassword", false)
 			},
-			email:   "test@example.com",
+			params:  "test@example.com",
 			want:    customers.Customer{},
 			wantErr: customers.ErrCustomerNotFound,
 		},
@@ -125,7 +121,7 @@ func TestRepository_FindByEmail(t *testing.T) {
 			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
 				insertTestCustomer(t, coll, "test2@example.com", "John Doe", "fakehashedpassword", true)
 			},
-			email: "test2@example.com",
+			params: "test2@example.com",
 			want: customers.Customer{
 				Email:     "test2@example.com",
 				Name:      "John Doe",
@@ -149,7 +145,7 @@ func TestRepository_FindByEmail(t *testing.T) {
 			}
 
 			repo := customers.NewRepository(zap.NewNop(), db, clock.FixedClock{FixedTime: now})
-			got, err := repo.FindByEmail(context.Background(), tt.email)
+			got, err := repo.FindByEmail(context.Background(), tt.params)
 
 			// Error assertion
 			assert.ErrorIs(t, err, tt.wantErr)
