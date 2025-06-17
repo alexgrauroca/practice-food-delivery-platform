@@ -9,18 +9,19 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/clock"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/config"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/infraestructure/mongodb"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/jwt"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/middleware"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh"
 )
 
 func main() {
+	ctx := context.Background()
+
 	// Initialize the logger
 	logger, err := zap.NewProduction()
 	if err != nil {
@@ -38,10 +39,16 @@ func main() {
 	router.Use(middleware.RequestInfoMiddleware())
 
 	// Initialize MongoDB connection
-	db, done := initMongoDB(logger)
-	if !done {
+	client, err := mongodb.NewClient(ctx, logger)
+	if err != nil {
+		logger.Fatal("Failed to initialize MongoDB client", zap.Error(err))
 		return
 	}
+	defer func(client *mongo.Client, ctx context.Context) {
+		_ = client.Disconnect(ctx)
+	}(client, ctx)
+
+	db := client.Database("authentication_service")
 
 	// Initialize features
 	refreshService := initRefreshFeature(logger, db)
@@ -53,31 +60,6 @@ func main() {
 	if err := router.Run(":8080"); err != nil {
 		logger.Fatal("Failed to start server", zap.Error(err))
 	}
-}
-
-func initMongoDB(logger *zap.Logger) (*mongo.Database, bool) {
-	mongoCfg, err := config.LoadMongoConfig(logger)
-	if err != nil {
-		logger.Fatal("Failed to load MongoDB configuration", zap.Error(err))
-		return nil, true
-	}
-
-	clientOpts := options.Client().ApplyURI(mongoCfg.URI)
-	if mongoCfg.User != "" && mongoCfg.Password != "" {
-		clientOpts.SetAuth(options.Credential{
-			Username: mongoCfg.User,
-			Password: mongoCfg.Password,
-		})
-	}
-
-	client, err := mongo.Connect(context.Background(), clientOpts)
-	if err != nil {
-		logger.Fatal("Failed to connect to MongoDB", zap.Error(err))
-		return nil, false
-	}
-	db := client.Database("authentication_service")
-	logger.Info("Connected to MongoDB")
-	return db, true
 }
 
 func initRefreshFeature(logger *zap.Logger, db *mongo.Database) refresh.Service {

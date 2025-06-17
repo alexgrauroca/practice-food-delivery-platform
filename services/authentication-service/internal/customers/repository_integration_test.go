@@ -4,8 +4,6 @@ package customers_test
 
 import (
 	"context"
-	"fmt"
-	"math/rand"
 	"testing"
 	"time"
 
@@ -16,24 +14,33 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/clock"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/config"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/infraestructure/mongodb"
 )
 
 var now = time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 
+type customersRepositoryTestCase[P, W any] struct {
+	name            string
+	insertDocuments func(t *testing.T, coll *mongo.Collection)
+	params          P
+	want            W
+	wantErr         error
+}
+
 func TestRepository_CreateCustomer(t *testing.T) {
-	tests := []struct {
-		name            string
-		insertDocuments func(t *testing.T, coll *mongo.Collection)
-		params          customers.CreateCustomerParams
-		want            customers.Customer
-		wantErr         error
-	}{
+	tests := []customersRepositoryTestCase[customers.CreateCustomerParams, customers.Customer]{
 		{
 			name: "when exists an active customer with the same email, it should return a customer already exists error",
 			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
-				insertTestCustomer(t, coll, "test@example.com", "John Doe", "fakehashedpassword", true)
+				mongodb.InsertTestDocument(t, coll, customers.Customer{
+					Email:     "test@example.com",
+					Name:      "John Doe",
+					Password:  "fakehashedpassword",
+					Active:    true,
+					CreatedAt: now,
+					UpdatedAt: now,
+				})
 			},
 			params: customers.CreateCustomerParams{
 				Email:    "test@example.com",
@@ -64,15 +71,15 @@ func TestRepository_CreateCustomer(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			db, cleanup := setupTestDB(t)
-			defer cleanup()
+			tdb := mongodb.NewTestDB(t)
+			defer tdb.Close(t)
 
-			coll := setupTestCustomersCollection(t, db)
+			coll := setupTestCustomersCollection(t, tdb.DB)
 			if tt.insertDocuments != nil {
 				tt.insertDocuments(t, coll)
 			}
 
-			repo := customers.NewRepository(zap.NewNop(), db, clock.FixedClock{FixedTime: now})
+			repo := customers.NewRepository(zap.NewNop(), tdb.DB, clock.FixedClock{FixedTime: now})
 			got, err := repo.CreateCustomer(context.Background(), tt.params)
 
 			// Error assertion
@@ -92,11 +99,11 @@ func TestRepository_CreateCustomer(t *testing.T) {
 }
 
 func TestRepository_CreateCustomer_UnexpectedFailure(t *testing.T) {
-	db, cleanup := setupTestDB(t)
-	repo := customers.NewRepository(zap.NewNop(), db, clock.FixedClock{FixedTime: now})
+	tdb := mongodb.NewTestDB(t)
+	repo := customers.NewRepository(zap.NewNop(), tdb.DB, clock.FixedClock{FixedTime: now})
 
 	// Simulating an unexpected failure by closing the opened connection
-	cleanup()
+	tdb.Close(t)
 
 	_, err := repo.CreateCustomer(context.Background(), customers.CreateCustomerParams{})
 	assert.Error(t, err, "Expected an error due to unexpected failure")
@@ -104,28 +111,36 @@ func TestRepository_CreateCustomer_UnexpectedFailure(t *testing.T) {
 }
 
 func TestRepository_FindByEmail(t *testing.T) {
-	tests := []struct {
-		name            string
-		insertDocuments func(t *testing.T, coll *mongo.Collection)
-		email           string
-		want            customers.Customer
-		wantErr         error
-	}{
+	tests := []customersRepositoryTestCase[string, customers.Customer]{
 		{
 			name: "when there is not an active customer with the email, it should return a customer not found error",
 			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
-				insertTestCustomer(t, coll, "test@example.com", "John Doe", "fakehashedpassword", false)
+				mongodb.InsertTestDocument(t, coll, customers.Customer{
+					Email:     "test@example.com",
+					Name:      "John Doe",
+					Password:  "fakehashedpassword",
+					Active:    false,
+					CreatedAt: now,
+					UpdatedAt: now,
+				})
 			},
-			email:   "test@example.com",
+			params:  "test@example.com",
 			want:    customers.Customer{},
 			wantErr: customers.ErrCustomerNotFound,
 		},
 		{
 			name: "when there is an active customer with the email, it should return the customer",
 			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
-				insertTestCustomer(t, coll, "test2@example.com", "John Doe", "fakehashedpassword", true)
+				mongodb.InsertTestDocument(t, coll, customers.Customer{
+					Email:     "test2@example.com",
+					Name:      "John Doe",
+					Password:  "fakehashedpassword",
+					Active:    true,
+					CreatedAt: now,
+					UpdatedAt: now,
+				})
 			},
-			email: "test2@example.com",
+			params: "test2@example.com",
 			want: customers.Customer{
 				Email:     "test2@example.com",
 				Name:      "John Doe",
@@ -140,16 +155,16 @@ func TestRepository_FindByEmail(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			db, cleanup := setupTestDB(t)
-			defer cleanup()
+			tdb := mongodb.NewTestDB(t)
+			defer tdb.Close(t)
 
-			coll := setupTestCustomersCollection(t, db)
+			coll := setupTestCustomersCollection(t, tdb.DB)
 			if tt.insertDocuments != nil {
 				tt.insertDocuments(t, coll)
 			}
 
-			repo := customers.NewRepository(zap.NewNop(), db, clock.FixedClock{FixedTime: now})
-			got, err := repo.FindByEmail(context.Background(), tt.email)
+			repo := customers.NewRepository(zap.NewNop(), tdb.DB, clock.FixedClock{FixedTime: now})
+			got, err := repo.FindByEmail(context.Background(), tt.params)
 
 			// Error assertion
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -167,53 +182,15 @@ func TestRepository_FindByEmail(t *testing.T) {
 }
 
 func TestRepository_FindByEmail_UnexpectedFailure(t *testing.T) {
-	db, cleanup := setupTestDB(t)
-	repo := customers.NewRepository(zap.NewNop(), db, clock.FixedClock{FixedTime: now})
+	tdb := mongodb.NewTestDB(t)
+	repo := customers.NewRepository(zap.NewNop(), tdb.DB, clock.FixedClock{FixedTime: now})
 
 	// Simulating an unexpected failure by closing the opened connection
-	cleanup()
+	tdb.Close(t)
 
 	_, err := repo.FindByEmail(context.Background(), "")
 	assert.Error(t, err, "Expected an error due to unexpected failure")
 	assert.NotErrorIs(t, err, customers.ErrCustomerNotFound)
-}
-
-func setupTestDB(t *testing.T) (*mongo.Database, func()) {
-	logger := zap.NewNop()
-	mongoCfg, err := config.LoadMongoConfig(logger)
-	if err != nil {
-		t.Fatalf("Failed to load MongoDB configuration: %v", err)
-	}
-
-	clientOpts := options.Client().ApplyURI(mongoCfg.URI)
-	if mongoCfg.User != "" && mongoCfg.Password != "" {
-		clientOpts.SetAuth(options.Credential{
-			Username: mongoCfg.User,
-			Password: mongoCfg.Password,
-		})
-	}
-
-	// Context with timeout for connection
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	client, err := mongo.Connect(ctx, clientOpts)
-	if err != nil {
-		t.Fatalf("Failed to connect to MongoDB: %v", err)
-	}
-	// Setting up a unique database name for each test to avoid conflicts
-	dbName := fmt.Sprintf("customers_test_authentication_service_%d_%d", time.Now().UnixNano(), rand.Intn(10000))
-	db := client.Database(dbName)
-	cleanup := func() {
-		if err := db.Drop(ctx); err != nil {
-			t.Fatalf("Failed to drop MongoDB collection: %v", err)
-			return
-		}
-		if err := client.Disconnect(ctx); err != nil {
-			t.Fatalf("Failed to disconnect MongoDB client: %v", err)
-			return
-		}
-		cancel()
-	}
-	return db, cleanup
 }
 
 func setupTestCustomersCollection(t *testing.T, db *mongo.Database) *mongo.Collection {
@@ -234,21 +211,4 @@ func setupTestCustomersCollection(t *testing.T, db *mongo.Database) *mongo.Colle
 	}
 
 	return coll
-}
-
-func insertTestCustomer(t *testing.T, coll *mongo.Collection, email, name, password string, active bool) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	doc := bson.M{
-		"email":      email,
-		"name":       name,
-		"password":   password,
-		"created_at": now,
-		"updated_at": now,
-		"active":     active,
-	}
-	if _, err := coll.InsertOne(ctx, doc); err != nil {
-		t.Fatalf("Failed to insert test customer: %v", err)
-	}
 }

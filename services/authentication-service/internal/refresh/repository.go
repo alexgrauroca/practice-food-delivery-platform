@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/clock"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/infraestructure/mongodb"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/logctx"
 )
 
@@ -47,6 +48,9 @@ type CreateTokenParams struct {
 	ExpiresAt time.Time
 }
 
+// ExpireParams defines parameters needed to update a token's expiration status.
+// Token represents the refresh token to be expired.
+// ExpiresAt specifies the new expiration time for the token.
 type ExpireParams struct {
 	Token     string
 	ExpiresAt time.Time
@@ -84,6 +88,10 @@ func (r *repository) Create(ctx context.Context, params CreateTokenParams) (Toke
 
 	res, err := r.collection.InsertOne(ctx, token)
 	if err != nil {
+		if mongodb.IsDuplicateKeyError(err) {
+			logctx.LoggerWithRequestInfo(ctx, r.logger).Error("Duplicate refresh token", zap.Error(err))
+			return Token{}, ErrRefreshTokenAlreadyExists
+		}
 		logctx.LoggerWithRequestInfo(ctx, r.logger).Error("Failed to store refresh token", zap.Error(err))
 		return Token{}, err
 	}
