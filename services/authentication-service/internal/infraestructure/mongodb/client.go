@@ -4,6 +4,7 @@ package mongodb
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -35,4 +36,17 @@ func NewClient(ctx context.Context, logger *zap.Logger) (*mongo.Client, error) {
 	}
 
 	return client, nil
+}
+
+// IsDuplicateKeyError checks if the error is a duplicate key error (MongoDB error code 11000).
+func IsDuplicateKeyError(err error) bool {
+	var we mongo.WriteException
+	if errors.As(err, &we) {
+		for _, e := range we.WriteErrors {
+			if e.Code == 11000 {
+				return true
+			}
+		}
+	}
+	return false
 }

@@ -38,7 +38,43 @@ func TestRepository_Create(t *testing.T) {
 	//TODO add a case for unique key error
 	tests := []refreshRepositoryTestCase[refresh.CreateTokenParams, refresh.Token]{
 		{
-			name: "when the refresh token is stored successfully, it should return the stored token",
+			name: "when the refresh token already exists, then it should return the error",
+			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
+				mongodb.InsertTestDocument(t, coll, refresh.Token{
+					UserID:    "fake-user-id",
+					Role:      "fake-role",
+					Token:     "fake-token",
+					Status:    refresh.TokenStatusActive,
+					ExpiresAt: expiresAt,
+					CreatedAt: now,
+					UpdatedAt: now,
+					DeviceInfo: refresh.DeviceInfo{
+						DeviceID:    "fake-device-id",
+						UserAgent:   "fake-user-agent",
+						IP:          "fake-ip",
+						FirstUsedAt: now,
+						LastUsedAt:  now,
+					},
+				})
+			},
+			params: refresh.CreateTokenParams{
+				UserID:    "fake-user-id",
+				Role:      "fake-role",
+				Token:     "fake-token",
+				ExpiresAt: expiresAt,
+				Device: refresh.DeviceInfo{
+					DeviceID:    "fake-device-id",
+					UserAgent:   "fake-user-agent",
+					IP:          "fake-ip",
+					FirstUsedAt: now,
+					LastUsedAt:  now,
+				},
+			},
+			want:    refresh.Token{},
+			wantErr: refresh.ErrRefreshTokenAlreadyExists,
+		},
+		{
+			name: "when the refresh token is stored successfully, then it should return the stored token",
 			params: refresh.CreateTokenParams{
 				UserID:    "fake-user-id",
 				Role:      "fake-role",
@@ -68,7 +104,6 @@ func TestRepository_Create(t *testing.T) {
 					LastUsedAt:  now,
 				},
 			},
-			wantErr: nil,
 		},
 	}
 
@@ -77,7 +112,10 @@ func TestRepository_Create(t *testing.T) {
 			tdb := mongodb.NewTestDB(t)
 			defer tdb.Close(t)
 
-			setupTestRefreshTokenCollection(t, tdb.DB)
+			coll := setupTestRefreshTokenCollection(t, tdb.DB)
+			if tt.insertDocuments != nil {
+				tt.insertDocuments(t, coll)
+			}
 
 			repo := refresh.NewRepository(zap.NewNop(), tdb.DB, clock.FixedClock{FixedTime: now})
 			token, err := repo.Create(context.Background(), tt.params)
