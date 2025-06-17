@@ -35,6 +35,7 @@ type refreshRepositoryTestCase[P, W any] struct {
 }
 
 func TestRepository_Create(t *testing.T) {
+	//TODO add a case for unique key error
 	tests := []refreshRepositoryTestCase[refresh.CreateTokenParams, refresh.Token]{
 		{
 			name: "when the refresh token is stored successfully, it should return the stored token",
@@ -116,7 +117,7 @@ func TestRepository_FindActiveToken(t *testing.T) {
 		{
 			name: "when the refresh token does not exist, then it should return a refresh token not found error",
 			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
-				insertTestRefreshToken(t, coll, refresh.Token{
+				mongodb.InsertTestDocument(t, coll, refresh.Token{
 					UserID:    "fake-user-id",
 					Role:      "fake-role",
 					Token:     "active-token",
@@ -140,7 +141,7 @@ func TestRepository_FindActiveToken(t *testing.T) {
 		{
 			name: "when the refresh token is revoked, then it should return a refresh token not found error",
 			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
-				insertTestRefreshToken(t, coll, refresh.Token{
+				mongodb.InsertTestDocument(t, coll, refresh.Token{
 					UserID:    "fake-user-id",
 					Role:      "fake-role",
 					Token:     "revoked-token",
@@ -164,7 +165,7 @@ func TestRepository_FindActiveToken(t *testing.T) {
 		{
 			name: "when the refresh token is expired, then it should return a refresh token not found error",
 			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
-				insertTestRefreshToken(t, coll, refresh.Token{
+				mongodb.InsertTestDocument(t, coll, refresh.Token{
 					UserID:    "fake-user-id",
 					Role:      "fake-role",
 					Token:     "expired-token",
@@ -188,7 +189,7 @@ func TestRepository_FindActiveToken(t *testing.T) {
 		{
 			name: "when the refresh token is active, then it should return the token",
 			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
-				insertTestRefreshToken(t, coll, refresh.Token{
+				mongodb.InsertTestDocument(t, coll, refresh.Token{
 					UserID:    "fake-user-id",
 					Role:      "fake-role",
 					Token:     "active-token",
@@ -273,7 +274,7 @@ func TestRepository_Expire(t *testing.T) {
 		{
 			name: "when the refresh token does not exist, then it should return a refresh token not found error",
 			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
-				insertTestRefreshToken(t, coll, refresh.Token{
+				mongodb.InsertTestDocument(t, coll, refresh.Token{
 					UserID:    "fake-user-id",
 					Role:      "fake-role",
 					Token:     "active-token",
@@ -297,7 +298,7 @@ func TestRepository_Expire(t *testing.T) {
 		{
 			name: "when the refresh token is revoked, then it should return a refresh token not found error",
 			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
-				insertTestRefreshToken(t, coll, refresh.Token{
+				mongodb.InsertTestDocument(t, coll, refresh.Token{
 					UserID:    "fake-user-id",
 					Role:      "fake-role",
 					Token:     "revoked-token",
@@ -321,7 +322,7 @@ func TestRepository_Expire(t *testing.T) {
 		{
 			name: "when the refresh token is already expired, then it should return a refresh token not found error",
 			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
-				insertTestRefreshToken(t, coll, refresh.Token{
+				mongodb.InsertTestDocument(t, coll, refresh.Token{
 					UserID:    "fake-user-id",
 					Role:      "fake-role",
 					Token:     "expired-token",
@@ -348,7 +349,7 @@ func TestRepository_Expire(t *testing.T) {
 		{
 			name: "when the refresh token is active, then it should return the token expired",
 			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
-				insertTestRefreshToken(t, coll, refresh.Token{
+				mongodb.InsertTestDocument(t, coll, refresh.Token{
 					UserID:    "fake-user-id",
 					Role:      "fake-role",
 					Token:     "active-token",
@@ -447,22 +448,4 @@ func setupTestRefreshTokenCollection(t *testing.T, db *mongo.Database) *mongo.Co
 	}
 
 	return coll
-}
-
-func insertTestRefreshToken(t *testing.T, coll *mongo.Collection, token refresh.Token) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	data, err := bson.Marshal(token)
-	if err != nil {
-		t.Fatalf("Failed to marshal test refresh token: %v", err)
-	}
-
-	var doc bson.M
-	if err := bson.Unmarshal(data, &doc); err != nil {
-		t.Fatalf("Failed to unmarshal test refresh token: %v", err)
-	}
-	if _, err := coll.InsertOne(ctx, doc); err != nil {
-		t.Fatalf("Failed to insert test refresh token: %v", err)
-	}
 }

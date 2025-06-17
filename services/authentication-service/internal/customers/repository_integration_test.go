@@ -33,7 +33,14 @@ func TestRepository_CreateCustomer(t *testing.T) {
 		{
 			name: "when exists an active customer with the same email, it should return a customer already exists error",
 			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
-				insertTestCustomer(t, coll, "test@example.com", "John Doe", "fakehashedpassword", true)
+				mongodb.InsertTestDocument(t, coll, customers.Customer{
+					Email:     "test@example.com",
+					Name:      "John Doe",
+					Password:  "fakehashedpassword",
+					Active:    true,
+					CreatedAt: now,
+					UpdatedAt: now,
+				})
 			},
 			params: customers.CreateCustomerParams{
 				Email:    "test@example.com",
@@ -108,7 +115,14 @@ func TestRepository_FindByEmail(t *testing.T) {
 		{
 			name: "when there is not an active customer with the email, it should return a customer not found error",
 			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
-				insertTestCustomer(t, coll, "test@example.com", "John Doe", "fakehashedpassword", false)
+				mongodb.InsertTestDocument(t, coll, customers.Customer{
+					Email:     "test@example.com",
+					Name:      "John Doe",
+					Password:  "fakehashedpassword",
+					Active:    false,
+					CreatedAt: now,
+					UpdatedAt: now,
+				})
 			},
 			params:  "test@example.com",
 			want:    customers.Customer{},
@@ -117,7 +131,14 @@ func TestRepository_FindByEmail(t *testing.T) {
 		{
 			name: "when there is an active customer with the email, it should return the customer",
 			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
-				insertTestCustomer(t, coll, "test2@example.com", "John Doe", "fakehashedpassword", true)
+				mongodb.InsertTestDocument(t, coll, customers.Customer{
+					Email:     "test2@example.com",
+					Name:      "John Doe",
+					Password:  "fakehashedpassword",
+					Active:    true,
+					CreatedAt: now,
+					UpdatedAt: now,
+				})
 			},
 			params: "test2@example.com",
 			want: customers.Customer{
@@ -190,21 +211,4 @@ func setupTestCustomersCollection(t *testing.T, db *mongo.Database) *mongo.Colle
 	}
 
 	return coll
-}
-
-func insertTestCustomer(t *testing.T, coll *mongo.Collection, email, name, password string, active bool) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	doc := bson.M{
-		"email":      email,
-		"name":       name,
-		"password":   password,
-		"created_at": now,
-		"updated_at": now,
-		"active":     active,
-	}
-	if _, err := coll.InsertOne(ctx, doc); err != nil {
-		t.Fatalf("Failed to insert test customer: %v", err)
-	}
 }

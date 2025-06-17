@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
 )
@@ -61,3 +62,25 @@ func (tdb *TestDB) Close(t *testing.T) {
 	}
 }
 
+// InsertTestDocument inserts a test document into a specified MongoDB collection within a test context.
+// M represents the type of the document to be inserted.
+// It uses the testing.T instance to log any errors that occur during execution.
+func InsertTestDocument[M any](t *testing.T, coll *mongo.Collection, doc M) {
+	t.Helper()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	data, err := bson.Marshal(doc)
+	if err != nil {
+		t.Fatalf("Failed to marshal test refresh token: %v", err)
+	}
+
+	var bdoc bson.M
+	if err := bson.Unmarshal(data, &bdoc); err != nil {
+		t.Fatalf("Failed to unmarshal test refresh token: %v", err)
+	}
+	if _, err := coll.InsertOne(ctx, bdoc); err != nil {
+		t.Fatalf("Failed to insert test refresh token: %v", err)
+	}
+}
