@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/clock"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/infraestructure/mongodb"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/logctx"
 )
 
@@ -82,7 +83,7 @@ func (r *repository) CreateCustomer(ctx context.Context, params CreateCustomerPa
 	}
 	res, err := r.collection.InsertOne(ctx, c)
 	if err != nil {
-		if isDuplicateKeyError(err) {
+		if mongodb.IsDuplicateKeyError(err) {
 			logctx.LoggerWithRequestInfo(ctx, r.logger).
 				Warn("Customer already exists", zap.String("email", params.Email))
 			return Customer{}, ErrCustomerAlreadyExists
@@ -115,17 +116,4 @@ func (r *repository) FindByEmail(ctx context.Context, email string) (Customer, e
 		return Customer{}, err
 	}
 	return customer, nil
-}
-
-// isDuplicateKeyError checks if the error is a duplicate key error (MongoDB error code 11000).
-func isDuplicateKeyError(err error) bool {
-	var we mongo.WriteException
-	if errors.As(err, &we) {
-		for _, e := range we.WriteErrors {
-			if e.Code == 11000 {
-				return true
-			}
-		}
-	}
-	return false
 }
