@@ -4,8 +4,6 @@ package refresh_test
 
 import (
 	"context"
-	"fmt"
-	"math/rand"
 	"testing"
 	"time"
 
@@ -16,7 +14,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/clock"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/config"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/infraestructure/mongodb"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh"
 )
 
@@ -75,12 +73,12 @@ func TestRepository_Create(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			db, cleanup := setupTestDB(t)
-			defer cleanup()
+			tdb := mongodb.NewTestDB(t)
+			defer tdb.Close(t)
 
-			setupTestRefreshTokenCollection(t, db)
+			setupTestRefreshTokenCollection(t, tdb.DB)
 
-			repo := refresh.NewRepository(zap.NewNop(), db, clock.FixedClock{FixedTime: now})
+			repo := refresh.NewRepository(zap.NewNop(), tdb.DB, clock.FixedClock{FixedTime: now})
 			token, err := repo.Create(context.Background(), tt.params)
 
 			// Error assertion
@@ -101,13 +99,13 @@ func TestRepository_Create(t *testing.T) {
 }
 
 func TestRepository_Create_UnexpectedFailure(t *testing.T) {
-	db, cleanup := setupTestDB(t)
-	setupTestRefreshTokenCollection(t, db)
+	tdb := mongodb.NewTestDB(t)
+	setupTestRefreshTokenCollection(t, tdb.DB)
 
-	repo := refresh.NewRepository(zap.NewNop(), db, clock.FixedClock{FixedTime: now})
+	repo := refresh.NewRepository(zap.NewNop(), tdb.DB, clock.FixedClock{FixedTime: now})
 
 	// Simulating an unexpected failure by closing the opened connection
-	cleanup()
+	tdb.Close(t)
 
 	_, err := repo.Create(context.Background(), refresh.CreateTokenParams{})
 	assert.Error(t, err, "Expected an error due to unexpected failure")
@@ -229,15 +227,15 @@ func TestRepository_FindActiveToken(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			db, cleanup := setupTestDB(t)
-			defer cleanup()
+			tdb := mongodb.NewTestDB(t)
+			defer tdb.Close(t)
 
-			coll := setupTestRefreshTokenCollection(t, db)
+			coll := setupTestRefreshTokenCollection(t, tdb.DB)
 			if tt.insertDocuments != nil {
 				tt.insertDocuments(t, coll)
 			}
 
-			repo := refresh.NewRepository(zap.NewNop(), db, clock.FixedClock{FixedTime: now})
+			repo := refresh.NewRepository(zap.NewNop(), tdb.DB, clock.FixedClock{FixedTime: now})
 			token, err := repo.FindActiveToken(context.Background(), tt.params)
 
 			// Error assertion
@@ -258,13 +256,13 @@ func TestRepository_FindActiveToken(t *testing.T) {
 }
 
 func TestRepository_FindActiveToken_UnexpectedFailure(t *testing.T) {
-	db, cleanup := setupTestDB(t)
-	setupTestRefreshTokenCollection(t, db)
+	tdb := mongodb.NewTestDB(t)
+	setupTestRefreshTokenCollection(t, tdb.DB)
 
-	repo := refresh.NewRepository(zap.NewNop(), db, clock.FixedClock{FixedTime: now})
+	repo := refresh.NewRepository(zap.NewNop(), tdb.DB, clock.FixedClock{FixedTime: now})
 
 	// Simulating an unexpected failure by closing the opened connection
-	cleanup()
+	tdb.Close(t)
 
 	_, err := repo.FindActiveToken(context.Background(), "")
 	assert.Error(t, err, "Expected an error due to unexpected failure")
@@ -392,15 +390,15 @@ func TestRepository_Expire(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			db, cleanup := setupTestDB(t)
-			defer cleanup()
+			tdb := mongodb.NewTestDB(t)
+			defer tdb.Close(t)
 
-			coll := setupTestRefreshTokenCollection(t, db)
+			coll := setupTestRefreshTokenCollection(t, tdb.DB)
 			if tt.insertDocuments != nil {
 				tt.insertDocuments(t, coll)
 			}
 
-			repo := refresh.NewRepository(zap.NewNop(), db, clock.FixedClock{FixedTime: now})
+			repo := refresh.NewRepository(zap.NewNop(), tdb.DB, clock.FixedClock{FixedTime: now})
 			token, err := repo.Expire(context.Background(), tt.params)
 
 			// Error assertion
@@ -421,55 +419,16 @@ func TestRepository_Expire(t *testing.T) {
 }
 
 func TestRepository_Expire_UnexpectedFailure(t *testing.T) {
-	db, cleanup := setupTestDB(t)
-	setupTestRefreshTokenCollection(t, db)
+	tdb := mongodb.NewTestDB(t)
+	setupTestRefreshTokenCollection(t, tdb.DB)
 
-	repo := refresh.NewRepository(zap.NewNop(), db, clock.FixedClock{FixedTime: now})
+	repo := refresh.NewRepository(zap.NewNop(), tdb.DB, clock.FixedClock{FixedTime: now})
 
 	// Simulating an unexpected failure by closing the opened connection
-	cleanup()
+	tdb.Close(t)
 
 	_, err := repo.Expire(context.Background(), refresh.ExpireParams{})
 	assert.Error(t, err, "Expected an error due to unexpected failure")
-}
-
-// TODO review how to handle this duplication in multiple integration tests
-func setupTestDB(t *testing.T) (*mongo.Database, func()) {
-	logger := zap.NewNop()
-	mongoCfg, err := config.LoadMongoConfig(logger)
-	if err != nil {
-		t.Fatalf("Failed to load MongoDB configuration: %v", err)
-	}
-
-	clientOpts := options.Client().ApplyURI(mongoCfg.URI)
-	if mongoCfg.User != "" && mongoCfg.Password != "" {
-		clientOpts.SetAuth(options.Credential{
-			Username: mongoCfg.User,
-			Password: mongoCfg.Password,
-		})
-	}
-
-	// Context with timeout for connection
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	client, err := mongo.Connect(ctx, clientOpts)
-	if err != nil {
-		t.Fatalf("Failed to connect to MongoDB: %v", err)
-	}
-	// Setting up a unique database name for each test to avoid conflicts
-	dbName := fmt.Sprintf("customers_test_authentication_service_%d_%d", time.Now().UnixNano(), rand.Intn(10000))
-	db := client.Database(dbName)
-	cleanup := func() {
-		if err := db.Drop(ctx); err != nil {
-			t.Fatalf("Failed to drop MongoDB collection: %v", err)
-			return
-		}
-		if err := client.Disconnect(ctx); err != nil {
-			t.Fatalf("Failed to disconnect MongoDB client: %v", err)
-			return
-		}
-		cancel()
-	}
-	return db, cleanup
 }
 
 func setupTestRefreshTokenCollection(t *testing.T, db *mongo.Database) *mongo.Collection {
