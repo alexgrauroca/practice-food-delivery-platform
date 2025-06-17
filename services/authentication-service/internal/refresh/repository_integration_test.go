@@ -35,7 +35,6 @@ type refreshRepositoryTestCase[P, W any] struct {
 }
 
 func TestRepository_Create(t *testing.T) {
-	//TODO add a case for unique key error
 	tests := []refreshRepositoryTestCase[refresh.CreateTokenParams, refresh.Token]{
 		{
 			name: "when the refresh token already exists, then it should return the error",
