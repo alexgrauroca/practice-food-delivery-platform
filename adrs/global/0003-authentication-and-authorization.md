@@ -3,43 +3,82 @@
 ## Status
 
 Accepted
+
 Date: 2025-06-18
 
 ## Context
 
-What is the issue that we're seeing that is motivating this decision or change?
+As our system grows with multiple services and user roles (customers, staff, and couriers), we need a clear strategy for
+handling authentication and authorization across the entire system. We need to ensure secure access control while
+maintaining scalability, performance, and reliability.
 
 ## Decision
 
-What is the change that we're proposing and/or doing?
+1. **Authentication Domain Responsibilities**
+    - User registration and login
+    - JWT token issuance (access and refresh tokens)
+    - Token refresh handling
+    - Management of signing keys
+    - Optional token revocation
+
+2. **Individual Domains Responsibilities**
+    - Independent JWT validation using shared signing keys
+    - Domain-specific authorization rules
+    - No direct calls to the auth domain for token validation
+
+3. **Common Authentication Library**
+    - Shared JWT validation middleware
+    - Standard claims processing
+    - Authorization helpers
 
 ## Consequences
 
-What becomes easier or more difficult to do because of this change?
-
 ### Positive
 
-- List positive consequences
+- Improved system performance (no network calls for validation)
+- Better service availability (no auth service dependency)
+- Increased scalability (auth service isn't a bottleneck)
+- Consistent security implementation across services
+- Clear separation of authentication and authorization concerns
 
 ### Negative
 
-- List negative consequences
+- Need for a secure key distribution mechanism
+- Additional complexity in key rotation (if needed)
+- Services must maintain a synchronized clock for token validation
+- More complex token revocation (if needed)
 
 ### Neutral
 
-- List neutral consequences
+- Services need to implement shared authentication middleware
+- Each service maintains its own authorization rules
+- Need for proper security monitoring and logging
 
 ## Implementation Notes
 
-- Technical details and implementation considerations
-- Code examples if applicable
-- Migration strategy if needed
+1. **Key Management**
+    - Use asymmetric key pairs (public/private)
+    - Store private key only in auth service
+    - Distribute public key to all services
+    - Implement automated key rotation
+
+2. **Token Structure**
+    - Include standard claims (sub, exp, iat)
+    - Add custom claims (role, user_type)
+    - Keep the payload minimal for performance
+
+3. **Validation Process**
+    - Verify signature using a public key
+    - Check token expiration
+    - Validate required claims
+    - Apply domain-specific authorization
 
 ## Related Documents
 
-- Links to related ADRs or documentation
-- References to requirements or issues
+- Authentication Service Design Doc (to be created)
+- Security Standards Doc (to be created)
+- Key Management Process Doc (to be created)
 
 ## Contributors
 
-- List of contributors and stakeholders involved in the decision
+- Àlex Grau Roca
