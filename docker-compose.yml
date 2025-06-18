@@ -1,14 +1,19 @@
 services:
   api-gateway:
-    image: nginx:1.28-alpine
+    image: kong:3.9
     container_name: api-gateway
     ports:
-      - "80:80"
+      - "80:8000"
     volumes:
-      - ./deployments/api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./deployments/api-gateway/conf.d:/etc/nginx/conf.d:ro
-    depends_on:
-      - authentication-service
+      - ./deployments/api-gateway/kong.yaml:/usr/local/kong/declarative/kong.yaml:ro
+    env_file:
+      - ./deployments/api-gateway/.env
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
+      start_period: 3s
     restart: always
 
   mongodb:
@@ -23,6 +28,12 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: rootpassword
     volumes:
       - mongo_data:/data/db
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 2s
+      timeout: 3s
+      retries: 10
+      start_period: 3s
 
   authentication-service:
     build:
@@ -30,7 +41,10 @@ services:
       dockerfile: Dockerfile
     container_name: authentication-service
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
+      api-gateway:
+        condition: service_healthy
     environment:
       - MONGO_URI=mongodb://mongodb:27017
       - MONGO_USER=root

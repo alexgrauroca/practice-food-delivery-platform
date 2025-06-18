@@ -1,0 +1,25 @@
+_format_version: "3.0"
+_transform: true
+
+services:
+  - name: authentication-service
+    url: http://authentication-service:8080
+    routes:
+      - name: auth-routes
+        paths:
+          - /v1.0/customers/register
+          - /v1.0/customers/login
+          - /v1.0/customers/refresh
+        strip_path: false
+    plugins:
+      - name: correlation-id
+        config:
+          header_name: X-Request-ID
+          generator: uuid#counter
+          echo_downstream: true
+      - name: request-transformer
+        config:
+          add:
+            headers:
+              - "Host:${host}"
+              - "X-Real-IP:${remote_addr}"
