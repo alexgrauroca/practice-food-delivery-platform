@@ -99,7 +99,6 @@ Status codes should align with the semantics of the error:
 ## Related Documents
 
 - [RFC 7807: Problem Details for HTTP APIs](https://datatracker.ietf.org/doc/html/rfc7807)
-- [REST API Versioning Strategy](./0001-rest-api-versioning-strategy.md)
 - [OpenAPI Specification 3.0.3](https://spec.openapis.org/oas/v3.0.3)
 
 ## Contributors

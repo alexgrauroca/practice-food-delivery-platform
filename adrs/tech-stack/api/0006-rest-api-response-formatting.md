@@ -1,10 +1,10 @@
-# 5. Rest API Response Formatting
+# 6. Rest API Response Formatting
 
 ## Status
 
 Accepted
 
-Date: 2025-06-19
+Date: 2025-06-20
 
 ## Context
 

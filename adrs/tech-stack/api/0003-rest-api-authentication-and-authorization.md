@@ -86,8 +86,6 @@ security:
 
 - [Global Authentication and Authorization](./../../global/0003-authentication-and-authorization.md)
 - [Authentication Strategy](./../../domain/authentication/0001-authentication-strategy.md)
-- [REST API Error Response Format](./0002-rest-api-error-response-format.md)
-- [REST API Versioning Strategy](./0001-rest-api-versioning-strategy.md)
 - [RFC 6750: OAuth 2.0 Bearer Token Usage](https://datatracker.ietf.org/doc/html/rfc6750)
 - [OpenAPI Specification 3.0.3](https://spec.openapis.org/oas/v3.0.3)
 
