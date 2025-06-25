@@ -64,31 +64,12 @@ The `internal` directory contains all service-specific code that should not be i
    - Service layer (business logic)
    - Repository layer (data access)
 
-2. **Dependency Injection**: Components receive dependencies through constructor functions:
-   ```go
-   func NewService(logger *zap.Logger, repo Repository, ...) Service {
-       return &service{
-           logger: logger,
-           repo:   repo,
-           // ...
-       }
-   }
-   ```
-
-3. **Interface-Based Design**: Define interfaces for all service components to enable mock testing:
-   ```go
-   //go:generate mockgen -destination=./mocks/service_mock.go -package=mocks github.com/.../internal/{feature} Service
-   type Service interface {
-       // ...
-   }
-   ```
-
-4. **Clear Separation of Concerns**:
+2. **Clear Separation of Concerns**:
    - Handlers handle HTTP concerns only
    - Services contain business logic
    - Repositories handle data persistence
 
-5. **Shared Utilities**: Cross-cutting concerns (logging, time, etc.) are in dedicated packages
+3. **Shared Utilities**: Cross-cutting concerns (logging, time, etc.) are in dedicated packages
 
 ## Consequences
 
@@ -97,14 +78,11 @@ The `internal` directory contains all service-specific code that should not be i
 - Consistent structure improves developer experience
 - Clear separation of concerns reduces complexity
 - Layered architecture improves testability
-- Consistent dependency injection simplifies testing and maintainability
 - Reduced cognitive load when switching between services
-- Interface-based design enables effective mocking for tests
 
 ### Negative
 
 - More initial structure may seem complex for very simple services
-- Interface-based design adds some verbosity
 - Requires discipline to maintain the structure
 
 ### Neutral
@@ -141,32 +119,6 @@ func main() {
 
     // Start the server
     router.Run(":8080")
-}
-```
-
-### Interface Pattern Example
-
-```go
-// Define the interface
-type Repository interface {
-    FindByID(ctx context.Context, id string) (Model, error)
-    // ...
-}
-
-// Private implementation
-type repository struct {
-    logger *zap.Logger
-    db     *mongo.Database
-    // ...
-}
-
-// Constructor function
-func NewRepository(logger *zap.Logger, db *mongo.Database, ...) Repository {
-    return &repository{
-        logger: logger,
-        db:     db,
-        // ...
-    }
 }
 ```
 
