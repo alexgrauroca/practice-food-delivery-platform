@@ -27,7 +27,8 @@ Inconsistent logging approaches lead to several challenges:
 
 ## Decision
 
-We will adopt zap (go.uber.org/zap) as our standard logging library with the following conventions:
+We will adopt zap (go.uber.org/zap) as our standard logging library with a custom Logger interface that abstracts 
+implementation details, providing the following benefits:
 
 ### 1. Structured Logging
 
@@ -37,8 +38,8 @@ We will adopt zap (go.uber.org/zap) as our standard logging library with the fol
 
 ```go
 logger.Info("Customer created successfully", 
-    zap.String("customer_id", customer.ID),
-    zap.String("email", customer.Email))
+    log.Field{Key: "customer_id", Value: customer.ID},
+    log.Field{Key: "email", Value: customer.Email})
 ```
 
 ### 2. Log Levels
@@ -53,59 +54,67 @@ logger.Info("Customer created successfully",
 
 - Include request ID in all logs related to a request
 - Pass logger with request context through the call chain
-- Use our logctx package to extract request information
+- Use the WithContext method to enrich logs with request information
 
 ```go
-logctx.LoggerWithRequestInfo(ctx, r.logger).Error("Failed to find customer", zap.Error(err))
+// Logger enriched with request information from context
+logger.WithContext(ctx).Error("Failed to find customer", err)
 ```
 
 ### 4. Standard Log Fields
 
 | Field Name | Description | Example |
 |------------|-------------|--------|
-| request_id | Unique request identifier | "req_abc123" |
+| request.request_id | Unique request identifier | "7f3ed891-c6f1-4b74-a589-103e41f1d5b0" |
+| request.host | Hostname from the request | "api.example.com" |
+| request.real_ip | Client's IP address | "192.168.1.1" |
+| request.user_agent | User agent string | "Mozilla/5.0..." |
 | timestamp | ISO 8601 timestamp | "2025-06-25T14:35:05Z" |
 | level | Log level | "info", "error" |
 | message | Human-readable message | "Customer created successfully" |
-| service | Service name | "authentication-service" |
-| method | HTTP method | "POST" |
-| path | Request path | "/v1.0/customers/register" |
-| duration_ms | Operation duration in ms | 127 |
-| user_id | User identifier (when available) | "usr_123" |
 | error | Error details | {"message":"document not found"} |
+| caller | Source file and line | "service.go:42" |
+| stack_trace | Stack trace (for errors) | "goroutine 1..." |
 
 ### 5. Error Logging
 
-- Always include error objects with zap.Error()
-- Add context about the operation that failed
+- Error and Fatal methods accept error as a second parameter
+- Add context about the operation that failed using fields
 - Include relevant IDs and parameters (sanitized of sensitive data)
 
 ```go
-logger.Error("Failed to create customer",
-    zap.Error(err),
-    zap.String("email", email),
-    zap.String("operation", "CreateCustomer"))
+// Direct error logging (minimal approach)
+logger.Error("Failed to create customer", err)
+
+// Error logging with additional context
+logger.WithContext(ctx).Error("Failed to create customer", err)
+
+// With additional context fields
+logger.Info("Operation attempted", 
+    log.Field{Key: "operation", Value: "CreateCustomer"},
+    log.Field{Key: "email", Value: email})
+logger.Error("Operation failed", err)
 ```
 
 ### 6. Sensitive Data Handling
 
 - Never log passwords, tokens, or credentials
-- Mask or truncate personally identifiable information (PII)
-- Use dedicated sanitization methods for logging user data
 
 ### 7. Logger Initialization
 
 - Initialize a single root logger in the application entry point
-- Configure log levels from environment variables
 - Pass logger instances to components via constructors
 
 ```go
 // In main.go
-logger, err := zap.NewProduction()
+logger, err := log.NewProduction()
 if err != nil {
-    log.Fatalf("can't initialize zap logger: %v", err)
+    log.Fatalf("can't initialize logger: %v", err)
 }
 defer logger.Sync()
+
+// For testing
+logger, _ := log.NewTest()
 ```
 
 ## Consequences
@@ -126,87 +135,104 @@ defer logger.Sync()
 
 ### Neutral
 
-- Need to update existing services to follow conventions
 - Regular review of logging patterns for effectiveness
 
 ## Implementation Notes
 
-### Middleware for Request Context
+### Logger Interface
 
-Implement middleware to add request information to the context:
+We've implemented a standardized logger interface that abstracts the underlying implementation:
 
 ```go
-func RequestInfoMiddleware() gin.HandlerFunc {
-    return func(c *gin.Context) {
-        // Generate request ID if not present
-        requestID := c.GetHeader("X-Request-ID")
-        if requestID == "" {
-            requestID = uuid.New().String()
-            c.Header("X-Request-ID", requestID)
-        }
+// Logger provides methods for structured and leveled logging within the application.
+type Logger interface {
+	Sync() error
+	WithContext(ctx context.Context) Logger
+	Debug(msg string, fields ...Field)
+	Info(msg string, fields ...Field)
+	Warn(msg string, fields ...Field)
+	Error(msg string, err error)
+	Fatal(msg string, err error)
+}
 
-        // Add request info to context
-        ctx := logctx.WithRequestInfo(c.Request.Context(), logctx.RequestInfo{
-            ID:        requestID,
-            Method:    c.Request.Method,
-            Path:      c.Request.URL.Path,
-            UserAgent: c.Request.UserAgent(),
-            ClientIP:  c.ClientIP(),
-        })
-
-        c.Request = c.Request.WithContext(ctx)
-        c.Next()
-    }
+type Field struct {
+	Key   string
+	Value any
 }
 ```
 
-### Helper for Contextualized Logging
+### Middleware for Request Context
 
-Implement a package for extracting request context:
+We've implemented middleware to add request information to the context:
 
 ```go
-// Package logctx provides utilities for contextual logging
-package logctx
+// RequestInfoMiddleware is a middleware that attaches request-specific information to the context.
+func RequestInfoMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		requestID := c.GetHeader("X-Request-ID")
+		if requestID == "" {
+			requestID = uuid.New().String()
+		}
 
-import (
-    "context"
-    "go.uber.org/zap"
-)
+		realIP := c.GetHeader("X-Real-IP")
+		if realIP == "" {
+			realIP = c.ClientIP()
+		}
 
+		// log is the internal log package
+		info := log.RequestInfo{
+			RequestID: requestID,
+			Host:      c.Request.Host,
+			RealIP:    realIP,
+			UserAgent: c.Request.UserAgent(),
+		}
+
+		ctx := log.WithRequestInfo(c.Request.Context(), info)
+		c.Request = c.Request.WithContext(ctx)
+		c.Next()
+	}
+}
+```
+
+### Context Utilities
+
+We've implemented a package for storing and retrieving request context:
+
+```go
+// RequestInfo represents metadata about a request
 type RequestInfo struct {
-    ID        string
-    Method    string
-    Path      string
-    UserAgent string
-    ClientIP  string
+	RequestID string
+	Host      string
+	RealIP    string
+	UserAgent string
 }
 
-type ctxKey string
-const requestInfoKey ctxKey = "requestInfo"
-
+// WithRequestInfo adds request-specific information to the provided context
 func WithRequestInfo(ctx context.Context, info RequestInfo) context.Context {
-    return context.WithValue(ctx, requestInfoKey, info)
+	ctx = context.WithValue(ctx, requestIDKey, info.RequestID)
+	ctx = context.WithValue(ctx, hostKey, info.Host)
+	ctx = context.WithValue(ctx, realIPKey, info.RealIP)
+	ctx = context.WithValue(ctx, userAgentKey, info.UserAgent)
+	return ctx
 }
 
+// LoggerWithRequestInfo enriches the provided logger with request metadata
 func LoggerWithRequestInfo(ctx context.Context, logger *zap.Logger) *zap.Logger {
-    info, ok := ctx.Value(requestInfoKey).(RequestInfo)
-    if !ok {
-        return logger
-    }
+	reqInfo := RequestInfo{
+		RequestID: RequestIDFromContext(ctx),
+		Host:      HostFromContext(ctx),
+		RealIP:    RealIPFromContext(ctx),
+		UserAgent: UserAgentFromContext(ctx),
+	}
 
-    return logger.With(
-        zap.String("request_id", info.ID),
-        zap.String("method", info.Method),
-        zap.String("path", info.Path),
-    )
+	return logger.With(zap.Object("request", reqInfo))
 }
 ```
 
 ## Related Documents
 
-- [Service Structure](./0001-service-structure.md)
 - [Interface Design Principles](./0002-interface-design-principles.md)
-- [Dependency Injection](./0003-dependency-injection.md)
+- [Dependency Injection](./0003-dependency-injection-and-service-initialization.md)
 
 ## Contributors
 
