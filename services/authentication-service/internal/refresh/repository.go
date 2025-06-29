@@ -9,11 +9,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.uber.org/zap"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/clock"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/infraestructure/mongodb"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/logctx"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/log"
 )
 
 const (
@@ -57,13 +56,13 @@ type ExpireParams struct {
 }
 
 type repository struct {
-	logger     *zap.Logger
+	logger     log.Logger
 	collection *mongo.Collection
 	clock      clock.Clock
 }
 
 // NewRepository creates a new Repository instance.
-func NewRepository(logger *zap.Logger, db *mongo.Database, clk clock.Clock) Repository {
+func NewRepository(logger log.Logger, db *mongo.Database, clk clock.Clock) Repository {
 	return &repository{
 		logger:     logger,
 		collection: db.Collection(CollectionName),
@@ -72,6 +71,8 @@ func NewRepository(logger *zap.Logger, db *mongo.Database, clk clock.Clock) Repo
 }
 
 func (r *repository) Create(ctx context.Context, params CreateTokenParams) (Token, error) {
+	logger := r.logger.WithContext(ctx)
+
 	now := r.clock.Now()
 	token := Token{
 		UserID:     params.UserID,
@@ -89,10 +90,10 @@ func (r *repository) Create(ctx context.Context, params CreateTokenParams) (Toke
 	res, err := r.collection.InsertOne(ctx, token)
 	if err != nil {
 		if mongodb.IsDuplicateKeyError(err) {
-			logctx.LoggerWithRequestInfo(ctx, r.logger).Error("Duplicate refresh token", zap.Error(err))
+			logger.Error("Duplicate refresh token", err)
 			return Token{}, ErrRefreshTokenAlreadyExists
 		}
-		logctx.LoggerWithRequestInfo(ctx, r.logger).Error("Failed to store refresh token", zap.Error(err))
+		logger.Error("Failed to store refresh token", err)
 		return Token{}, err
 	}
 
@@ -101,6 +102,8 @@ func (r *repository) Create(ctx context.Context, params CreateTokenParams) (Toke
 }
 
 func (r *repository) FindActiveToken(ctx context.Context, refreshToken string) (Token, error) {
+	logger := r.logger.WithContext(ctx)
+
 	token := Token{}
 	searchParams := bson.M{
 		FieldToken:  refreshToken,
@@ -112,10 +115,10 @@ func (r *repository) FindActiveToken(ctx context.Context, refreshToken string) (
 	err := r.collection.FindOne(ctx, searchParams).Decode(&token)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			logctx.LoggerWithRequestInfo(ctx, r.logger).Warn("Refresh token not found")
+			logger.Warn("Refresh token not found")
 			return Token{}, ErrRefreshTokenNotFound
 		}
-		logctx.LoggerWithRequestInfo(ctx, r.logger).Error("Failed to find active refresh refreshToken", zap.Error(err))
+		logger.Error("Failed to find active refresh refreshToken", err)
 		return Token{}, err
 	}
 
@@ -123,6 +126,8 @@ func (r *repository) FindActiveToken(ctx context.Context, refreshToken string) (
 }
 
 func (r *repository) Expire(ctx context.Context, params ExpireParams) (Token, error) {
+	logger := r.logger.WithContext(ctx)
+
 	var token Token
 	filter := bson.M{
 		FieldToken:  params.Token,
@@ -145,10 +150,10 @@ func (r *repository) Expire(ctx context.Context, params ExpireParams) (Token, er
 	err := r.collection.FindOneAndUpdate(ctx, filter, update, opts).Decode(&token)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			logctx.LoggerWithRequestInfo(ctx, r.logger).Warn("Refresh token not found")
+			logger.Warn("Refresh token not found")
 			return Token{}, ErrRefreshTokenNotFound
 		}
-		logctx.LoggerWithRequestInfo(ctx, r.logger).Error("Failed to expire refresh token", zap.Error(err))
+		logger.Error("Failed to expire refresh token", err)
 		return Token{}, err
 	}
 	return token, nil

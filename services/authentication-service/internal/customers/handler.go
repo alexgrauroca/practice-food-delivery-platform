@@ -8,13 +8,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/iancoleman/strcase"
-	"go.uber.org/zap"
 
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/logctx"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/log"
 )
 
 const (
-
 	// CodeValidationError represents the error code for validation failures during input processing or validation checks.
 	CodeValidationError = "VALIDATION_ERROR"
 	// CodeInvalidRequest represents the error code for an invalid or improper request made to the system.
@@ -95,12 +93,12 @@ type ErrorResponse struct {
 
 // Handler manages HTTP requests for auth-customer-related operations.
 type Handler struct {
-	logger  *zap.Logger
+	logger  log.Logger
 	service Service
 }
 
 // NewHandler creates a new instance of Handler.
-func NewHandler(logger *zap.Logger, service Service) *Handler {
+func NewHandler(logger log.Logger, service Service) *Handler {
 	return &Handler{
 		logger:  logger,
 		service: service,
@@ -116,11 +114,14 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 
 // RegisterCustomer handles the registration of a new customer.
 func (h *Handler) RegisterCustomer(c *gin.Context) {
-	logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).Info("RegisterCustomer handler called")
+	ctx := c.Request.Context()
+	logger := h.logger.WithContext(ctx)
+
+	logger.Info("RegisterCustomer handler called")
 
 	var req RegisterCustomerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).Warn("Failed to bind request", zap.Error(err))
+		logger.Warn("Failed to bind request", log.Field{Key: "error", Value: err.Error()})
 		errResp := getErrorResponseFromValidationErr(err)
 		c.JSON(http.StatusBadRequest, errResp)
 		return
@@ -128,66 +129,66 @@ func (h *Handler) RegisterCustomer(c *gin.Context) {
 
 	input := RegisterCustomerInput(req)
 
-	output, err := h.service.RegisterCustomer(c.Request.Context(), input)
+	output, err := h.service.RegisterCustomer(ctx, input)
 	if err != nil {
 		if errors.Is(err, ErrCustomerAlreadyExists) {
-			logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).
-				Warn("Customer already exists", zap.String("email", req.Email))
+			logger.Warn("Customer already exists", log.Field{Key: "email", Value: req.Email})
 			c.JSON(http.StatusConflict, newErrorResponse(CodeCustomerAlreadyExists, MsgCustomerAlreadyExists))
 			return
 		}
-		logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).
-			Error("Failed to register customer", zap.Error(err))
+		logger.Error("Failed to register customer", err)
 		c.JSON(http.StatusInternalServerError, newErrorResponse(CodeInternalError, MsgInternalError))
 		return
 	}
 
 	resp := RegisterCustomerResponse(output)
-	logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).
-		Info("Customer registered successfully", zap.Any("customer", resp))
+	logger.Info("Customer registered successfully", log.Field{Key: "customer", Value: resp})
 	c.JSON(http.StatusCreated, resp)
 }
 
 // LoginCustomer processes the login request for a customer using credentials provided in JSON format.
 func (h *Handler) LoginCustomer(c *gin.Context) {
-	logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).Info("LoginCustomer handler called")
+	ctx := c.Request.Context()
+	logger := h.logger.WithContext(ctx)
+
+	logger.Info("LoginCustomer handler called")
 
 	var req LoginCustomerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).Warn("Failed to bind request", zap.Error(err))
+		logger.Warn("Failed to bind request", log.Field{Key: "error", Value: err.Error()})
 		errResp := getErrorResponseFromValidationErr(err)
 		c.JSON(http.StatusBadRequest, errResp)
 		return
 	}
 
 	input := LoginCustomerInput(req)
-	output, err := h.service.LoginCustomer(c.Request.Context(), input)
+	output, err := h.service.LoginCustomer(ctx, input)
 	if err != nil {
 		if errors.Is(err, ErrInvalidCredentials) {
-			logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).
-				Warn("Invalid credentials provided", zap.String("email", req.Email))
+			logger.Warn("Invalid credentials provided", log.Field{Key: "email", Value: req.Email})
 			c.JSON(http.StatusUnauthorized, newErrorResponse(CodeInvalidCredentials, MsgInvalidCredentials))
 			return
 		}
-		logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).
-			Error("Failed to login customer", zap.Error(err))
+		logger.Error("Failed to login customer", err)
 		c.JSON(http.StatusInternalServerError, newErrorResponse(CodeInternalError, MsgInternalError))
 		return
 	}
 
 	resp := LoginCustomerResponse(output.TokenPair)
-	logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).
-		Info("Customer logged in successfully")
+	logger.Info("Customer logged in successfully")
 	c.JSON(http.StatusOK, resp)
 }
 
 // RefreshCustomer handles the refreshing of a customer's authentication token.
 func (h *Handler) RefreshCustomer(c *gin.Context) {
-	logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).Info("RefreshCustomer handler called")
+	ctx := c.Request.Context()
+	logger := h.logger.WithContext(ctx)
+
+	logger.Info("RefreshCustomer handler called")
 
 	var req RefreshCustomerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).Warn("Failed to bind request", zap.Error(err))
+		logger.Warn("Failed to bind request", log.Field{Key: "error", Value: err.Error()})
 		errResp := getErrorResponseFromValidationErr(err)
 		c.JSON(http.StatusBadRequest, errResp)
 		return
@@ -197,17 +198,16 @@ func (h *Handler) RefreshCustomer(c *gin.Context) {
 	output, err := h.service.RefreshCustomer(c.Request.Context(), input)
 	if err != nil {
 		if errors.Is(err, ErrInvalidRefreshToken) {
-			logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).Warn("Invalid refresh token provided")
+			logger.Warn("Invalid refresh token provided")
 			c.JSON(http.StatusUnauthorized, newErrorResponse(CodeInvalidRefreshToken, MsgInvalidRefreshToken))
 			return
 		} else if errors.Is(err, ErrTokenMismatch) {
-			logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).Warn("Token mismatch")
+			logger.Warn("Token mismatch")
 			c.JSON(http.StatusForbidden, newErrorResponse(CodeTokenMismatch, MsgTokenMismatch))
 			return
 		}
 
-		logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).
-			Error("Failed to refresh customer", zap.Error(err))
+		logger.Error("Failed to refresh customer", err)
 		c.JSON(http.StatusInternalServerError, newErrorResponse(CodeInternalError, MsgInternalError))
 		return
 	}
@@ -215,7 +215,7 @@ func (h *Handler) RefreshCustomer(c *gin.Context) {
 	resp := RefreshCustomerResponse{
 		LoginCustomerResponse(output.TokenPair),
 	}
-	logctx.LoggerWithRequestInfo(c.Request.Context(), h.logger).Info("Customer refreshed successfully")
+	logger.Info("Customer refreshed successfully")
 	c.JSON(http.StatusOK, resp)
 }
 

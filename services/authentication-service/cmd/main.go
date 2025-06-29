@@ -9,12 +9,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.uber.org/zap"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/clock"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/infraestructure/mongodb"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/jwt"
+	customlog "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/log"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/middleware"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh"
 )
@@ -23,13 +23,13 @@ func main() {
 	ctx := context.Background()
 
 	// Initialize the logger
-	logger, err := zap.NewProduction()
+	logger, err := customlog.NewProduction()
 	if err != nil {
-		log.Fatalf("can't initialize zap logger: %v", err)
+		log.Fatalf("can't initialize logger: %v", err)
 		return
 	}
-	defer func(logger *zap.Logger) {
-		if err := logger.Sync(); err != nil && err.Error() != "sync /dev/stderr: invalid argument" {
+	defer func(logger customlog.Logger) {
+		if err := logger.Sync(); err != nil {
 			log.Printf("failed to sync logger: %v", err)
 		}
 	}(logger)
@@ -41,7 +41,7 @@ func main() {
 	// Initialize MongoDB connection
 	client, err := mongodb.NewClient(ctx, logger)
 	if err != nil {
-		logger.Fatal("Failed to initialize MongoDB client", zap.Error(err))
+		logger.Fatal("Failed to initialize MongoDB client", err)
 		return
 	}
 	defer func(client *mongo.Client, ctx context.Context) {
@@ -58,11 +58,11 @@ func main() {
 	logger.Info("Starting http server")
 	// Start the server
 	if err := router.Run(":8080"); err != nil {
-		logger.Fatal("Failed to start server", zap.Error(err))
+		logger.Fatal("Failed to start server", err)
 	}
 }
 
-func initRefreshFeature(logger *zap.Logger, db *mongo.Database) refresh.Service {
+func initRefreshFeature(logger customlog.Logger, db *mongo.Database) refresh.Service {
 	// Initialize the refresh repository
 	repo := refresh.NewRepository(logger, db, clock.RealClock{})
 
@@ -70,13 +70,14 @@ func initRefreshFeature(logger *zap.Logger, db *mongo.Database) refresh.Service 
 	return refresh.NewService(logger, repo, clock.RealClock{})
 }
 
-func initJWTFeature(logger *zap.Logger) jwt.Service {
+func initJWTFeature(logger customlog.Logger) jwt.Service {
 	/// Initialize the jwt service
 	//TODO configure secret by env vars
 	return jwt.NewService(logger, []byte("a-string-secret-at-least-256-bits-long"))
 }
 
-func initCustomersFeature(logger *zap.Logger, db *mongo.Database, router *gin.Engine, refreshService refresh.Service,
+func initCustomersFeature(logger customlog.Logger, db *mongo.Database, router *gin.Engine,
+	refreshService refresh.Service,
 	jwtService jwt.Service) {
 	// Initialize the customer's repository
 	repo := customers.NewRepository(logger, db, clock.RealClock{})

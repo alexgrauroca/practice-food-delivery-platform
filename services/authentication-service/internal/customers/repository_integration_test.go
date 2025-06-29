@@ -11,14 +11,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.uber.org/zap"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/clock"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/infraestructure/mongodb"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/log"
 )
-
-var now = time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 
 type customersRepositoryTestCase[P, W any] struct {
 	name            string
@@ -29,6 +27,9 @@ type customersRepositoryTestCase[P, W any] struct {
 }
 
 func TestRepository_CreateCustomer(t *testing.T) {
+	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	logger, _ := log.NewTest()
+
 	tests := []customersRepositoryTestCase[customers.CreateCustomerParams, customers.Customer]{
 		{
 			name: "when exists an active customer with the same email, it should return a customer already exists error",
@@ -79,7 +80,7 @@ func TestRepository_CreateCustomer(t *testing.T) {
 				tt.insertDocuments(t, coll)
 			}
 
-			repo := customers.NewRepository(zap.NewNop(), tdb.DB, clock.FixedClock{FixedTime: now})
+			repo := customers.NewRepository(logger, tdb.DB, clock.FixedClock{FixedTime: now})
 			got, err := repo.CreateCustomer(context.Background(), tt.params)
 
 			// Error assertion
@@ -99,8 +100,11 @@ func TestRepository_CreateCustomer(t *testing.T) {
 }
 
 func TestRepository_CreateCustomer_UnexpectedFailure(t *testing.T) {
+	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	logger, _ := log.NewTest()
+
 	tdb := mongodb.NewTestDB(t)
-	repo := customers.NewRepository(zap.NewNop(), tdb.DB, clock.FixedClock{FixedTime: now})
+	repo := customers.NewRepository(logger, tdb.DB, clock.FixedClock{FixedTime: now})
 
 	// Simulating an unexpected failure by closing the opened connection
 	tdb.Close(t)
@@ -111,6 +115,9 @@ func TestRepository_CreateCustomer_UnexpectedFailure(t *testing.T) {
 }
 
 func TestRepository_FindByEmail(t *testing.T) {
+	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	logger, _ := log.NewTest()
+
 	tests := []customersRepositoryTestCase[string, customers.Customer]{
 		{
 			name: "when there is not an active customer with the email, it should return a customer not found error",
@@ -163,7 +170,7 @@ func TestRepository_FindByEmail(t *testing.T) {
 				tt.insertDocuments(t, coll)
 			}
 
-			repo := customers.NewRepository(zap.NewNop(), tdb.DB, clock.FixedClock{FixedTime: now})
+			repo := customers.NewRepository(logger, tdb.DB, clock.FixedClock{FixedTime: now})
 			got, err := repo.FindByEmail(context.Background(), tt.params)
 
 			// Error assertion
@@ -182,8 +189,11 @@ func TestRepository_FindByEmail(t *testing.T) {
 }
 
 func TestRepository_FindByEmail_UnexpectedFailure(t *testing.T) {
+	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	logger, _ := log.NewTest()
+
 	tdb := mongodb.NewTestDB(t)
-	repo := customers.NewRepository(zap.NewNop(), tdb.DB, clock.FixedClock{FixedTime: now})
+	repo := customers.NewRepository(logger, tdb.DB, clock.FixedClock{FixedTime: now})
 
 	// Simulating an unexpected failure by closing the opened connection
 	tdb.Close(t)

@@ -11,12 +11,12 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
 	customersmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers/mocks"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/jwt"
 	jwtmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/jwt/mocks"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/log"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/password"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh"
 	refreshmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh/mocks"
@@ -25,7 +25,6 @@ import (
 var (
 	errRepo  = errors.New("repository error")
 	errToken = errors.New("token error")
-	logger   = zap.NewNop()
 )
 
 type customersServiceTestCase[I, W any] struct {
@@ -39,6 +38,8 @@ type customersServiceTestCase[I, W any] struct {
 
 func TestService_RegisterCustomer(t *testing.T) {
 	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	logger, _ := log.NewTest()
+
 	tests := []customersServiceTestCase[customers.RegisterCustomerInput, customers.RegisterCustomerOutput]{
 		{
 			name: "when there is an active customer with the same email, then it should return a customer already exists error",
@@ -129,6 +130,7 @@ func TestService_RegisterCustomer(t *testing.T) {
 
 func TestService_LoginCustomer(t *testing.T) {
 	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	logger, _ := log.NewTest()
 
 	tests := []customersServiceTestCase[customers.LoginCustomerInput, customers.LoginCustomerOutput]{
 		{
@@ -138,8 +140,8 @@ func TestService_LoginCustomer(t *testing.T) {
 				Email:    "test@example.com",
 				Password: "ValidPassword123",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
-				jwtService *jwtmocks.MockService) {
+			mocksSetup: func(repo *customersmocks.MockRepository, _ *refreshmocks.MockService,
+				_ *jwtmocks.MockService) {
 				repo.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, customers.ErrCustomerNotFound)
 			},
@@ -153,8 +155,8 @@ func TestService_LoginCustomer(t *testing.T) {
 				Email:    "test@example.com",
 				Password: "InvalidPassword123",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
-				jwtService *jwtmocks.MockService) {
+			mocksSetup: func(repo *customersmocks.MockRepository, _ *refreshmocks.MockService,
+				_ *jwtmocks.MockService) {
 				hashedPassword, err := password.Hash("ValidPassword123")
 				require.NoError(t, err)
 
@@ -178,8 +180,8 @@ func TestService_LoginCustomer(t *testing.T) {
 				Email:    "test@example.com",
 				Password: "ValidPassword123",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
-				jwtService *jwtmocks.MockService) {
+			mocksSetup: func(repo *customersmocks.MockRepository, _ *refreshmocks.MockService,
+				_ *jwtmocks.MockService) {
 				repo.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, errRepo)
 			},
@@ -192,7 +194,7 @@ func TestService_LoginCustomer(t *testing.T) {
 				Email:    "test@example.com",
 				Password: "ValidPassword123",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
+			mocksSetup: func(repo *customersmocks.MockRepository, _ *refreshmocks.MockService,
 				jwtService *jwtmocks.MockService) {
 				hashedPassword, err := password.Hash("ValidPassword123")
 				require.NoError(t, err)
@@ -308,6 +310,8 @@ func TestService_LoginCustomer(t *testing.T) {
 }
 
 func TestService_RefreshCustomer(t *testing.T) {
+	logger, _ := log.NewTest()
+
 	tests := []customersServiceTestCase[customers.RefreshCustomerInput, customers.RefreshCustomerOutput]{
 		{
 			name: "when there is not an active refresh token, then it should return an invalid refresh token error",

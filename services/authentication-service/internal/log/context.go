@@ -1,6 +1,4 @@
-// Package logctx provides context-based logging utilities for managing request-specific information
-// in HTTP services.
-package logctx
+package log
 
 import (
 	"context"
