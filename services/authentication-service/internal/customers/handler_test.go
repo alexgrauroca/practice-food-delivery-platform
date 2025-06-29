@@ -13,11 +13,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
 	customersmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers/mocks"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/jwt"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/log"
 )
 
 type customerHandlerTestCase struct {
@@ -398,17 +398,17 @@ func TestHandler_RefreshCustomer(t *testing.T) {
 }
 
 // setupTestEnv initializes the test environment with default values common to all tests.
-func setupTestEnv() *zap.Logger {
+func setupTestEnv() log.Logger {
 	// Setting up the default values
 	gin.SetMode(gin.TestMode)
-	logger := zap.NewNop()
+	logger, _ := log.NewTest()
 	return logger
 }
 
 // runCustomerHandlerTestCase executes a test case for the customer handler, which is common for all tests.
 func runCustomerHandlerTestCase(
 	t *testing.T,
-	logger *zap.Logger,
+	logger log.Logger,
 	route string,
 	tt customerHandlerTestCase,
 ) {

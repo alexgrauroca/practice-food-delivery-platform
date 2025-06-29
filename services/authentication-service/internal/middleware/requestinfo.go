@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/logctx"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/log"
 )
 
 // RequestInfoMiddleware is a middleware that attaches request-specific information to the context.
@@ -22,14 +22,14 @@ func RequestInfoMiddleware() gin.HandlerFunc {
 			realIP = c.ClientIP()
 		}
 
-		info := logctx.RequestInfo{
+		info := log.RequestInfo{
 			RequestID: requestID,
 			Host:      c.Request.Host,
 			RealIP:    realIP,
 			UserAgent: c.Request.UserAgent(),
 		}
 
-		ctx := logctx.WithRequestInfo(c.Request.Context(), info)
+		ctx := log.WithRequestInfo(c.Request.Context(), info)
 		c.Request = c.Request.WithContext(ctx)
 		c.Next()
 	}

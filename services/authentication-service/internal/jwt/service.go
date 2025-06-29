@@ -6,7 +6,8 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"go.uber.org/zap"
+
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/log"
 )
 
 // DefaultTokenType represents the default type of token used for authorization, typically set to "Bearer".
@@ -33,12 +34,12 @@ type Config struct {
 }
 
 type service struct {
-	logger *zap.Logger
+	logger log.Logger
 	secret []byte // jwt secret key
 }
 
 // NewService creates a new JWT service instance
-func NewService(logger *zap.Logger, secret []byte) Service {
+func NewService(logger log.Logger, secret []byte) Service {
 	return &service{
 		logger: logger,
 		secret: secret,

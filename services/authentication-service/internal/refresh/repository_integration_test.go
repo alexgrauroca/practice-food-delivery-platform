@@ -11,19 +11,11 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.uber.org/zap"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/clock"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/infraestructure/mongodb"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/log"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh"
-)
-
-var (
-	now          = time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
-	yesterday    = time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC)
-	expiresAt    = time.Date(2025, 1, 7, 0, 0, 0, 0, time.UTC)
-	expiredAt    = time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
-	newExpiresAt = time.Date(2025, 1, 1, 0, 0, 5, 0, time.UTC)
 )
 
 type refreshRepositoryTestCase[P, W any] struct {
@@ -35,6 +27,12 @@ type refreshRepositoryTestCase[P, W any] struct {
 }
 
 func TestRepository_Create(t *testing.T) {
+	var (
+		now       = time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+		expiresAt = time.Date(2025, 1, 7, 0, 0, 0, 0, time.UTC)
+	)
+	logger, _ := log.NewTest()
+
 	tests := []refreshRepositoryTestCase[refresh.CreateTokenParams, refresh.Token]{
 		{
 			name: "when the refresh token already exists, then it should return the error",
@@ -116,7 +114,7 @@ func TestRepository_Create(t *testing.T) {
 				tt.insertDocuments(t, coll)
 			}
 
-			repo := refresh.NewRepository(zap.NewNop(), tdb.DB, clock.FixedClock{FixedTime: now})
+			repo := refresh.NewRepository(logger, tdb.DB, clock.FixedClock{FixedTime: now})
 			token, err := repo.Create(context.Background(), tt.params)
 
 			// Error assertion
@@ -137,10 +135,13 @@ func TestRepository_Create(t *testing.T) {
 }
 
 func TestRepository_Create_UnexpectedFailure(t *testing.T) {
+	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	logger, _ := log.NewTest()
+
 	tdb := mongodb.NewTestDB(t)
 	setupTestRefreshTokenCollection(t, tdb.DB)
 
-	repo := refresh.NewRepository(zap.NewNop(), tdb.DB, clock.FixedClock{FixedTime: now})
+	repo := refresh.NewRepository(logger, tdb.DB, clock.FixedClock{FixedTime: now})
 
 	// Simulating an unexpected failure by closing the opened connection
 	tdb.Close(t)
@@ -150,6 +151,13 @@ func TestRepository_Create_UnexpectedFailure(t *testing.T) {
 }
 
 func TestRepository_FindActiveToken(t *testing.T) {
+	var (
+		now       = time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+		expiresAt = time.Date(2025, 1, 7, 0, 0, 0, 0, time.UTC)
+		expiredAt = time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	)
+	logger, _ := log.NewTest()
+
 	tests := []refreshRepositoryTestCase[string, refresh.Token]{
 		{
 			name: "when the refresh token does not exist, then it should return a refresh token not found error",
@@ -273,7 +281,7 @@ func TestRepository_FindActiveToken(t *testing.T) {
 				tt.insertDocuments(t, coll)
 			}
 
-			repo := refresh.NewRepository(zap.NewNop(), tdb.DB, clock.FixedClock{FixedTime: now})
+			repo := refresh.NewRepository(logger, tdb.DB, clock.FixedClock{FixedTime: now})
 			token, err := repo.FindActiveToken(context.Background(), tt.params)
 
 			// Error assertion
@@ -294,10 +302,13 @@ func TestRepository_FindActiveToken(t *testing.T) {
 }
 
 func TestRepository_FindActiveToken_UnexpectedFailure(t *testing.T) {
+	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	logger, _ := log.NewTest()
+
 	tdb := mongodb.NewTestDB(t)
 	setupTestRefreshTokenCollection(t, tdb.DB)
 
-	repo := refresh.NewRepository(zap.NewNop(), tdb.DB, clock.FixedClock{FixedTime: now})
+	repo := refresh.NewRepository(logger, tdb.DB, clock.FixedClock{FixedTime: now})
 
 	// Simulating an unexpected failure by closing the opened connection
 	tdb.Close(t)
@@ -307,6 +318,14 @@ func TestRepository_FindActiveToken_UnexpectedFailure(t *testing.T) {
 }
 
 func TestRepository_Expire(t *testing.T) {
+	var (
+		now          = time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+		yesterday    = time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC)
+		expiresAt    = time.Date(2025, 1, 7, 0, 0, 0, 0, time.UTC)
+		newExpiresAt = time.Date(2025, 1, 1, 0, 0, 5, 0, time.UTC)
+	)
+	logger, _ := log.NewTest()
+
 	tests := []refreshRepositoryTestCase[refresh.ExpireParams, refresh.Token]{
 		{
 			name: "when the refresh token does not exist, then it should return a refresh token not found error",
@@ -436,7 +455,7 @@ func TestRepository_Expire(t *testing.T) {
 				tt.insertDocuments(t, coll)
 			}
 
-			repo := refresh.NewRepository(zap.NewNop(), tdb.DB, clock.FixedClock{FixedTime: now})
+			repo := refresh.NewRepository(logger, tdb.DB, clock.FixedClock{FixedTime: now})
 			token, err := repo.Expire(context.Background(), tt.params)
 
 			// Error assertion
@@ -457,10 +476,13 @@ func TestRepository_Expire(t *testing.T) {
 }
 
 func TestRepository_Expire_UnexpectedFailure(t *testing.T) {
+	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	logger, _ := log.NewTest()
+
 	tdb := mongodb.NewTestDB(t)
 	setupTestRefreshTokenCollection(t, tdb.DB)
 
-	repo := refresh.NewRepository(zap.NewNop(), tdb.DB, clock.FixedClock{FixedTime: now})
+	repo := refresh.NewRepository(logger, tdb.DB, clock.FixedClock{FixedTime: now})
 
 	// Simulating an unexpected failure by closing the opened connection
 	tdb.Close(t)

@@ -9,7 +9,8 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.uber.org/zap"
+
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/log"
 )
 
 // TestDB represents a test database wrapper for managing a MongoDB instance in a testing environment.
@@ -29,7 +30,8 @@ func NewTestDB(t *testing.T) *TestDB {
 	t.Helper()
 
 	ctx := context.Background()
-	client, err := NewClient(ctx, zap.NewNop())
+	logger, _ := log.NewTest()
+	client, err := NewClient(ctx, logger)
 	if err != nil {
 		t.Fatalf("Failed to create MongoDB client: %v", err)
 	}

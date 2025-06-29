@@ -8,11 +8,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.uber.org/zap"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/clock"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/infraestructure/mongodb"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/logctx"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/log"
 )
 
 const (
@@ -53,14 +52,14 @@ type Customer struct {
 }
 
 type repository struct {
-	logger     *zap.Logger
+	logger     log.Logger
 	collection *mongo.Collection
 	clock      clock.Clock
 }
 
 // NewRepository creates a new instance of the Repository interface with MongoDB implementation.
 // It requires a logger for operational logging, a database connection, and a clock implementation for timestamp generation.
-func NewRepository(logger *zap.Logger, db *mongo.Database, clk clock.Clock) Repository {
+func NewRepository(logger log.Logger, db *mongo.Database, clk clock.Clock) Repository {
 	return &repository{
 		logger:     logger,
 		collection: db.Collection(CollectionName),
@@ -72,6 +71,8 @@ func NewRepository(logger *zap.Logger, db *mongo.Database, clk clock.Clock) Repo
 // It returns the created customer with an assigned ID or an error if the operation fails.
 // If a customer with the same email already exists, it returns ErrCustomerAlreadyExists.
 func (r *repository) CreateCustomer(ctx context.Context, params CreateCustomerParams) (Customer, error) {
+	logger := r.logger.WithContext(ctx)
+
 	now := r.clock.Now()
 	c := Customer{
 		Email:     params.Email,
@@ -84,22 +85,22 @@ func (r *repository) CreateCustomer(ctx context.Context, params CreateCustomerPa
 	res, err := r.collection.InsertOne(ctx, c)
 	if err != nil {
 		if mongodb.IsDuplicateKeyError(err) {
-			logctx.LoggerWithRequestInfo(ctx, r.logger).
-				Warn("Customer already exists", zap.String("email", params.Email))
+			logger.Warn("Customer already exists", log.Field{Key: "email", Value: params.Email})
 			return Customer{}, ErrCustomerAlreadyExists
 		}
-		logctx.LoggerWithRequestInfo(ctx, r.logger).Error("Failed to insert customer", zap.Error(err))
+		logger.Error("Failed to insert customer", err)
 		return Customer{}, err
 	}
 	c.ID = res.InsertedID.(primitive.ObjectID).Hex()
-	logctx.LoggerWithRequestInfo(ctx, r.logger).
-		Info("Customer created successfully", zap.String("customer_id", c.ID))
+	logger.Info("Customer created successfully", log.Field{Key: "customer_id", Value: c.ID})
 	return c, nil
 }
 
 // FindByEmail searches for an active customer with the specified email address.
 // It returns the customer if found or ErrCustomerNotFound if no matching active customer exists.
 func (r *repository) FindByEmail(ctx context.Context, email string) (Customer, error) {
+	logger := r.logger.WithContext(ctx)
+
 	var customer Customer
 	filter := bson.M{
 		FieldEmail:  email,
@@ -108,11 +109,10 @@ func (r *repository) FindByEmail(ctx context.Context, email string) (Customer, e
 
 	if err := r.collection.FindOne(ctx, filter).Decode(&customer); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			logctx.LoggerWithRequestInfo(ctx, r.logger).
-				Warn("Customer not found", zap.String("email", email))
+			logger.Warn("Customer not found", log.Field{Key: "email", Value: email})
 			return Customer{}, ErrCustomerNotFound
 		}
-		logctx.LoggerWithRequestInfo(ctx, r.logger).Error("Failed to find customer", zap.Error(err))
+		logger.Error("Failed to find customer", err)
 		return Customer{}, err
 	}
 	return customer, nil

@@ -11,10 +11,8 @@ import (
 	"fmt"
 	"time"
 
-	"go.uber.org/zap"
-
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/clock"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/logctx"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/log"
 )
 
 const (
@@ -73,20 +71,22 @@ type ExpireOutput struct {
 }
 
 type service struct {
-	logger *zap.Logger
+	logger log.Logger
 	repo   Repository
 	clock  clock.Clock
 }
 
 // NewService initializes and returns a new Service implementation.
-func NewService(logger *zap.Logger, repo Repository, clk clock.Clock) Service {
+func NewService(logger log.Logger, repo Repository, clk clock.Clock) Service {
 	return &service{logger: logger, repo: repo, clock: clk}
 }
 
 func (s *service) Generate(ctx context.Context, input GenerateTokenInput) (GenerateTokenOutput, error) {
+	logger := s.logger.WithContext(ctx)
+
 	token, err := generateToken()
 	if err != nil {
-		logctx.LoggerWithRequestInfo(ctx, s.logger).Error("failed to generate refresh token", zap.Error(err))
+		logger.Error("failed to generate refresh token", err)
 		return GenerateTokenOutput{}, err
 	}
 
@@ -101,15 +101,18 @@ func (s *service) Generate(ctx context.Context, input GenerateTokenInput) (Gener
 
 	refreshToken, err := s.repo.Create(ctx, params)
 	if err != nil {
-		logctx.LoggerWithRequestInfo(ctx, s.logger).Error("failed to store refresh token", zap.Error(err))
+		logger.Error("failed to store refresh token", err)
 		return GenerateTokenOutput{}, err
 	}
 	return GenerateTokenOutput{Token: refreshToken.Token}, nil
 }
 
 func (s *service) FindActiveToken(ctx context.Context, input FindActiveTokenInput) (FindActiveTokenOutput, error) {
+	logger := s.logger.WithContext(ctx)
+
 	token, err := s.repo.FindActiveToken(ctx, input.Token)
 	if err != nil {
+		logger.Error("failed to find active refresh token", err)
 		return FindActiveTokenOutput{}, err
 	}
 
@@ -123,11 +126,14 @@ func (s *service) FindActiveToken(ctx context.Context, input FindActiveTokenInpu
 }
 
 func (s *service) Expire(ctx context.Context, input ExpireInput) (ExpireOutput, error) {
+	logger := s.logger.WithContext(ctx)
+
 	token, err := s.repo.Expire(ctx, ExpireParams{
 		Token:     input.Token,
 		ExpiresAt: s.clock.Now().Add(DefaultTokenExpiresInSec * time.Second),
 	})
 	if err != nil {
+		logger.Error("failed to expire refresh token", err)
 		return ExpireOutput{}, err
 	}
 	return ExpireOutput{
@@ -156,8 +162,8 @@ func generateDeviceID(userAgent, ip string) string {
 }
 
 func getDeviceFromContext(ctx context.Context) DeviceInfo {
-	ip := logctx.RealIPFromContext(ctx)
-	userAgent := logctx.UserAgentFromContext(ctx)
+	ip := log.RealIPFromContext(ctx)
+	userAgent := log.UserAgentFromContext(ctx)
 	deviceID := generateDeviceID(userAgent, ip)
 
 	return DeviceInfo{

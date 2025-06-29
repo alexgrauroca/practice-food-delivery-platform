@@ -9,14 +9,14 @@ import (
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.uber.org/zap"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/config"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/log"
 )
 
 // NewClient creates and returns a new MongoDB Client with the given context and logger. It applies authentication if required.
 // Returns an error if loading configuration or connecting to MongoDB fails.
-func NewClient(ctx context.Context, logger *zap.Logger) (*mongo.Client, error) {
+func NewClient(ctx context.Context, logger log.Logger) (*mongo.Client, error) {
 	mongoCfg, err := config.LoadMongoConfig(logger)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load MongoDB configuration: %w", err)

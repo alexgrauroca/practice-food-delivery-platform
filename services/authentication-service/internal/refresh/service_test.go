@@ -14,6 +14,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/clock"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/log"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh"
 	refreshmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh/mocks"
 )
@@ -32,6 +33,8 @@ type refreshServiceTestCase[I, W any] struct {
 }
 
 func TestService_Generate(t *testing.T) {
+	logger, _ := log.NewTest()
+
 	tests := []refreshServiceTestCase[refresh.GenerateTokenInput, refresh.GenerateTokenOutput]{
 		{
 			name: "when there is an error storing the refresh token, then it propagates the error",
@@ -89,9 +92,12 @@ func TestService_Generate(t *testing.T) {
 }
 
 func TestService_FindByActiveToken(t *testing.T) {
-	now := time.Date(2025, 1, 7, 0, 0, 0, 0, time.UTC)
-	yesterday := time.Date(2025, 1, 6, 0, 0, 0, 0, time.UTC)
-	tomorrow := time.Date(2025, 1, 8, 0, 0, 0, 0, time.UTC)
+	var (
+		now       = time.Date(2025, 1, 7, 0, 0, 0, 0, time.UTC)
+		yesterday = time.Date(2025, 1, 6, 0, 0, 0, 0, time.UTC)
+		tomorrow  = time.Date(2025, 1, 8, 0, 0, 0, 0, time.UTC)
+	)
+	logger, _ := log.NewTest()
 
 	tests := []refreshServiceTestCase[refresh.FindActiveTokenInput, refresh.FindActiveTokenOutput]{
 		{
@@ -179,8 +185,11 @@ func TestService_FindByActiveToken(t *testing.T) {
 }
 
 func TestService_Expire(t *testing.T) {
-	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
-	yesterday := time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC)
+	var (
+		now       = time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+		yesterday = time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC)
+	)
+	logger, _ := log.NewTest()
 
 	tests := []refreshServiceTestCase[refresh.ExpireInput, refresh.ExpireOutput]{
 		{
@@ -213,8 +222,8 @@ func TestService_Expire(t *testing.T) {
 				}, nil)
 			},
 			want: refresh.ExpireOutput{
-				ID:    "fake-token-id",
-				Token: "fake-token",
+				ID:        "fake-token-id",
+				Token:     "fake-token",
 				ExpiresAt: now.Add(5 * time.Second),
 			},
 			wantErr: nil,
