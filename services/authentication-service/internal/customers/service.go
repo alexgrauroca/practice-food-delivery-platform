@@ -28,51 +28,6 @@ type Service interface {
 	RefreshCustomer(ctx context.Context, input RefreshCustomerInput) (RefreshCustomerOutput, error)
 }
 
-// RegisterCustomerInput defines the input structure required for registering a new customer.
-type RegisterCustomerInput struct {
-	Email    string
-	Password string
-	Name     string
-}
-
-// RegisterCustomerOutput represents the output data returned after successfully registering a new customer.
-type RegisterCustomerOutput struct {
-	ID        string
-	Email     string
-	Name      string
-	CreatedAt time.Time
-}
-
-// LoginCustomerInput represents the input required for the customer login process.
-type LoginCustomerInput struct {
-	Email    string
-	Password string
-}
-
-// TokenPair represents a pair of tokens typically used for authentication and session management.
-type TokenPair struct {
-	AccessToken  string
-	RefreshToken string
-	ExpiresIn    int // Number of seconds until the token expires
-	TokenType    string
-}
-
-// LoginCustomerOutput represents the output returned upon successful login of a customer.
-type LoginCustomerOutput struct {
-	TokenPair
-}
-
-// RefreshCustomerInput represents the input required to refresh a customer's authentication tokens.
-type RefreshCustomerInput struct {
-	RefreshToken string
-	AccessToken  string
-}
-
-// RefreshCustomerOutput wraps the response of a successful customer token refresh operation.
-type RefreshCustomerOutput struct {
-	TokenPair
-}
-
 type service struct {
 	logger         log.Logger
 	repo           Repository
@@ -88,6 +43,21 @@ func NewService(logger log.Logger, repo Repository, refreshService refresh.Servi
 		refreshService: refreshService,
 		jwtService:     jwtService,
 	}
+}
+
+// RegisterCustomerInput defines the input structure required for registering a new customer.
+type RegisterCustomerInput struct {
+	Email    string
+	Password string
+	Name     string
+}
+
+// RegisterCustomerOutput represents the output data returned after successfully registering a new customer.
+type RegisterCustomerOutput struct {
+	ID        string
+	Email     string
+	Name      string
+	CreatedAt time.Time
 }
 
 func (s *service) RegisterCustomer(ctx context.Context, input RegisterCustomerInput) (RegisterCustomerOutput, error) {
@@ -123,6 +93,17 @@ func (s *service) RegisterCustomer(ctx context.Context, input RegisterCustomerIn
 	return output, nil
 }
 
+// LoginCustomerInput represents the input required for the customer login process.
+type LoginCustomerInput struct {
+	Email    string
+	Password string
+}
+
+// LoginCustomerOutput represents the output returned upon successful login of a customer.
+type LoginCustomerOutput struct {
+	TokenPair
+}
+
 func (s *service) LoginCustomer(ctx context.Context, input LoginCustomerInput) (LoginCustomerOutput, error) {
 	logger := s.logger.WithContext(ctx)
 
@@ -150,6 +131,17 @@ func (s *service) LoginCustomer(ctx context.Context, input LoginCustomerInput) (
 	}
 
 	return LoginCustomerOutput{TokenPair: tokenPair}, nil
+}
+
+// RefreshCustomerInput represents the input required to refresh a customer's authentication tokens.
+type RefreshCustomerInput struct {
+	RefreshToken string
+	AccessToken  string
+}
+
+// RefreshCustomerOutput wraps the response of a successful customer token refresh operation.
+type RefreshCustomerOutput struct {
+	TokenPair
 }
 
 func (s *service) RefreshCustomer(ctx context.Context, input RefreshCustomerInput) (RefreshCustomerOutput, error) {
@@ -196,6 +188,14 @@ func (s *service) RefreshCustomer(ctx context.Context, input RefreshCustomerInpu
 	}
 
 	return RefreshCustomerOutput{TokenPair: tokenPair}, nil
+}
+
+// TokenPair represents a pair of tokens typically used for authentication and session management.
+type TokenPair struct {
+	AccessToken  string
+	RefreshToken string
+	ExpiresIn    int // Number of seconds until the token expires
+	TokenType    string
 }
 
 func (s *service) generateTokenPair(ctx context.Context, customer Customer) (TokenPair, error) {

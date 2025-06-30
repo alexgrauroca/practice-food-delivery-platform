@@ -44,51 +44,12 @@ const (
 	MsgTokenMismatch = "token mismatch"
 )
 
-// RegisterCustomerRequest represents the request payload for registering a new customer.
-type RegisterCustomerRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=8"`
-	Name     string `json:"name" binding:"required"`
-}
-
-// RegisterCustomerResponse represents the response returned after successfully registering a new customer.
-type RegisterCustomerResponse struct {
-	ID        string    `json:"id"`
-	Email     string    `json:"email"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"created_at"`
-}
-
-// LoginCustomerRequest represents the request payload for logging in a customer.
-type LoginCustomerRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=8"`
-}
-
-// LoginCustomerResponse represents the response payload for a successful customer login.
-type LoginCustomerResponse struct {
+// TokenPairResponse represents the structure for holding both access and refresh tokens along with metadata.
+type TokenPairResponse struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 	ExpiresIn    int    `json:"expires_in"` // the number of seconds until the token expires
 	TokenType    string `json:"token_type"`
-}
-
-// RefreshCustomerRequest represents a request to refresh customer information using tokens.
-type RefreshCustomerRequest struct {
-	RefreshToken string `json:"refresh_token" binding:"required"`
-	AccessToken  string `json:"access_token" binding:"required"`
-}
-
-// RefreshCustomerResponse represents the response returned when refreshing a customer's token.
-type RefreshCustomerResponse struct {
-	LoginCustomerResponse
-}
-
-// ErrorResponse represents a standardized structure for API error responses containing code, message, and optional details.
-type ErrorResponse struct {
-	Code    string   `json:"code"`
-	Message string   `json:"message"`
-	Details []string `json:"details"`
 }
 
 // Handler manages HTTP requests for auth-customer-related operations.
@@ -110,6 +71,21 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 	router.POST("/v1.0/customers/register", h.RegisterCustomer)
 	router.POST("/v1.0/customers/login", h.LoginCustomer)
 	router.POST("v1.0/customers/refresh", h.RefreshCustomer)
+}
+
+// RegisterCustomerRequest represents the request payload for registering a new customer.
+type RegisterCustomerRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required,min=8"`
+	Name     string `json:"name" binding:"required"`
+}
+
+// RegisterCustomerResponse represents the response returned after successfully registering a new customer.
+type RegisterCustomerResponse struct {
+	ID        string    `json:"id"`
+	Email     string    `json:"email"`
+	Name      string    `json:"name"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 // RegisterCustomer handles the registration of a new customer.
@@ -146,6 +122,17 @@ func (h *Handler) RegisterCustomer(c *gin.Context) {
 	c.JSON(http.StatusCreated, resp)
 }
 
+// LoginCustomerRequest represents the request payload for logging in a customer.
+type LoginCustomerRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required,min=8"`
+}
+
+// LoginCustomerResponse represents the response payload for a successful customer login.
+type LoginCustomerResponse struct {
+	TokenPairResponse
+}
+
 // LoginCustomer processes the login request for a customer using credentials provided in JSON format.
 func (h *Handler) LoginCustomer(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -174,9 +161,20 @@ func (h *Handler) LoginCustomer(c *gin.Context) {
 		return
 	}
 
-	resp := LoginCustomerResponse(output.TokenPair)
+	resp := LoginCustomerResponse{TokenPairResponse: TokenPairResponse(output.TokenPair)}
 	logger.Info("Customer logged in successfully")
 	c.JSON(http.StatusOK, resp)
+}
+
+// RefreshCustomerRequest represents a request to refresh customer information using tokens.
+type RefreshCustomerRequest struct {
+	RefreshToken string `json:"refresh_token" binding:"required"`
+	AccessToken  string `json:"access_token" binding:"required"`
+}
+
+// RefreshCustomerResponse represents the response returned when refreshing a customer's token.
+type RefreshCustomerResponse struct {
+	TokenPairResponse
 }
 
 // RefreshCustomer handles the refreshing of a customer's authentication token.
@@ -212,11 +210,16 @@ func (h *Handler) RefreshCustomer(c *gin.Context) {
 		return
 	}
 
-	resp := RefreshCustomerResponse{
-		LoginCustomerResponse(output.TokenPair),
-	}
+	resp := RefreshCustomerResponse{TokenPairResponse: TokenPairResponse(output.TokenPair)}
 	logger.Info("Customer refreshed successfully")
 	c.JSON(http.StatusOK, resp)
+}
+
+// ErrorResponse represents a standardized structure for API error responses containing code, message, and optional details.
+type ErrorResponse struct {
+	Code    string   `json:"code"`
+	Message string   `json:"message"`
+	Details []string `json:"details"`
 }
 
 func newErrorResponse(code, message string) ErrorResponse {
