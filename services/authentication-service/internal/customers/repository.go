@@ -24,22 +24,6 @@ const (
 	FieldActive = "active"
 )
 
-// Repository defines the interface for customer repository operations.
-// It includes methods to create a customer and find a customer by email.
-//
-//go:generate mockgen -destination=./mocks/repository_mock.go -package=customers_mocks github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers Repository
-type Repository interface {
-	CreateCustomer(ctx context.Context, params CreateCustomerParams) (Customer, error)
-	FindByEmail(ctx context.Context, email string) (Customer, error)
-}
-
-// CreateCustomerParams represents the parameters needed to create a new customer.
-type CreateCustomerParams struct {
-	Email    string
-	Password string
-	Name     string
-}
-
 // Customer represents a user in the system with associated details such as email, name, and account activation status.
 type Customer struct {
 	ID        string    `bson:"_id,omitempty"`
@@ -49,6 +33,15 @@ type Customer struct {
 	CreatedAt time.Time `bson:"created_at"`
 	UpdatedAt time.Time `bson:"updated_at"`
 	Active    bool      `bson:"active"`
+}
+
+// Repository defines the interface for customer repository operations.
+// It includes methods to create a customer and find a customer by email.
+//
+//go:generate mockgen -destination=./mocks/repository_mock.go -package=customers_mocks github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers Repository
+type Repository interface {
+	CreateCustomer(ctx context.Context, params CreateCustomerParams) (Customer, error)
+	FindByEmail(ctx context.Context, email string) (Customer, error)
 }
 
 type repository struct {
@@ -65,6 +58,13 @@ func NewRepository(logger log.Logger, db *mongo.Database, clk clock.Clock) Repos
 		collection: db.Collection(CollectionName),
 		clock:      clk,
 	}
+}
+
+// CreateCustomerParams represents the parameters needed to create a new customer.
+type CreateCustomerParams struct {
+	Email    string
+	Password string
+	Name     string
 }
 
 // CreateCustomer creates a new customer record in the database.
