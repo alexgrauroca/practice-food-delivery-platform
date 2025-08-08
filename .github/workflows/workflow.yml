@@ -17,6 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       non_adr_changes: ${{ steps.filter.outputs.non_adr_changes }}
+      openapi_specs_changed: ${{ steps.filter.outputs.openapi_specs_changed }}
       auth_service_internal: ${{ steps.filter.outputs.auth_service_internal }}
       auth_service_docs: ${{ steps.filter.outputs.auth_service_docs }}
       customer_service_internal: ${{ steps.filter.outputs.customer_service_internal }}
@@ -30,6 +31,9 @@ jobs:
             non_adr_changes:
               - '!adrs/**'
               - '**'
+            openapi_specs_changed:
+              - 'services/*/docs/dist/openapi.yaml'
+              - 'services/*/client-gen-config.yaml'
             auth_service_internal:
               - 'services/authentication-service/internal/**'
             auth_service_docs:
@@ -38,6 +42,34 @@ jobs:
               - 'services/customer-service/internal/**'
             customer_service_docs:
               - 'services/customer-service/docs/**'
+
+  update-service-clients:
+    needs: changes
+    if: ${{ needs.changes.outputs.openapi_specs_changed == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Generate Clients
+        id: generate
+        run: ./scripts/generate-service-clients.sh
+
+      - name: Commit changes if any and update go.mod
+        if: steps.generate.outputs.changes_detected == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add clients/
+          git commit -m "chore: update service clients [skip ci]"
+          cd clients
+          go mod tidy
+          git add go.mod go.sum
+          git commit -m "chore: update clients dependencies [skip ci]"
+          git push
 
   authentication-service-unit-tests:
     needs: changes
