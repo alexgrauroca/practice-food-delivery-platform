@@ -7,18 +7,21 @@ openapi-validate-docs:
 openapi-generate:
 	@cd ../.. && ./scripts/openapi-bundle.sh services/customer-service
 
-generate-clients: install-oapi-codegen
+generate-clients: install-openapi-generator
 	@echo "Generating clients for customer service..."
 	@cd ../.. && mkdir -p clients/customer-service
-	@oapi-codegen -config client-gen-config.yaml docs/dist/openapi.yaml > ../../clients/customer-service/client.go
+	@npx @openapitools/openapi-generator-cli generate -i docs/dist/openapi.yaml \
+    		-g go \
+    		-o ../../clients/customer-service \
+    		--package-name customerclient
 	@cd ../../clients/customer-service && \
 		if [ ! -f go.mod ]; then \
 			go mod init github.com/alexgrauroca/practice-food-delivery-platform/clients/customer-service; \
 		fi && \
 		go mod tidy
 
-install-oapi-codegen:
-	@bash ../../scripts/install-oapi-codegen.sh
+install-openapi-generator:
+	@bash ../../scripts/install-openapi-generator.sh
 
 generate-mocks: install-mockgen
 	@echo "Generating mocks for authentication service..."

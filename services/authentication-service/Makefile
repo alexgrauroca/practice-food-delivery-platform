@@ -7,18 +7,21 @@ openapi-validate-docs:
 openapi-generate:
 	@cd ../.. && ./scripts/openapi-bundle.sh services/authentication-service
 
-generate-clients: install-oapi-codegen
+generate-clients: install-openapi-generator
 	@echo "Generating clients for authentication service..."
 	@cd ../.. && mkdir -p clients/authentication-service
-	@oapi-codegen -config client-gen-config.yaml docs/dist/openapi.yaml > ../../clients/authentication-service/client.go
+	@npx @openapitools/openapi-generator-cli generate -i docs/dist/openapi.yaml \
+    		-g go \
+    		-o ../../clients/authentication-service \
+    		--package-name authclient
 	@cd ../../clients/authentication-service && \
 		if [ ! -f go.mod ]; then \
 			go mod init github.com/alexgrauroca/practice-food-delivery-platform/clients/authentication-service; \
 		fi && \
 		go mod tidy
 
-install-oapi-codegen:
-	@bash ../../scripts/install-oapi-codegen.sh
+install-openapi-generator:
+	@bash ../../scripts/install-openapi-generator.sh
 
 generate-mocks: install-mockgen
 	@echo "Generating mocks for authentication service..."

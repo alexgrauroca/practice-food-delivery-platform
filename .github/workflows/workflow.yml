@@ -39,7 +39,6 @@ jobs:
               - '**'
             openapi_specs_changed:
               - 'services/*/docs/dist/openapi.yaml'
-              - 'services/*/client-gen-config.yaml'
             auth_service_internal:
               - 'services/authentication-service/internal/**'
             auth_service_docs:
@@ -62,6 +61,20 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install OpenAPI Generator
+        run: npm install -g @openapitools/openapi-generator-cli
 
       - name: Make script executable
         run: chmod +x ./scripts/validate-service-clients.sh
