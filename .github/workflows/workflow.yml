@@ -54,6 +54,9 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
+      - name: Make script executable
+        run: chmod +x ./scripts/generate-service-clients.sh
+
       - name: Generate Clients
         id: generate
         run: ./scripts/generate-service-clients.sh
