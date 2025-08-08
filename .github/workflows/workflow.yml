@@ -13,8 +13,22 @@ env:
   GO_VERSION: '1.24'
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      non_adr_changes: ${{ steps.filter.outputs.non_adr_changes }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            non_adr_changes:
+              - '!adrs/**'
+              - '**'
+
   authentication-service-unit-tests:
-    if: contains(github.event.pull_request.files.*.path, 'services/authentication-service/')
+    if: contains(github.event.pull_request.files.*.path, 'services/authentication-service/internal/')
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -29,6 +43,7 @@ jobs:
         run: make run-unit-tests
 
   authentication-service-integration-tests:
+    if: contains(github.event.pull_request.files.*.path, 'services/authentication-service/internal/')
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -43,6 +58,7 @@ jobs:
         run: make run-integration-tests
 
   authentication-service-validate-openapi-docs:
+    if: contains(github.event.pull_request.files.*.path, 'services/authentication-service/docs/')
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -55,6 +71,7 @@ jobs:
         run: make openapi-validate-docs
 
   customer-service-unit-tests:
+    if: contains(github.event.pull_request.files.*.path, 'services/customer-service/internal/')
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -69,6 +86,7 @@ jobs:
         run: make run-unit-tests
 
 #  customer-service-integration-tests:
+#    if: contains(github.event.pull_request.files.*.path, 'services/customer-service/internal/')
 #    runs-on: ubuntu-latest
 #    defaults:
 #      run:
@@ -83,6 +101,7 @@ jobs:
 #        run: make run-integration-tests
 
   customer-service-validate-openapi-docs:
+    if: contains(github.event.pull_request.files.*.path, 'services/customer-service/docs/')
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -95,6 +114,8 @@ jobs:
         run: make openapi-validate-docs
 
   e2e-tests:
+    needs: changes
+    if: ${{ needs.changes.outputs.non_adr_changes == 'true' }}
     runs-on: ubuntu-latest
     defaults:
       run:
