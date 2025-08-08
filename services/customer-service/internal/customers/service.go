@@ -3,6 +3,8 @@ package customers
 import (
 	"context"
 	"time"
+
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/log"
 )
 
 // Service defines the interface for customer management service.
@@ -10,6 +12,19 @@ import (
 //go:generate mockgen -destination=./mocks/service_mock.go -package=customers_mocks github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/customers Service
 type Service interface {
 	RegisterCustomer(ctx context.Context, input RegisterCustomerInput) (RegisterCustomerOutput, error)
+}
+
+type service struct {
+	logger log.Logger
+	repo   Repository
+}
+
+// NewService creates a new instance of Service with the provided logger and repository dependencies.
+func NewService(logger log.Logger, repo Repository) Service {
+	return &service{
+		logger: logger,
+		repo:   repo,
+	}
 }
 
 // RegisterCustomerInput defines the input structure required for registering a new customer.
@@ -33,4 +48,40 @@ type RegisterCustomerOutput struct {
 	PostalCode  string
 	CountryCode string
 	CreatedAt   time.Time
+}
+
+func (s *service) RegisterCustomer(ctx context.Context, input RegisterCustomerInput) (RegisterCustomerOutput, error) {
+	logger := s.logger.WithContext(ctx)
+	logger.Info("registering customer",
+		log.Field{Key: "email", Value: input.Email}, log.Field{Key: "name", Value: input.Name})
+
+	params := CreateCustomerParams{
+		Email:       input.Email,
+		Name:        input.Name,
+		Address:     input.Address,
+		City:        input.City,
+		PostalCode:  input.PostalCode,
+		CountryCode: input.CountryCode,
+	}
+
+	customer, err := s.repo.CreateCustomer(ctx, params)
+	if err != nil {
+		logger.Error("failed to create customer", err)
+		return RegisterCustomerOutput{}, err
+	}
+
+	// TODO: create the customer at auth service
+
+	output := RegisterCustomerOutput{
+		ID:          customer.ID,
+		Email:       customer.Email,
+		Name:        customer.Name,
+		Address:     customer.Address,
+		City:        customer.City,
+		PostalCode:  customer.PostalCode,
+		CountryCode: customer.CountryCode,
+		CreatedAt:   customer.CreatedAt,
+	}
+	logger.Info("customer registered successfully", log.Field{Key: "customerID", Value: customer.ID})
+	return output, nil
 }
