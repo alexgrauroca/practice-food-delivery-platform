@@ -61,17 +61,13 @@ jobs:
         id: generate
         run: ./scripts/generate-service-clients.sh
 
-      - name: Commit changes if any and update go.mod
+      - name: Commit changes if any
         if: steps.generate.outputs.changes_detected == 'true'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add .
           git commit -m "chore: update service clients [skip ci]"
-          cd clients
-          go mod tidy
-          git add .
-          git commit -m "chore: update clients dependencies [skip ci]"
           git push
 
   authentication-service-unit-tests:
