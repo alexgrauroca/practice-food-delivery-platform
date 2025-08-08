@@ -3,5 +3,5 @@ set -e
 
 if ! command -v mockgen &> /dev/null; then
   echo "mockgen not found, installing..."
-  go get github.com/golang/mock/mockgen@latest
+  go install github.com/golang/mock/mockgen@latest
 fi
