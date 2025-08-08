@@ -9,6 +9,7 @@ permissions:
   contents: write
   pull-requests: write
   checks: write
+  actions: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -71,6 +72,8 @@ jobs:
 
       - name: Commit changes if any
         if: steps.generate.outputs.changes_detected == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
