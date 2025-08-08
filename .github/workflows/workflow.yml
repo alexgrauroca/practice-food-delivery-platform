@@ -17,6 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       non_adr_changes: ${{ steps.filter.outputs.non_adr_changes }}
+      auth_service_internal: ${{ steps.filter.outputs.auth_service_internal }}
+      auth_service_docs: ${{ steps.filter.outputs.auth_service_docs }}
+      customer_service_internal: ${{ steps.filter.outputs.customer_service_internal }}
+      customer_service_docs: ${{ steps.filter.outputs.customer_service_docs }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -26,9 +30,18 @@ jobs:
             non_adr_changes:
               - '!adrs/**'
               - '**'
+            auth_service_internal:
+              - 'services/authentication-service/internal/**'
+            auth_service_docs:
+              - 'services/authentication-service/docs/**'
+            customer_service_internal:
+              - 'services/customer-service/internal/**'
+            customer_service_docs:
+              - 'services/customer-service/docs/**'
 
   authentication-service-unit-tests:
-    if: contains(github.event.pull_request.files.*.path, 'services/authentication-service/internal/')
+    needs: changes
+    if: ${{ needs.changes.outputs.auth_service_internal == 'true' }}
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -43,7 +56,8 @@ jobs:
         run: make run-unit-tests
 
   authentication-service-integration-tests:
-    if: contains(github.event.pull_request.files.*.path, 'services/authentication-service/internal/')
+    needs: changes
+    if: ${{ needs.changes.outputs.auth_service_internal == 'true' }}
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -58,7 +72,8 @@ jobs:
         run: make run-integration-tests
 
   authentication-service-validate-openapi-docs:
-    if: contains(github.event.pull_request.files.*.path, 'services/authentication-service/docs/')
+    needs: changes
+    if: ${{ needs.changes.outputs.auth_service_docs == 'true' }}
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -71,7 +86,8 @@ jobs:
         run: make openapi-validate-docs
 
   customer-service-unit-tests:
-    if: contains(github.event.pull_request.files.*.path, 'services/customer-service/internal/')
+    needs: changes
+    if: ${{ needs.changes.outputs.customer_service_internal == 'true' }}
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -86,7 +102,8 @@ jobs:
         run: make run-unit-tests
 
 #  customer-service-integration-tests:
-#    if: contains(github.event.pull_request.files.*.path, 'services/customer-service/internal/')
+#    needs: changes
+#    if: ${{ needs.changes.outputs.customer_service_internal == 'true' }}
 #    runs-on: ubuntu-latest
 #    defaults:
 #      run:
@@ -101,7 +118,8 @@ jobs:
 #        run: make run-integration-tests
 
   customer-service-validate-openapi-docs:
-    if: contains(github.event.pull_request.files.*.path, 'services/customer-service/docs/')
+    needs: changes
+    if: ${{ needs.changes.outputs.customer_service_docs == 'true' }}
     runs-on: ubuntu-latest
     defaults:
       run:
