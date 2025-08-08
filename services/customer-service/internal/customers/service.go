@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	authclient "github.com/alexgrauroca/practice-food-delivery-platform/clients/authentication-service"
+
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/log"
 )
 
@@ -69,6 +71,8 @@ func (s *service) RegisterCustomer(ctx context.Context, input RegisterCustomerIn
 		logger.Error("failed to create customer", err)
 		return RegisterCustomerOutput{}, err
 	}
+
+	authclient.Client{}
 
 	// TODO: create the customer at auth service
 

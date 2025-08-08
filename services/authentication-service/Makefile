@@ -11,7 +11,11 @@ generate-clients: install-oapi-codegen
 	@echo "Generating clients for authentication service..."
 	@cd ../.. && mkdir -p clients/authentication-service
 	@oapi-codegen -config client-gen-config.yaml docs/dist/openapi.yaml > ../../clients/authentication-service/client.go
-	@cd ../../clients && go mod tidy
+	@cd ../../clients/authentication-service && \
+		if [ ! -f go.mod ]; then \
+			go mod init github.com/alexgrauroca/practice-food-delivery-platform/clients/authentication-service; \
+		fi && \
+		go mod tidy
 
 install-oapi-codegen:
 	@bash ../../scripts/install-oapi-codegen.sh

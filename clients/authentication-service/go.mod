@@ -1,4 +1,4 @@
-module github.com/alexgrauroca/practice-food-delivery-platform/clients
+module github.com/alexgrauroca/practice-food-delivery-platform/clients/authentication-service
 
 go 1.24.3
 

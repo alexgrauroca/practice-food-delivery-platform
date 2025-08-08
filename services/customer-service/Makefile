@@ -11,7 +11,11 @@ generate-clients: install-oapi-codegen
 	@echo "Generating clients for customer service..."
 	@cd ../.. && mkdir -p clients/customer-service
 	@oapi-codegen -config client-gen-config.yaml docs/dist/openapi.yaml > ../../clients/customer-service/client.go
-	@cd ../../clients && go mod tidy
+	@cd ../../clients/customer-service && \
+		if [ ! -f go.mod ]; then \
+			go mod init github.com/alexgrauroca/practice-food-delivery-platform/clients/customer-service; \
+		fi && \
+		go mod tidy
 
 install-oapi-codegen:
 	@bash ../../scripts/install-oapi-codegen.sh
