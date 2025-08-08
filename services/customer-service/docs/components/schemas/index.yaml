@@ -1,0 +1,9 @@
+# Request schemas
+RegisterCustomerRequest:
+  $ref: './requests/RegisterCustomerRequest.yaml'
+
+# Response schemas
+RegisterCustomerResponse:
+  $ref: './responses/RegisterCustomerResponse.yaml'
+ErrorResponse:
+  $ref: './responses/ErrorResponse.yaml'

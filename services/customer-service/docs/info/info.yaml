@@ -1,0 +1,12 @@
+title: Customer Service API
+version: 1.0.0
+description: |
+  API documentation for the customer service.
+  
+  This service provides endpoints for customer registration and management.
+contact:
+  name: Àlex Grau Roca
+  url: https://github.com/alexgrauroca
+license:
+  name: MIT
+  url: https://opensource.org/licenses/MIT

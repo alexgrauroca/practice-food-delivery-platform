@@ -1,0 +1,6 @@
+InvalidRequest:
+  $ref: './InvalidRequest.yaml'
+CustomerExists:
+  $ref: './CustomerExists.yaml'
+InternalError:
+  $ref: './InternalError.yaml'

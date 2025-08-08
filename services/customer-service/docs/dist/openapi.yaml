@@ -1,0 +1,243 @@
+openapi: 3.0.3
+info:
+  title: Customer Service API
+  version: 1.0.0
+  description: |
+    API documentation for the customer service.
+
+    This service provides endpoints for customer registration and management.
+  contact:
+    name: Àlex Grau Roca
+    url: https://github.com/alexgrauroca
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+  - url: http://localhost:80
+    description: Local server
+security:
+  - BearerAuth: []
+tags:
+  - name: Customers
+    description: Operations related to customer registration and management
+paths:
+  /v1.0/customers:
+    post:
+      summary: Register a new customer
+      description: Creates a new customer account with the provided information
+      operationId: registerCustomer
+      tags:
+        - Customers
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterCustomerRequest'
+      responses:
+        '201':
+          description: Customer registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterCustomerResponse'
+        '400':
+          description: Invalid input or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidRequest:
+                  $ref: '#/components/examples/InvalidRequest'
+                validationError:
+                  summary: Validation error
+                  value:
+                    code: VALIDATION_ERROR
+                    message: validation failed
+                    details:
+                      - email is required
+                      - password is required
+                      - name is required
+                      - email must be a valid email address
+                      - password must be a valid password with at least 8 characters long
+        '409':
+          description: Customer already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                customerExists:
+                  $ref: '#/components/examples/CustomerExists'
+        '500':
+          $ref: '#/components/responses/InternalError'
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from the login endpoint
+  examples:
+    InvalidRequest:
+      summary: Invalid JSON
+      value:
+        code: INVALID_REQUEST
+        message: invalid request
+        details: []
+    CustomerExists:
+      summary: Customer already exists
+      value:
+        code: CUSTOMER_ALREADY_EXISTS
+        message: customer already exists
+        details: []
+    InternalError:
+      summary: Unexpected error
+      value:
+        code: INTERNAL_ERROR
+        message: An unexpected error occurred
+        details: []
+  schemas:
+    RegisterCustomerRequest:
+      type: object
+      required:
+        - email
+        - password
+        - name
+        - address
+        - city
+        - postal_code
+        - country_code
+      properties:
+        email:
+          type: string
+          format: email
+          pattern: ^[\w\.-]+@[\w\.-]+\.\w{2,}$
+          description: Customer's email address
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          description: Password must be at least 8 characters long
+          example: strongpassword123
+          writeOnly: true
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Customer's full name
+          example: John Doe
+        address:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Customer's address
+          example: 123 Main St
+        city:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Customer's city
+          example: New York
+        postal_code:
+          type: string
+          minLength: 5
+          maxLength: 32
+          description: Customer's postal code
+          example: 10001
+        country_code:
+          type: string
+          minLength: 2
+          maxLength: 2
+          description: Customer's country code in ISO 3166-1 alpha-2 format
+          example: US
+    RegisterCustomerResponse:
+      type: object
+      required:
+        - id
+        - email
+        - name
+        - address
+        - city
+        - postal_code
+        - country_code
+        - created_at
+      properties:
+        id:
+          type: string
+          pattern: ^[a-zA-Z0-9\-]+$
+          description: Unique customer identifier
+          example: cust-123abc
+        email:
+          type: string
+          format: email
+          description: Customer's email address
+          example: user@example.com
+        name:
+          type: string
+          description: Customer's full name
+          example: John Doe
+        address:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Customer's address
+          example: 123 Main St
+        city:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Customer's city
+          example: New York
+        postal_code:
+          type: string
+          minLength: 5
+          maxLength: 32
+          description: Customer's postal code
+          example: 10001
+        country_code:
+          type: string
+          minLength: 2
+          maxLength: 2
+          description: Customer's country code in ISO 3166-1 alpha-2 format
+          example: US
+        created_at:
+          type: string
+          format: date-time
+          description: Account creation timestamp
+          example: '2025-01-01T00:00:00Z'
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Error code identifier
+          example: VALIDATION_ERROR
+        message:
+          type: string
+          description: Human-readable error message
+          example: validation failed
+        details:
+          type: array
+          description: Additional error details
+          items:
+            type: string
+          example:
+            - email is required
+            - password is required
+  responses:
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            internalError:
+              $ref: '#/components/examples/InternalError'
