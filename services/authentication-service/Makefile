@@ -7,8 +7,11 @@ openapi-validate-docs:
 openapi-generate:
 	@cd ../.. && ./scripts/openapi-bundle.sh services/authentication-service
 
-openapi-generate-clients: install-oapi-codegen
-	@echo "Not implemented"
+generate-clients: install-oapi-codegen
+	@echo "Generating clients for authentication service..."
+	@cd ../.. && mkdir -p clients/authentication-service
+	@oapi-codegen -config client-gen-config.yaml docs/dist/openapi.yaml > ../../clients/authentication-service/client.go
+	@cd ../../clients && go mod tidy
 
 install-oapi-codegen:
 	@bash ../../scripts/install-oapi-codegen.sh

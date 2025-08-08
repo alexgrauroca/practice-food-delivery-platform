@@ -7,6 +7,15 @@ openapi-validate-docs:
 openapi-generate:
 	@cd ../.. && ./scripts/openapi-bundle.sh services/customer-service
 
+generate-clients: install-oapi-codegen
+	@echo "Generating clients for customer service..."
+	@cd ../.. && mkdir -p clients/customer-service
+	@oapi-codegen -config client-gen-config.yaml docs/dist/openapi.yaml > ../../clients/customer-service/client.go
+	@cd ../../clients && go mod tidy
+
+install-oapi-codegen:
+	@bash ../../scripts/install-oapi-codegen.sh
+
 generate-mocks: install-mockgen
 	@echo "Generating mocks for authentication service..."
 	@go generate ./...

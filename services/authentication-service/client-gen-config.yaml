@@ -1,0 +1,7 @@
+package: authclient
+generate:
+  models: true
+  client: true
+  embedded-spec: true
+output-options:
+  response-type-suffix: Schema
