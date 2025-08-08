@@ -11,11 +11,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
+
+	customersmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers/mocks"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
-	customersmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers/mocks"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/jwt"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/log"
 )
