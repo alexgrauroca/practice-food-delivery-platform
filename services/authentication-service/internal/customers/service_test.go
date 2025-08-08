@@ -8,12 +8,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
+
+	customersmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers/mocks"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
-	customersmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers/mocks"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/jwt"
 	jwtmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/jwt/mocks"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/log"

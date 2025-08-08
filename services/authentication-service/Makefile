@@ -8,6 +8,7 @@ generate-mocks: install-mockgen
 
 install-mockgen:
 	@bash ../../scripts/install-mockgen.sh
+	go get go.uber.org/mock/mockgen
 
 run-integration-tests: start-mongodb
 	@echo "Running integration tests for authentication service..."
