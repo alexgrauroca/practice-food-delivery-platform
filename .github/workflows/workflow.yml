@@ -66,11 +66,11 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add clients/
+          git add .
           git commit -m "chore: update service clients [skip ci]"
           cd clients
           go mod tidy
-          git add go.mod go.sum
+          git add .
           git commit -m "chore: update clients dependencies [skip ci]"
           git push
 
