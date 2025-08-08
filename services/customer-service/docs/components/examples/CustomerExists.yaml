@@ -1,0 +1,5 @@
+summary: Customer already exists
+value:
+  code: CUSTOMER_ALREADY_EXISTS
+  message: customer already exists
+  details: [ ]

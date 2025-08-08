@@ -1,0 +1,5 @@
+summary: Invalid JSON
+value:
+  code: INVALID_REQUEST
+  message: invalid request
+  details: [ ]
