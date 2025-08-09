@@ -39,6 +39,7 @@ jobs:
               - '**'
             openapi_specs_changed:
               - 'services/*/docs/dist/openapi.yaml'
+              - 'scripts/validate-service-clients.sh'
             auth_service_internal:
               - 'services/authentication-service/internal/**'
             auth_service_docs:
