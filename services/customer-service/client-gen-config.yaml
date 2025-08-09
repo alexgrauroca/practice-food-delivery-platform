@@ -1,0 +1,13 @@
+generatorName: go
+outputDir: ../../clients/customer-service
+packageName: customerclient
+gitUserId: alexgrauroca
+gitRepoId: practice-food-delivery-platform
+additionalProperties:
+  module: github.com/alexgrauroca/practice-food-delivery-platform/clients/customer-service
+  isGoSubmodule: "true"
+  enumClassPrefix: "true"
+  packageName: customerclient
+  disallowAdditionalPropertiesIfNotPresent: "true"
+  importPath: github.com/alexgrauroca/practice-food-delivery-platform/clients/customer-service
+

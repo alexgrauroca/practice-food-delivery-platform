@@ -4,8 +4,6 @@ import (
 	"context"
 	"time"
 
-	authclient "github.com/alexgrauroca/practice-food-delivery-platform/clients/authentication-service"
-
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/log"
 )
 
@@ -72,8 +70,7 @@ func (s *service) RegisterCustomer(ctx context.Context, input RegisterCustomerIn
 		return RegisterCustomerOutput{}, err
 	}
 
-	authclient.Client{}
-
+	config := authclient.NewConfiguration()
 	// TODO: create the customer at auth service
 
 	output := RegisterCustomerOutput{

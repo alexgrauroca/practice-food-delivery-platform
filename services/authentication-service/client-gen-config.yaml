@@ -1,0 +1,13 @@
+generatorName: go
+outputDir: ../../clients/authentication-service
+packageName: authclient
+gitUserId: alexgrauroca
+gitRepoId: practice-food-delivery-platform
+additionalProperties:
+  module: github.com/alexgrauroca/practice-food-delivery-platform/clients/authentication-service
+  isGoSubmodule: "true"
+  enumClassPrefix: "true"
+  packageName: authclient
+  disallowAdditionalPropertiesIfNotPresent: "true"
+  importPath: github.com/alexgrauroca/practice-food-delivery-platform/clients/authentication-service
+

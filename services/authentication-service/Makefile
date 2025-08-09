@@ -10,10 +10,9 @@ openapi-generate:
 generate-clients: install-openapi-generator
 	@echo "Generating clients for authentication service..."
 	@cd ../.. && mkdir -p clients/authentication-service
-	@npx @openapitools/openapi-generator-cli generate -i docs/dist/openapi.yaml \
-    		-g go \
-    		-o ../../clients/authentication-service \
-    		--package-name authclient
+	@npx @openapitools/openapi-generator-cli generate \
+			-i docs/dist/openapi.yaml \
+    		-c client-gen-config.yaml
 	@cd ../../clients/authentication-service && \
 		if [ ! -f go.mod ]; then \
 			go mod init github.com/alexgrauroca/practice-food-delivery-platform/clients/authentication-service; \

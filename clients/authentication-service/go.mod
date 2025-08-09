@@ -1,4 +1,4 @@
-module github.com/GIT_USER_ID/GIT_REPO_ID
+module github.com/alexgrauroca/practice-food-delivery-platform/authclient
 
 go 1.18
 
