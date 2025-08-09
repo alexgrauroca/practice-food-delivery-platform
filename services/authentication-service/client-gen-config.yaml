@@ -4,10 +4,8 @@ packageName: authclient
 gitUserId: alexgrauroca
 gitRepoId: practice-food-delivery-platform
 additionalProperties:
-  module: github.com/alexgrauroca/practice-food-delivery-platform/clients/authentication-service
+  module: github.com/alexgrauroca/practice-food-delivery-platform/authclient
   isGoSubmodule: "true"
   enumClassPrefix: "true"
   packageName: authclient
   disallowAdditionalPropertiesIfNotPresent: "true"
-  importPath: github.com/alexgrauroca/practice-food-delivery-platform/clients/authentication-service
-

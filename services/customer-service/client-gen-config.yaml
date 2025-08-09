@@ -4,10 +4,9 @@ packageName: customerclient
 gitUserId: alexgrauroca
 gitRepoId: practice-food-delivery-platform
 additionalProperties:
-  module: github.com/alexgrauroca/practice-food-delivery-platform/clients/customer-service
+  module: github.com/alexgrauroca/practice-food-delivery-platform/customerclient
   isGoSubmodule: "true"
   enumClassPrefix: "true"
   packageName: customerclient
   disallowAdditionalPropertiesIfNotPresent: "true"
-  importPath: github.com/alexgrauroca/practice-food-delivery-platform/clients/customer-service
 
