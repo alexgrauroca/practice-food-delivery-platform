@@ -3,6 +3,13 @@ package customers
 import (
 	"context"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/clock"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/infraestructure/mongodb"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/log"
 )
 
 const (
@@ -38,6 +45,22 @@ type Repository interface {
 	PurgeCustomer(ctx context.Context, id string) error
 }
 
+type repository struct {
+	logger     log.Logger
+	collection *mongo.Collection
+	clock      clock.Clock
+}
+
+// NewRepository creates a new instance of the Repository interface with MongoDB implementation.
+// It requires a logger for operational logging, a database connection, and a clock implementation for timestamp generation.
+func NewRepository(logger log.Logger, db *mongo.Database, clk clock.Clock) Repository {
+	return &repository{
+		logger:     logger,
+		collection: db.Collection(CollectionName),
+		clock:      clk,
+	}
+}
+
 // CreateCustomerParams represents the parameters needed to create a new customer.
 type CreateCustomerParams struct {
 	Email       string
@@ -46,4 +69,40 @@ type CreateCustomerParams struct {
 	City        string
 	PostalCode  string
 	CountryCode string
+}
+
+// CreateCustomer creates a new customer record in the database.
+// It returns the created customer with an assigned ID or an error if the operation fails.
+// If a customer with the same email already exists, it returns ErrCustomerAlreadyExists.
+func (r *repository) CreateCustomer(ctx context.Context, params CreateCustomerParams) (Customer, error) {
+	logger := r.logger.WithContext(ctx)
+
+	now := r.clock.Now()
+	c := Customer{
+		Email:       params.Email,
+		Name:        params.Name,
+		Active:      true,
+		Address:     params.Address,
+		City:        params.City,
+		PostalCode:  params.PostalCode,
+		CountryCode: params.CountryCode,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}
+	res, err := r.collection.InsertOne(ctx, c)
+	if err != nil {
+		if mongodb.IsDuplicateKeyError(err) {
+			logger.Warn("Customer already exists", log.Field{Key: "email", Value: params.Email})
+			return Customer{}, ErrCustomerAlreadyExists
+		}
+		logger.Error("Failed to insert customer", err)
+		return Customer{}, err
+	}
+	c.ID = res.InsertedID.(primitive.ObjectID).Hex()
+	logger.Info("Customer created successfully", log.Field{Key: "customer_id", Value: c.ID})
+	return c, nil
+}
+
+func (r *repository) PurgeCustomer(ctx context.Context, id string) error {
+	panic("implement me")
 }
