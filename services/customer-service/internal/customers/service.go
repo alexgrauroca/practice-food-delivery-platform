@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/alexgrauroca/practice-food-delivery-platform/authclient"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/log"
 )
 
@@ -16,9 +15,8 @@ type Service interface {
 }
 
 type service struct {
-	logger  log.Logger
-	repo    Repository
-	authcli authclient.APIClient
+	logger log.Logger
+	repo   Repository
 }
 
 // NewService creates a new instance of Service with the provided logger and repository dependencies.
@@ -71,8 +69,6 @@ func (s *service) RegisterCustomer(ctx context.Context, input RegisterCustomerIn
 		logger.Error("failed to create customer", err)
 		return RegisterCustomerOutput{}, err
 	}
-
-	// TODO: create the customer at auth service
 
 	output := RegisterCustomerOutput{
 		ID:          customer.ID,
