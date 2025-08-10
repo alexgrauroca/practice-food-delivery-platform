@@ -5,6 +5,16 @@ import (
 	"time"
 )
 
+const (
+	// CollectionName defines the name of the MongoDB collection used for storing customer documents.
+	CollectionName = "customers"
+
+	// FieldEmail represents the field name used to store or query email addresses in the database.
+	FieldEmail = "email"
+	// FieldActive represents the field name used to indicate the active status of a customer in the database.
+	FieldActive = "active"
+)
+
 // Customer represents a user in the system with associated details such as email, name, and account activation status.
 type Customer struct {
 	ID          string    `bson:"_id,omitempty"`
