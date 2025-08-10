@@ -42,7 +42,7 @@ type Customer struct {
 //go:generate mockgen -destination=./mocks/repository_mock.go -package=customers_mocks github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/customers Repository
 type Repository interface {
 	CreateCustomer(ctx context.Context, params CreateCustomerParams) (Customer, error)
-	PurgeCustomer(ctx context.Context, id string) error
+	PurgeCustomer(ctx context.Context, email string) error
 }
 
 type repository struct {
@@ -103,6 +103,6 @@ func (r *repository) CreateCustomer(ctx context.Context, params CreateCustomerPa
 	return c, nil
 }
 
-func (r *repository) PurgeCustomer(ctx context.Context, id string) error {
+func (r *repository) PurgeCustomer(ctx context.Context, email string) error {
 	panic("implement me")
 }

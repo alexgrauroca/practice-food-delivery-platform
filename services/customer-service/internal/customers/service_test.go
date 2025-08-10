@@ -93,7 +93,7 @@ func TestService_RegisterCustomer(t *testing.T) {
 				authcli.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
 					Return(authentication.RegisterCustomerResponse{}, errAuthCli)
 
-				repo.EXPECT().PurgeCustomer(gomock.Any(), gomock.Any()).Return(nil)
+				repo.EXPECT().PurgeCustomer(gomock.Any(), "test@example.com").Return(nil)
 			},
 			want:    customers.RegisterCustomerOutput{},
 			wantErr: errAuthCli,

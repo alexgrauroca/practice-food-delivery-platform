@@ -32,7 +32,8 @@ func TestRepository_CreateCustomer(t *testing.T) {
 
 	tests := []customersRepositoryTestCase[customers.CreateCustomerParams, customers.Customer]{
 		{
-			name: "when exists an active customer with the same email, it should return a customer already exists error",
+			name: "when exists an active customer with the same email, " +
+				"then it should return a customer already exists error",
 			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
 				mongodb.InsertTestDocument(t, coll, customers.Customer{
 					Email:       "test@example.com",
@@ -58,7 +59,7 @@ func TestRepository_CreateCustomer(t *testing.T) {
 			wantErr: customers.ErrCustomerAlreadyExists,
 		},
 		{
-			name: "when the customer is created successfully, it should return the created customer",
+			name: "when the customer is created successfully, then it should return the created customer",
 			params: customers.CreateCustomerParams{
 				Email:       "test@example.com",
 				Name:        "John Doe",
@@ -122,6 +123,66 @@ func TestRepository_CreateCustomer_UnexpectedFailure(t *testing.T) {
 	tdb.Close(t)
 
 	_, err := repo.CreateCustomer(context.Background(), customers.CreateCustomerParams{})
+	assert.Error(t, err, "Expected an error due to unexpected failure")
+	assert.NotErrorIs(t, err, customers.ErrCustomerAlreadyExists)
+}
+
+func TestRepository_PurgeCustomer(t *testing.T) {
+	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	logger, _ := log.NewTest()
+
+	// Params is just string as id. We don't need want, so it will be any type
+	tests := []customersRepositoryTestCase[string, any]{
+		{
+			name:    "when the customer does not exist, then it should an error XXXXXXXXXXXXXXXXX",
+			params:  "test@example.com",
+			wantErr: nil,
+		},
+		{
+			name: "when the customer exist, then it should not return an error",
+			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
+				mongodb.InsertTestDocument(t, coll, customers.Customer{
+					Email:     "test@example.com",
+					Active:    true,
+					CreatedAt: now,
+					UpdatedAt: now,
+				})
+			},
+			params:  "test@example.com",
+			wantErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tdb := mongodb.NewTestDB(t)
+			defer tdb.Close(t)
+
+			coll := setupTestCustomersCollection(t, tdb.DB)
+			if tt.insertDocuments != nil {
+				tt.insertDocuments(t, coll)
+			}
+
+			repo := customers.NewRepository(logger, tdb.DB, clock.FixedClock{FixedTime: now})
+			err := repo.PurgeCustomer(context.Background(), tt.params)
+
+			// Error assertion
+			assert.ErrorIs(t, err, tt.wantErr)
+		})
+	}
+}
+
+func TestRepository_PurgeCustomer_UnexpectedFailure(t *testing.T) {
+	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	logger, _ := log.NewTest()
+
+	tdb := mongodb.NewTestDB(t)
+	repo := customers.NewRepository(logger, tdb.DB, clock.FixedClock{FixedTime: now})
+
+	// Simulating an unexpected failure by closing the opened connection
+	tdb.Close(t)
+
+	err := repo.PurgeCustomer(context.Background(), "")
 	assert.Error(t, err, "Expected an error due to unexpected failure")
 	assert.NotErrorIs(t, err, customers.ErrCustomerAlreadyExists)
 }

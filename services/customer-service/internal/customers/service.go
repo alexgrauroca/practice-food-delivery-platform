@@ -82,7 +82,7 @@ func (s *service) RegisterCustomer(ctx context.Context, input RegisterCustomerIn
 		logger.Error("failed to register customer at auth service", err)
 
 		// Roll back the created customer in case of error when registering the customer at auth service
-		if err := s.repo.PurgeCustomer(ctx, customer.ID); err != nil {
+		if err := s.repo.PurgeCustomer(ctx, input.Email); err != nil {
 			logger.Error("failed to purge customer", err)
 			return RegisterCustomerOutput{}, err
 		}
