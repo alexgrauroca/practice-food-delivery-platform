@@ -90,9 +90,36 @@ func TestService_RegisterCustomer(t *testing.T) {
 
 				authcli.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
 					Return(authentication.RegisterCustomerResponse{}, errAuthCli)
+
+				repo.EXPECT().PurgeCustomer(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want:    customers.RegisterCustomerOutput{},
 			wantErr: errAuthCli,
+		},
+		{
+			name: "when there is an unexpected error when purging the created customer, " +
+				"then it should propagate the error",
+			input: customers.RegisterCustomerInput{
+				Email:       "test@example.com",
+				Password:    "ValidPassword123",
+				Name:        "John Doe",
+				Address:     "a valid address",
+				City:        "a valid city",
+				PostalCode:  "12345",
+				CountryCode: "US",
+			},
+			mocksSetup: func(repo *customersmocks.MockRepository, authcli *authmocks.MockClient) {
+				// The returned customer is not relevant for this case
+				repo.EXPECT().CreateCustomer(gomock.Any(), gomock.Any()).
+					Return(customers.Customer{}, nil)
+
+				authcli.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
+					Return(authentication.RegisterCustomerResponse{}, errAuthCli)
+
+				repo.EXPECT().PurgeCustomer(gomock.Any(), gomock.Any()).Return(errRepo)
+			},
+			want:    customers.RegisterCustomerOutput{},
+			wantErr: errRepo,
 		},
 		{
 			name: "when the customer can be created, then it should return the created customer",
