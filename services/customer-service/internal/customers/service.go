@@ -70,6 +70,8 @@ func (s *service) RegisterCustomer(ctx context.Context, input RegisterCustomerIn
 		return RegisterCustomerOutput{}, err
 	}
 
+	// TODO: create the customer at auth service
+
 	output := RegisterCustomerOutput{
 		ID:          customer.ID,
 		Email:       customer.Email,
