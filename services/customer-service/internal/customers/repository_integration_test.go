@@ -136,7 +136,7 @@ func TestRepository_PurgeCustomer(t *testing.T) {
 		{
 			name:    "when the customer does not exist, then it should an error XXXXXXXXXXXXXXXXX",
 			params:  "test@example.com",
-			wantErr: nil,
+			wantErr: customers.ErrCustomerNotFound,
 		},
 		{
 			name: "when the customer exist, then it should not return an error",
@@ -184,7 +184,7 @@ func TestRepository_PurgeCustomer_UnexpectedFailure(t *testing.T) {
 
 	err := repo.PurgeCustomer(context.Background(), "")
 	assert.Error(t, err, "Expected an error due to unexpected failure")
-	assert.NotErrorIs(t, err, customers.ErrCustomerAlreadyExists)
+	assert.NotErrorIs(t, err, customers.ErrCustomerNotFound)
 }
 
 func setupTestCustomersCollection(t *testing.T, db *mongo.Database) *mongo.Collection {

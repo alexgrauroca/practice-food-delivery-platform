@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
@@ -104,5 +105,19 @@ func (r *repository) CreateCustomer(ctx context.Context, params CreateCustomerPa
 }
 
 func (r *repository) PurgeCustomer(ctx context.Context, email string) error {
-	panic("implement me")
+	logger := r.logger.WithContext(ctx)
+	logger.Info("Purging customer", log.Field{Key: "email", Value: email})
+
+	res, err := r.collection.DeleteOne(ctx, bson.M{FieldEmail: email})
+	if err != nil {
+		logger.Error("Failed to purge customer", err)
+		return err
+	}
+	if res.DeletedCount == 0 {
+		logger.Warn("Customer not found", log.Field{Key: "email", Value: email})
+		return ErrCustomerNotFound
+	}
+
+	logger.Info("Customer purged successfully", log.Field{Key: "email", Value: email})
+	return nil
 }
