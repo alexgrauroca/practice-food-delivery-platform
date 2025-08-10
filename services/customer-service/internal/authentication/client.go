@@ -5,6 +5,8 @@ package authentication
 
 import (
 	"context"
+
+	"github.com/alexgrauroca/practice-food-delivery-platform/authclient"
 )
 
 // Client defines the interface for interacting with the authentication service.
@@ -33,4 +35,24 @@ type RegisterCustomerRequest struct {
 type RegisterCustomerResponse struct {
 	ID    string
 	Email string
+}
+
+type client struct {
+	conf   *authclient.Configuration
+	apicli *authclient.APIClient
+}
+
+func NewClient(config Config) Client {
+	conf := authclient.NewConfiguration()
+	conf.Debug = config.Debug
+
+	apiclient := authclient.NewAPIClient(conf)
+	return &client{
+		conf:   conf,
+		apicli: apiclient,
+	}
+}
+
+func (c *client) RegisterCustomer(ctx context.Context, req RegisterCustomerRequest) (RegisterCustomerResponse, error) {
+	return RegisterCustomerResponse{}, nil
 }
