@@ -9,17 +9,22 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/authentication"
+	authmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/authentication/mocks"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/customers"
 	customersmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/customers/mocks"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/log"
 )
 
-var errRepo = errors.New("repository error")
+var (
+	errRepo    = errors.New("repository error")
+	errAuthCli = errors.New("authentication client error")
+)
 
 type customersServiceTestCase[I, W any] struct {
 	name       string
 	input      I
-	mocksSetup func(repo *customersmocks.MockRepository)
+	mocksSetup func(repo *customersmocks.MockRepository, authcli *authmocks.MockClient)
 	want       W
 	wantErr    error
 }
@@ -41,7 +46,7 @@ func TestService_RegisterCustomer(t *testing.T) {
 				PostalCode:  "12345",
 				CountryCode: "US",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository) {
+			mocksSetup: func(repo *customersmocks.MockRepository, _ *authmocks.MockClient) {
 				repo.EXPECT().CreateCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, customers.ErrCustomerAlreadyExists)
 			},
@@ -59,12 +64,35 @@ func TestService_RegisterCustomer(t *testing.T) {
 				PostalCode:  "12345",
 				CountryCode: "US",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository) {
+			mocksSetup: func(repo *customersmocks.MockRepository, _ *authmocks.MockClient) {
 				repo.EXPECT().CreateCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, errRepo)
 			},
 			want:    customers.RegisterCustomerOutput{},
 			wantErr: errRepo,
+		},
+		{
+			name: "when there is an unexpected error when registering the customer at auth service, " +
+				"then it should propagate the error",
+			input: customers.RegisterCustomerInput{
+				Email:       "test@example.com",
+				Password:    "ValidPassword123",
+				Name:        "John Doe",
+				Address:     "a valid address",
+				City:        "a valid city",
+				PostalCode:  "12345",
+				CountryCode: "US",
+			},
+			mocksSetup: func(repo *customersmocks.MockRepository, authcli *authmocks.MockClient) {
+				// The returned customer is not relevant for this case
+				repo.EXPECT().CreateCustomer(gomock.Any(), gomock.Any()).
+					Return(customers.Customer{}, nil)
+
+				authcli.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
+					Return(authentication.RegisterCustomerResponse{}, errAuthCli)
+			},
+			want:    customers.RegisterCustomerOutput{},
+			wantErr: errAuthCli,
 		},
 		{
 			name: "when the customer can be created, then it should return the created customer",
@@ -77,22 +105,39 @@ func TestService_RegisterCustomer(t *testing.T) {
 				PostalCode:  "12345",
 				CountryCode: "US",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository) {
-				repo.EXPECT().CreateCustomer(gomock.Any(), gomock.Any()).
-					DoAndReturn(func(_ context.Context, params customers.CreateCustomerParams) (customers.Customer, error) {
-						return customers.Customer{
-							ID:          "fake-id",
-							Email:       params.Email,
-							Name:        params.Name,
-							Address:     params.Address,
-							City:        params.City,
-							PostalCode:  params.PostalCode,
-							CountryCode: params.CountryCode,
-							Active:      true,
-							CreatedAt:   now,
-							UpdatedAt:   now,
-						}, nil
-					})
+			mocksSetup: func(repo *customersmocks.MockRepository, authcli *authmocks.MockClient) {
+				repo.EXPECT().CreateCustomer(gomock.Any(), customers.CreateCustomerParams{
+					Email:       "test@example.com",
+					Name:        "John Doe",
+					Address:     "a valid address",
+					City:        "a valid city",
+					PostalCode:  "12345",
+					CountryCode: "US",
+				}).DoAndReturn(func(_ context.Context, params customers.CreateCustomerParams) (customers.Customer, error) {
+					return customers.Customer{
+						ID:          "fake-id",
+						Email:       params.Email,
+						Name:        params.Name,
+						Address:     params.Address,
+						City:        params.City,
+						PostalCode:  params.PostalCode,
+						CountryCode: params.CountryCode,
+						Active:      true,
+						CreatedAt:   now,
+						UpdatedAt:   now,
+					}, nil
+				})
+
+				authcli.EXPECT().RegisterCustomer(gomock.Any(), authentication.RegisterCustomerRequest{
+					Email:    "test@example.com",
+					Password: "ValidPassword123",
+					Name:     "John Doe",
+				}).Return(authentication.RegisterCustomerResponse{
+					ID:        "fake-id",
+					Email:     "test@example.com",
+					Name:      "John Doe",
+					CreatedAt: now,
+				}, nil)
 			},
 			want: customers.RegisterCustomerOutput{
 				ID:          "fake-id",
@@ -114,11 +159,12 @@ func TestService_RegisterCustomer(t *testing.T) {
 			defer ctrl.Finish()
 
 			repo := customersmocks.NewMockRepository(ctrl)
+			authcli := authmocks.NewMockClient(ctrl)
 			if tt.mocksSetup != nil {
-				tt.mocksSetup(repo)
+				tt.mocksSetup(repo, authcli)
 			}
 
-			service := customers.NewService(logger, repo)
+			service := customers.NewService(logger, repo, authcli)
 			got, err := service.RegisterCustomer(context.Background(), tt.input)
 
 			assert.ErrorIs(t, err, tt.wantErr)
