@@ -5,6 +5,7 @@ package authentication
 
 import (
 	"context"
+	"time"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/authclient"
 )
@@ -33,8 +34,10 @@ type RegisterCustomerRequest struct {
 // RegisterCustomerResponse contains the data returned after successfully
 // registering a customer in the authentication service.
 type RegisterCustomerResponse struct {
-	ID    string
-	Email string
+	ID        string
+	Email     string
+	Name      string
+	CreatedAt time.Time
 }
 
 type client struct {
@@ -54,5 +57,15 @@ func NewClient(config Config) Client {
 }
 
 func (c *client) RegisterCustomer(ctx context.Context, req RegisterCustomerRequest) (RegisterCustomerResponse, error) {
-	return RegisterCustomerResponse{}, nil
+	authreq := authclient.RegisterCustomerRequest(req)
+	resp, _, err := c.apicli.CustomersAPI.RegisterCustomer(ctx).RegisterCustomerRequest(authreq).Execute()
+	if err != nil {
+		return RegisterCustomerResponse{}, err
+	}
+	return RegisterCustomerResponse{
+		ID:        resp.Id,
+		Email:     resp.Email,
+		Name:      resp.Name,
+		CreatedAt: resp.CreatedAt,
+	}, nil
 }
