@@ -17,6 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       non_adr_changes: ${{ steps.filter.outputs.non_adr_changes }}
+      openapi_specs_changed: ${{ steps.filter.outputs.openapi_specs_changed }}
       auth_service_internal: ${{ steps.filter.outputs.auth_service_internal }}
       auth_service_docs: ${{ steps.filter.outputs.auth_service_docs }}
       customer_service_internal: ${{ steps.filter.outputs.customer_service_internal }}
@@ -30,6 +31,10 @@ jobs:
             non_adr_changes:
               - '!adrs/**'
               - '**'
+            openapi_specs_changed:
+              - 'services/*/docs/dist/openapi.yaml'
+              - 'services/*/client-gen-config.yaml'
+              - 'scripts/validate-service-clients.sh'
             auth_service_internal:
               - 'services/authentication-service/internal/**'
             auth_service_docs:
@@ -38,6 +43,40 @@ jobs:
               - 'services/customer-service/internal/**'
             customer_service_docs:
               - 'services/customer-service/docs/**'
+
+  validate-service-clients:
+    needs: changes
+    if: ${{ needs.changes.outputs.openapi_specs_changed == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install OpenAPI Generator
+        run: npm install -g @openapitools/openapi-generator-cli
+
+      - name: Make script executable
+        run: chmod +x ./scripts/validate-service-clients.sh
+
+      - name: Validate clients
+        run: ./scripts/validate-service-clients.sh
 
   authentication-service-unit-tests:
     needs: changes
