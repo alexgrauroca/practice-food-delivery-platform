@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/log"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/log"
 )
 
 // TestDB represents a test database wrapper for managing a MongoDB instance in a testing environment.
