@@ -4,8 +4,8 @@ package customer
 import (
 	"time"
 
-	"github.com/alexgrauroca/practice-food-delivery-platform/e2e/authentication-service/authentication"
-	"github.com/alexgrauroca/practice-food-delivery-platform/e2e/authentication-service/customers/api"
+	"github.com/alexgrauroca/practice-food-delivery-platform/e2e/domain/authentication"
+	"github.com/alexgrauroca/practice-food-delivery-platform/e2e/pkg/api"
 )
 
 // New creates and returns a new TestCustomer with predefined and dynamically generated fields.
@@ -29,7 +29,7 @@ func (c *TestCustomer) Login() (*LoginResponse, error) {
 		"password": c.Password,
 	}
 
-	return api.DoPost[LoginResponse](api.LoginEndpoint, payload)
+	return api.DoPost[LoginResponse](LoginEndpoint, payload)
 }
 
 // Register sends a registration request for a TestCustomer and returns a RegisterResponse or an error.
@@ -40,7 +40,7 @@ func (c *TestCustomer) Register() (*RegisterResponse, error) {
 		"name":     c.Name,
 	}
 
-	return api.DoPost[RegisterResponse](api.RegisterEndpoint, payload)
+	return api.DoPost[RegisterResponse](RegisterEndpoint, payload)
 }
 
 // Refresh attempts to refresh the authentication token for the TestCustomer using the provided access and refresh tokens.
@@ -50,7 +50,7 @@ func (c *TestCustomer) Refresh() (*RefreshResponse, error) {
 		"refresh_token": c.Auth.RefreshToken,
 	}
 
-	return api.DoPost[RefreshResponse](api.RefreshEndpoint, payload)
+	return api.DoPost[RefreshResponse](RefreshEndpoint, payload)
 }
 
 func generateEmail() string {

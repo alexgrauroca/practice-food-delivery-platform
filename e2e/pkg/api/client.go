@@ -8,22 +8,14 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-
-	apierrors "github.com/alexgrauroca/practice-food-delivery-platform/e2e/authentication-service/customers/api/errors"
 )
 
 const (
-	baseURL         = "http://localhost:80"
-	contentTypeJSON = "application/json"
-)
+	// BaseURL defines the default base URL for the authentication service API endpoints.
+	// It is used as a prefix for all API requests in the testing environment.
+	BaseURL = "http://localhost:80"
 
-var (
-	// RegisterEndpoint defines the API endpoint URL for customer registration under version 1.0 of the API.
-	RegisterEndpoint = baseURL + "/v1.0/customers/register"
-	// LoginEndpoint defines the API endpoint URL for customer login under version 1.0 of the API.
-	LoginEndpoint = baseURL + "/v1.0/customers/login"
-	// RefreshEndpoint defines the API endpoint URL for refreshing customer data under version 1.0 of the API.
-	RefreshEndpoint = baseURL + "/v1.0/customers/refresh"
+	contentTypeJSON = "application/json"
 )
 
 // DoPost sends a POST request to the specified endpoint with the given payload, decoding the response into the generic type T.
@@ -49,11 +41,11 @@ func DoPost[T any](endpoint string, payload any) (*T, error) {
 
 	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
 		// Try to parse as API errors first
-		if apiError, err := apierrors.ParseErrorResponse(responseBody); err == nil {
+		if apiError, err := ParseErrorResponse(responseBody); err == nil {
 			return nil, apiError
 		}
 		// Fallback to generic errors
-		return nil, &apierrors.APIError{
+		return nil, &APIError{
 			Code:    "UNEXPECTED_ERROR",
 			Message: fmt.Sprintf("unexpected status code: %d", resp.StatusCode),
 			Details: []string{string(responseBody)},

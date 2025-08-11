@@ -1,6 +1,6 @@
 package customer
 
-import "github.com/alexgrauroca/practice-food-delivery-platform/e2e/authentication-service/authentication"
+import "github.com/alexgrauroca/practice-food-delivery-platform/e2e/domain/authentication"
 
 // TestCustomer represents a test customer with email, password, and name information.
 type TestCustomer struct {
