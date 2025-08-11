@@ -2,6 +2,7 @@ package customers
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/authentication"
@@ -81,8 +82,9 @@ func (s *service) RegisterCustomer(ctx context.Context, input RegisterCustomerIn
 	if _, err := s.authcli.RegisterCustomer(ctx, authReq); err != nil {
 		logger.Error("failed to register customer at auth service", err)
 
-		// Roll back the created customer in case of error when registering the customer at auth service
-		if err := s.repo.PurgeCustomer(ctx, customer.ID); err != nil {
+		// Roll back the created customer in case of error when registering the customer at auth service.
+		// Customer not found error is ignored.
+		if err := s.repo.PurgeCustomer(ctx, input.Email); err != nil && !errors.Is(err, ErrCustomerNotFound) {
 			logger.Error("failed to purge customer", err)
 			return RegisterCustomerOutput{}, err
 		}

@@ -34,3 +34,11 @@ install-mockgen:
 run-unit-tests: generate-mocks
 	@echo "Running unit tests for authentication service..."
 	@go test -v -tags=unit ./...
+
+run-integration-tests: start-mongodb
+	@echo "Running integration tests for authentication service..."
+	@bash -c "set -a && source ../../.env && set +a && go test -v -tags=integration ./..."
+
+start-mongodb:
+	@echo "Starting MongoDB Docker containers for integration tests..."
+	@docker compose -f ../../docker-compose.yml up -d mongodb

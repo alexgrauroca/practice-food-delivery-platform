@@ -1,3 +1,5 @@
+//go:build unit
+
 package customers_test
 
 import (
@@ -72,8 +74,8 @@ func TestService_RegisterCustomer(t *testing.T) {
 			wantErr: errRepo,
 		},
 		{
-			name: "when there is an unexpected error when registering the customer at auth service, " +
-				"then it should propagate the error",
+			name: "when there is a customer not found error when purging the created customer, " +
+				"then it should propagate the authcli error",
 			input: customers.RegisterCustomerInput{
 				Email:       "test@example.com",
 				Password:    "ValidPassword123",
@@ -91,7 +93,7 @@ func TestService_RegisterCustomer(t *testing.T) {
 				authcli.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
 					Return(authentication.RegisterCustomerResponse{}, errAuthCli)
 
-				repo.EXPECT().PurgeCustomer(gomock.Any(), gomock.Any()).Return(nil)
+				repo.EXPECT().PurgeCustomer(gomock.Any(), gomock.Any()).Return(customers.ErrCustomerNotFound)
 			},
 			want:    customers.RegisterCustomerOutput{},
 			wantErr: errAuthCli,
@@ -120,6 +122,31 @@ func TestService_RegisterCustomer(t *testing.T) {
 			},
 			want:    customers.RegisterCustomerOutput{},
 			wantErr: errRepo,
+		},
+		{
+			name: "when there is an unexpected error when registering the customer at auth service, " +
+				"then it should propagate the error",
+			input: customers.RegisterCustomerInput{
+				Email:       "test@example.com",
+				Password:    "ValidPassword123",
+				Name:        "John Doe",
+				Address:     "a valid address",
+				City:        "a valid city",
+				PostalCode:  "12345",
+				CountryCode: "US",
+			},
+			mocksSetup: func(repo *customersmocks.MockRepository, authcli *authmocks.MockClient) {
+				// The returned customer is not relevant for this case
+				repo.EXPECT().CreateCustomer(gomock.Any(), gomock.Any()).
+					Return(customers.Customer{}, nil)
+
+				authcli.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
+					Return(authentication.RegisterCustomerResponse{}, errAuthCli)
+
+				repo.EXPECT().PurgeCustomer(gomock.Any(), "test@example.com").Return(nil)
+			},
+			want:    customers.RegisterCustomerOutput{},
+			wantErr: errAuthCli,
 		},
 		{
 			name: "when the customer can be created, then it should return the created customer",
