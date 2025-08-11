@@ -1,7 +1,7 @@
-//go:build e2e || authentication || customers
+//go:build e2e || authentication || customer
 
 //nolint:revive
-package customers
+package authentication_test
 
 import (
 	"errors"
@@ -10,8 +10,8 @@ import (
 	g "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	apierrors "github.com/alexgrauroca/practice-food-delivery-platform/e2e/authentication-service/customers/api/errors"
-	"github.com/alexgrauroca/practice-food-delivery-platform/e2e/authentication-service/customers/customer"
+	"github.com/alexgrauroca/practice-food-delivery-platform/e2e/domain/customer"
+	"github.com/alexgrauroca/practice-food-delivery-platform/e2e/pkg/api"
 )
 
 var _ = g.Describe("Customer Authentication Workflow", func() {
@@ -64,7 +64,7 @@ var _ = g.Describe("Customer Authentication Workflow", func() {
 		_, err = c.Refresh()
 		Expect(err).To(HaveOccurred())
 
-		var apiErr *apierrors.APIError
+		var apiErr *api.APIError
 		ok := errors.As(err, &apiErr)
 		Expect(ok).To(BeTrue(), "Expected APIError type")
 		Expect(apiErr.Code).To(Equal("INVALID_REFRESH_TOKEN"))

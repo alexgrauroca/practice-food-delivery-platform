@@ -1,6 +1,6 @@
-//go:build e2e || authentication || customers
+//go:build e2e || authentication || customer
 
-package customers
+package authentication_test
 
 import (
 	"testing"
@@ -11,5 +11,5 @@ import (
 
 func TestCustomersE2E(t *testing.T) {
 	gomega.RegisterFailHandler(ginkgo.Fail)
-	ginkgo.RunSpecs(t, "Auth Customers E2E Suite")
+	ginkgo.RunSpecs(t, "Authentication E2E Suite")
 }

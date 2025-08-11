@@ -1,13 +1,11 @@
-// Package errors provides custom errors types and handling functionality for the authentication service.
-// It defines specific errors cases and standardizes errors responses across the customer-related operations.
-package errors
+package api
 
 import (
 	"encoding/json"
 	"errors"
 )
 
-// APIError represents an errors response from an API, containing an errors code, message, and optional details.
+// APIError represents an error response from an API, containing an error code, message, and optional details.
 type APIError struct {
 	Code    string   `json:"code"`
 	Message string   `json:"message"`
@@ -18,8 +16,8 @@ func (e *APIError) Error() string {
 	return e.Message
 }
 
-// ParseErrorResponse parses the errors response body into an APIError object and validates required fields.
-// Returns an errors if unmarshalling fails or required fields are missing.
+// ParseErrorResponse parses the error response body into an APIError object and validates required fields.
+// Returns an error if unmarshalling fails or required fields are missing.
 func ParseErrorResponse(body []byte) (*APIError, error) {
 	var apiError APIError
 	if err := json.Unmarshal(body, &apiError); err != nil {
