@@ -51,5 +51,21 @@ services:
       - MONGO_PWD=rootpassword
     restart: always
 
+  customer-service:
+    build:
+      context: . # Context needs to be set to the root of the project because of clients import
+      dockerfile: ./services/customer-service/Dockerfile
+    container_name: customer-service
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      api-gateway:
+        condition: service_healthy
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017
+      - MONGO_USER=root
+      - MONGO_PWD=rootpassword
+    restart: always
+
 volumes:
   mongo_data:
