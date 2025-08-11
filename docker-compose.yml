@@ -53,8 +53,8 @@ services:
 
   customer-service:
     build:
-      context: ./services/customer-service
-      dockerfile: Dockerfile
+      context: . # Context needs to be set to the root of the project because of clients import
+      dockerfile: ./services/customer-service/Dockerfile
     container_name: customer-service
     depends_on:
       mongodb:

@@ -1,19 +1,23 @@
 # Build stage
 FROM golang:1.24-alpine AS builder
 
-WORKDIR /app
+# Copy clients
+WORKDIR /app/clients/authentication-service
+COPY ./clients/authentication-service/ ./
 
-COPY go.mod go.sum ./
+# Copy and build the service
+WORKDIR /app/services/customer-service
+COPY ./services/customer-service/go.mod ./services/customer-service/go.sum ./
 RUN go mod download
 
-COPY . .
+COPY ./services/customer-service/ ./
 
 RUN go build -o customer-service ./cmd/main.go
 
 # Final stage
 FROM alpine:latest
 
-COPY --from=builder /app/customer-service .
+COPY --from=builder /app/services/customer-service/customer-service .
 EXPOSE 8080
 
 CMD ["./customer-service"]
