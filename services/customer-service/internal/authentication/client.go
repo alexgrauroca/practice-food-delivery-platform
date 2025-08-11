@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/authclient"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/log"
 )
 
 // Client defines the interface for interacting with the authentication service.
@@ -41,16 +42,21 @@ type RegisterCustomerResponse struct {
 }
 
 type client struct {
+	logger log.Logger
 	conf   *authclient.Configuration
 	apicli *authclient.APIClient
 }
 
-func NewClient(config Config) Client {
+// NewClient creates and initializes a new authentication client with the provided logger and configuration.
+// It sets up the underlying API client with the specified debug mode and returns an interface
+// implementation for interacting with the authentication service.
+func NewClient(logger log.Logger, config Config) Client {
 	conf := authclient.NewConfiguration()
 	conf.Debug = config.Debug
 
 	apiclient := authclient.NewAPIClient(conf)
 	return &client{
+		logger: logger,
 		conf:   conf,
 		apicli: apiclient,
 	}
@@ -58,10 +64,19 @@ func NewClient(config Config) Client {
 
 func (c *client) RegisterCustomer(ctx context.Context, req RegisterCustomerRequest) (RegisterCustomerResponse, error) {
 	authreq := authclient.RegisterCustomerRequest(req)
-	resp, _, err := c.apicli.CustomersAPI.RegisterCustomer(ctx).RegisterCustomerRequest(authreq).Execute()
+	resp, r, err := c.apicli.CustomersAPI.RegisterCustomer(ctx).RegisterCustomerRequest(authreq).Execute()
 	if err != nil {
+		c.logger.Warn(
+			"Failed to register customer",
+			log.Field{Key: "error", Value: err.Error()},
+			log.Field{Key: "response", Value: r},
+		)
 		return RegisterCustomerResponse{}, err
 	}
+	c.logger.Info(
+		"Customer registered successfully at authentication service",
+		log.Field{Key: "customerID", Value: resp.Id},
+	)
 	return RegisterCustomerResponse{
 		ID:        resp.Id,
 		Email:     resp.Email,

@@ -1,1 +1,77 @@
+// Package main is the entry point for the customer service.
+// It initializes and coordinates core components.
+
 package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/mongo"
+
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/authentication"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/clock"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/customers"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/infraestructure/mongodb"
+	customlog "github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/log"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/middleware"
+)
+
+func main() {
+	ctx := context.Background()
+
+	// Initialize the logger
+	logger, err := customlog.NewProduction()
+	if err != nil {
+		log.Fatalf("can't initialize logger: %v", err)
+		return
+	}
+	defer func(logger customlog.Logger) {
+		if err := logger.Sync(); err != nil {
+			log.Printf("failed to sync logger: %v", err)
+		}
+	}(logger)
+
+	// Initialize the Gin router
+	router := gin.Default()
+	router.Use(middleware.RequestInfoMiddleware())
+
+	// Initialize MongoDB connection
+	client, err := mongodb.NewClient(ctx, logger)
+	if err != nil {
+		logger.Fatal("Failed to initialize MongoDB client", err)
+		return
+	}
+	defer func(client *mongo.Client, ctx context.Context) {
+		_ = client.Disconnect(ctx)
+	}(client, ctx)
+
+	db := client.Database("customer_service")
+
+	// Initialize features
+	authcli := initAuthenticationFeature(logger)
+	initCustomersFeature(logger, db, router, authcli)
+
+	logger.Info("Starting http server")
+	// Start the server
+	if err := router.Run(":8080"); err != nil {
+		logger.Fatal("Failed to start server", err)
+	}
+}
+
+func initAuthenticationFeature(logger customlog.Logger) authentication.Client {
+	return authentication.NewClient(logger, authentication.Config{Debug: false})
+}
+
+func initCustomersFeature(logger customlog.Logger, db *mongo.Database, router *gin.Engine, authcli authentication.Client) {
+	// Initialize the customer's repository
+	repo := customers.NewRepository(logger, db, clock.RealClock{})
+
+	// Initialize the customer's service
+	service := customers.NewService(logger, repo, authcli)
+
+	// Initialize the customer's handler and register routes
+	handler := customers.NewHandler(logger, service)
+	handler.RegisterRoutes(router)
+}
