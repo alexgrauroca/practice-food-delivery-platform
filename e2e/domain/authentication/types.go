@@ -9,3 +9,25 @@ type Token struct {
 	ExpiresIn    int    `json:"expires_in"`
 	TokenType    string `json:"token_type"`
 }
+
+// LoginRequest represents the payload needed for user authentication, containing email and password.
+type LoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+// LoginResponse contains the authentication token details returned after successful login.
+type LoginResponse struct {
+	Token
+}
+
+// RefreshRequest contains the current access and refresh tokens needed to get new tokens.
+type RefreshRequest struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+// RefreshResponse contains the new authentication token details returned after successful token refresh.
+type RefreshResponse struct {
+	Token
+}

@@ -53,6 +53,7 @@ type client struct {
 func NewClient(logger log.Logger, config Config) Client {
 	conf := authclient.NewConfiguration()
 	conf.Debug = config.Debug
+	conf.Host = "authentication-service:8080"
 
 	apiclient := authclient.NewAPIClient(conf)
 	return &client{
