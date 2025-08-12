@@ -64,9 +64,9 @@ var _ = g.Describe("Customer Authentication Workflow", func() {
 		_, err = c.Refresh()
 		Expect(err).To(HaveOccurred())
 
-		var apiErr *api.APIError
+		var apiErr *api.ErrorResponse
 		ok := errors.As(err, &apiErr)
-		Expect(ok).To(BeTrue(), "Expected APIError type")
+		Expect(ok).To(BeTrue(), "Expected ErrorResponse type")
 		Expect(apiErr.Code).To(Equal("INVALID_REFRESH_TOKEN"))
 	})
 })

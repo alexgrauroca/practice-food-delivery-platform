@@ -20,7 +20,7 @@ const (
 
 // DoPost sends a POST request to the specified endpoint with the given payload, decoding the response into the generic type T.
 // It returns a pointer to the decoded response of type T or an error if the request or decoding fails.
-func DoPost[T any](endpoint string, payload any) (*T, error) {
+func DoPost[P, R any](endpoint string, payload P) (*R, error) {
 	body, err := json.Marshal(payload)
 	if err != nil {
 		return nil, fmt.Errorf("errors marshaling payload: %w", err)
@@ -45,14 +45,14 @@ func DoPost[T any](endpoint string, payload any) (*T, error) {
 			return nil, apiError
 		}
 		// Fallback to generic errors
-		return nil, &APIError{
+		return nil, &ErrorResponse{
 			Code:    "UNEXPECTED_ERROR",
 			Message: fmt.Sprintf("unexpected status code: %d", resp.StatusCode),
 			Details: []string{string(responseBody)},
 		}
 	}
 
-	var result T
+	var result R
 	if err := json.Unmarshal(responseBody, &result); err != nil {
 		return nil, fmt.Errorf("errors decoding response: %w", err)
 	}
