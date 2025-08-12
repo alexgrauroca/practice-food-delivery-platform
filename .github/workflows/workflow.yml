@@ -31,6 +31,7 @@ jobs:
             non_adr_changes:
               - '**'
               - '!adrs/**'
+              - '!.github/workflows/**'
             openapi_specs_changed:
               - 'services/*/docs/dist/openapi.yaml'
               - 'services/*/client-gen-config.yaml'
