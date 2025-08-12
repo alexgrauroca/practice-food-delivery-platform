@@ -29,8 +29,8 @@ jobs:
         with:
           filters: |
             non_adr_changes:
-              - '!adrs/**'
               - '**'
+              - '!adrs/**'
             openapi_specs_changed:
               - 'services/*/docs/dist/openapi.yaml'
               - 'services/*/client-gen-config.yaml'
