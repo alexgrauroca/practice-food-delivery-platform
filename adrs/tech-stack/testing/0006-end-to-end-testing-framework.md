@@ -143,20 +143,23 @@ Focus on value rather than on quantity.
    - Add sufficient timeouts for async operations
    - Document any test-specific requirements
 
-// TODO: the following organization is a draft and needs to be refined
-5. **Test Organization Example**.
+5. **Test Folder and Files Organization**.
    ```
    e2e/
-   ├── features/
-   │   ├── authentication/            # Authentication feature tests
-   │   │   ├── suite_test.go         # Test suite setup
-   │   │   ├── login_test.go         # Login workflow tests
-   │   │   └── registration_test.go   # Registration workflow tests
-   │   └── ordering/                  # Order management feature tests
-   ├── support/                       # Shared test support code
-   │   ├── api/                       # API clients
-   │   ├── factories/                 # Test data factories
-   │   └── assertions/                # Custom matchers
+   ├── domain/                        # Domain specific code
+   │   └── customer/                  # Customer domain
+   │       ├── actions.go             # Customer domain actions
+   │       ├── api.go                 # Customer API interface
+   │       ├── factory.go             # Customer test data factory
+   │       └── types.go               # Customer type definitions
+   ├── features/                      # Feature tests
+   │   └── authentication/            # Authentication feature tests
+   │       ├── suite_test.go          # Test suite setup
+   │       └── customer_registration_authentication_test.go  # Customer registration tests
+   ├── pkg/                           # Shared packages
+   │   └── api/                       # API clients
+   ├── go.mod                         # Go module file
+   ├── go.sum                         # Go dependencies checksum
    └── Makefile                       # Test execution commands
    ```
 
