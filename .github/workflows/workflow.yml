@@ -16,7 +16,7 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      non_adr_changes: ${{ steps.filter.outputs.non_adr_changes }}
+      run_e2e: ${{ steps.filter.outputs.run_e2e }}
       openapi_specs_changed: ${{ steps.filter.outputs.openapi_specs_changed }}
       auth_service_internal: ${{ steps.filter.outputs.auth_service_internal }}
       auth_service_docs: ${{ steps.filter.outputs.auth_service_docs }}
@@ -28,9 +28,13 @@ jobs:
         id: filter
         with:
           filters: |
-            non_adr_changes:
-              - '!adrs/**'
-              - '**'
+            run_e2e:
+              - 'docker-compose.yml'
+              - 'clients/**'
+              - 'deployments/**'
+              - 'e2e/**'
+              - 'scripts/**'
+              - 'services/**'
             openapi_specs_changed:
               - 'services/*/docs/dist/openapi.yaml'
               - 'services/*/client-gen-config.yaml'
@@ -172,7 +176,7 @@ jobs:
 
   e2e-tests:
     needs: changes
-    if: ${{ needs.changes.outputs.non_adr_changes == 'true' }}
+    if: ${{ needs.changes.outputs.run_e2e == 'true' }}
     runs-on: ubuntu-latest
     defaults:
       run:
