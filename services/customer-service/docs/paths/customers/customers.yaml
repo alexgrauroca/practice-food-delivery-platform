@@ -14,7 +14,8 @@ get:
         type: integer
         default: 1
         minimum: 1
-    - name: size
+        example: 1
+    - name: page-size
       in: query
       description: Number of items per page
       schema:
@@ -22,19 +23,22 @@ get:
         default: 10
         minimum: 1
         maximum: 100
+        example: 20
     - name: sort
       in: query
-      description: Sort field and direction
+      description: |
+        Sort fields and directions, comma-separated.
+        Prefix field with '-' for descending order.
+        Multiple fields can be specified (e.g., 'name,-email').
+        Available sort fields:
+          - name: Customer's full name
+          - email: Customer's email address
+          - created-at: Account creation date
       schema:
         type: string
-        default: name,asc
-        enum:
-          - name,asc
-          - name,desc
-          - email,asc
-          - email,desc
-          - createdAt,asc
-          - createdAt,desc
+        pattern: '^(-?(name|email|created-at),)*(-?(name|email|created-at))$'
+        default: name
+        example: 'name,-email'
   responses:
     '200':
       description: List of customers retrieved successfully
@@ -88,16 +92,7 @@ post:
             invalidRequest:
               $ref: './../../components/examples/InvalidRequest.yaml'
             validationError:
-              summary: Validation error
-              value:
-                code: VALIDATION_ERROR
-                message: validation failed
-                details:
-                  - email is required
-                  - password is required
-                  - name is required
-                  - email must be a valid email address
-                  - password must be a valid password with at least 8 characters long
+              $ref: './../../components/examples/RegisterCustomerValidationError.yaml'
     '409':
       description: Customer already exists
       content:

@@ -1,6 +1,12 @@
-InvalidRequest:
-  $ref: './InvalidRequest.yaml'
 CustomerExists:
   $ref: './CustomerExists.yaml'
+Forbidden:
+  $ref: './Forbidden.yaml'
 InternalError:
   $ref: './InternalError.yaml'
+InvalidRequest:
+  $ref: './InvalidRequest.yaml'
+RegisterCustomerValidationError:
+  $ref: './RegisterCustomerValidationError.yaml'
+Unauthorized:
+  $ref: './Unauthorized.yaml'

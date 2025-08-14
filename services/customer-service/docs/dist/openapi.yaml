@@ -22,6 +22,69 @@ tags:
     description: Operations related to customer registration and management
 paths:
   /v1.0/customers:
+    get:
+      summary: Get the list of customers
+      description: Returns a list of customers
+      operationId: getCustomers
+      tags:
+        - Customers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number for pagination
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+            example: 1
+        - name: page-size
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+            example: 20
+        - name: sort
+          in: query
+          description: |
+            Sort fields and directions, comma-separated.
+            Prefix field with '-' for descending order.
+            Multiple fields can be specified (e.g., 'name,-email').
+            Available sort fields:
+              - name: Customer's full name
+              - email: Customer's email address
+              - created-at: Account creation date
+          schema:
+            type: string
+            pattern: ^(-?(name|email|created-at),)*(-?(name|email|created-at))$
+            default: name
+            example: name,-email
+      responses:
+        '200':
+          description: List of customers retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetCustomersResponse'
+        '400':
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidRequest:
+                  $ref: '#/components/examples/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
     post:
       summary: Register a new customer
       description: Creates a new customer account with the provided information
@@ -52,16 +115,7 @@ paths:
                 invalidRequest:
                   $ref: '#/components/examples/InvalidRequest'
                 validationError:
-                  summary: Validation error
-                  value:
-                    code: VALIDATION_ERROR
-                    message: validation failed
-                    details:
-                      - email is required
-                      - password is required
-                      - name is required
-                      - email must be a valid email address
-                      - password must be a valid password with at least 8 characters long
+                  $ref: '#/components/examples/RegisterCustomerValidationError'
         '409':
           description: Customer already exists
           content:
@@ -87,11 +141,17 @@ components:
         code: INVALID_REQUEST
         message: invalid request
         details: []
-    CustomerExists:
-      summary: Customer already exists
+    Unauthorized:
+      summary: Authentication required
       value:
-        code: CUSTOMER_ALREADY_EXISTS
-        message: customer already exists
+        code: UNAUTHORIZED
+        message: Authentication is required to access this resource
+        details: []
+    Forbidden:
+      summary: Access forbidden
+      value:
+        code: FORBIDDEN
+        message: You do not have permission to access this resource
         details: []
     InternalError:
       summary: Unexpected error
@@ -99,7 +159,155 @@ components:
         code: INTERNAL_ERROR
         message: An unexpected error occurred
         details: []
+    RegisterCustomerValidationError:
+      summary: Validation error
+      value:
+        code: VALIDATION_ERROR
+        message: validation failed
+        details:
+          - email is required
+          - password is required
+          - name is required
+          - address is required
+          - city is required
+          - postal_code is required
+          - country_code is required
+          - email must be a valid email address
+          - password must be a valid password with at least 8 characters long
+          - postal_code must be at least 5 characters long
+          - country_code must be at least 2 characters long
+          - name must not exceed 100 characters long
+          - address must not exceed 100 characters long
+          - city must not exceed 100 characters long
+          - postal_code must not exceed 32 characters long
+          - country_code must not exceed 2 characters long
+    CustomerExists:
+      summary: Customer already exists
+      value:
+        code: CUSTOMER_ALREADY_EXISTS
+        message: customer already exists
+        details: []
   schemas:
+    Customer:
+      type: object
+      required:
+        - id
+        - name
+        - email
+        - address
+        - city
+        - postal_code
+        - country_code
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+          description: Unique customer identifier
+          example: 507f1f77bcf86cd799439011
+        name:
+          type: string
+          description: The full name of the customer
+          example: John Doe
+        email:
+          type: string
+          format: email
+          description: The email address of the customer
+          example: john.doe@example.com
+        address:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Customer's address
+          example: 123 Main St
+        city:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Customer's city
+          example: New York
+        postal_code:
+          type: string
+          minLength: 5
+          maxLength: 32
+          description: Customer's postal code
+          example: 10001
+        country_code:
+          type: string
+          minLength: 2
+          maxLength: 2
+          description: Customer's country code in ISO 3166-1 alpha-2 format
+          example: US
+        createdAt:
+          type: string
+          format: date-time
+          description: The timestamp when the customer was created
+          example: '2024-01-01T12:00:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          description: The timestamp when the customer was last updated
+          example: '2024-01-01T12:00:00Z'
+    Pagination:
+      type: object
+      required:
+        - page
+        - size
+        - totalElements
+        - totalPages
+      properties:
+        total_items:
+          type: integer
+          description: Total number of elements across all pages
+          example: 200
+        total_pages:
+          type: integer
+          description: Total number of pages
+          example: 10
+        current_page:
+          type: integer
+          description: Current page number
+          example: 1
+        page_size:
+          type: integer
+          description: Number of elements per page
+          example: 20
+    GetCustomersResponse:
+      type: object
+      required:
+        - items
+        - pagination
+      properties:
+        items:
+          type: array
+          description: List of customers
+          items:
+            $ref: '#/components/schemas/Customer'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Error code identifier
+          example: VALIDATION_ERROR
+        message:
+          type: string
+          description: Human-readable error message
+          example: validation failed
+        details:
+          type: array
+          description: Additional error details
+          items:
+            type: string
+          example:
+            - email is required
+            - password is required
     RegisterCustomerRequest:
       type: object
       required:
@@ -168,9 +376,9 @@ components:
       properties:
         id:
           type: string
-          pattern: ^[a-zA-Z0-9\-]+$
+          pattern: ^[0-9a-fA-F]{24}$
           description: Unique customer identifier
-          example: cust-123abc
+          example: 507f1f77bcf86cd799439011
         email:
           type: string
           format: email
@@ -209,29 +417,25 @@ components:
           format: date-time
           description: Account creation timestamp
           example: '2025-01-01T00:00:00Z'
-    ErrorResponse:
-      type: object
-      required:
-        - code
-        - message
-      properties:
-        code:
-          type: string
-          description: Error code identifier
-          example: VALIDATION_ERROR
-        message:
-          type: string
-          description: Human-readable error message
-          example: validation failed
-        details:
-          type: array
-          description: Additional error details
-          items:
-            type: string
-          example:
-            - email is required
-            - password is required
   responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            internalError:
+              $ref: '#/components/examples/Unauthorized'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            internalError:
+              $ref: '#/components/examples/Forbidden'
     InternalError:
       description: Internal server error
       content:
