@@ -22,6 +22,78 @@ tags:
   name: Customers
 paths:
   /v1.0/customers:
+    get:
+      description: Returns a list of customers
+      operationId: getCustomers
+      parameters:
+      - description: Page number for pagination
+        explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          example: 1
+          minimum: 1
+          type: integer
+        style: form
+      - description: Number of items per page
+        explode: true
+        in: query
+        name: page-size
+        required: false
+        schema:
+          default: 10
+          example: 20
+          maximum: 100
+          minimum: 1
+          type: integer
+        style: form
+      - description: |
+          Sort fields and directions, comma-separated.
+          Prefix field with '-' for descending order.
+          Multiple fields can be specified (e.g., 'name,-email').
+          Available sort fields:
+            - name: Customer's full name
+            - email: Customer's email address
+            - created-at: Account creation date
+        explode: true
+        in: query
+        name: sort
+        required: false
+        schema:
+          default: name
+          example: "name,-email"
+          pattern: "^(-?(name|email|created-at),)*(-?(name|email|created-at))$"
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetCustomersResponse"
+          description: List of customers retrieved successfully
+        "400":
+          content:
+            application/json:
+              examples:
+                invalidRequest:
+                  $ref: "#/components/examples/InvalidRequest"
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+          description: Invalid parameters
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+      security:
+      - BearerAuth: []
+      summary: Get the list of customers
+      tags:
+      - Customers
     post:
       description: Creates a new customer account with the provided information
       operationId: registerCustomer
@@ -45,17 +117,7 @@ paths:
                 invalidRequest:
                   $ref: "#/components/examples/InvalidRequest"
                 validationError:
-                  summary: Validation error
-                  value:
-                    code: VALIDATION_ERROR
-                    message: validation failed
-                    details:
-                    - email is required
-                    - password is required
-                    - name is required
-                    - email must be a valid email address
-                    - password must be a valid password with at least 8 characters
-                      long
+                  $ref: "#/components/examples/RegisterCustomerValidationError"
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
           description: Invalid input or validation error
@@ -82,11 +144,17 @@ components:
         code: INVALID_REQUEST
         message: invalid request
         details: []
-    CustomerExists:
-      summary: Customer already exists
+    Unauthorized:
+      summary: Authentication required
       value:
-        code: CUSTOMER_ALREADY_EXISTS
-        message: customer already exists
+        code: UNAUTHORIZED
+        message: Authentication is required to access this resource
+        details: []
+    Forbidden:
+      summary: Access forbidden
+      value:
+        code: FORBIDDEN
+        message: You do not have permission to access this resource
         details: []
     InternalError:
       summary: Unexpected error
@@ -94,7 +162,53 @@ components:
         code: INTERNAL_ERROR
         message: An unexpected error occurred
         details: []
+    RegisterCustomerValidationError:
+      summary: Validation error
+      value:
+        code: VALIDATION_ERROR
+        message: validation failed
+        details:
+        - email is required
+        - password is required
+        - name is required
+        - address is required
+        - city is required
+        - postal_code is required
+        - country_code is required
+        - email must be a valid email address
+        - password must be a valid password with at least 8 characters long
+        - postal_code must be at least 5 characters long
+        - country_code must be at least 2 characters long
+        - name must not exceed 100 characters long
+        - address must not exceed 100 characters long
+        - city must not exceed 100 characters long
+        - postal_code must not exceed 32 characters long
+        - country_code must not exceed 2 characters long
+    CustomerExists:
+      summary: Customer already exists
+      value:
+        code: CUSTOMER_ALREADY_EXISTS
+        message: customer already exists
+        details: []
   responses:
+    Unauthorized:
+      content:
+        application/json:
+          examples:
+            internalError:
+              $ref: "#/components/examples/Unauthorized"
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+      description: Unauthorized
+    Forbidden:
+      content:
+        application/json:
+          examples:
+            internalError:
+              $ref: "#/components/examples/Forbidden"
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+      description: Forbidden
     InternalError:
       content:
         application/json:
@@ -105,6 +219,172 @@ components:
             $ref: "#/components/schemas/ErrorResponse"
       description: Internal server error
   schemas:
+    Customer:
+      example:
+        country_code: US
+        createdAt: 2024-01-01T12:00:00Z
+        address: 123 Main St
+        city: New York
+        name: John Doe
+        id: 507f1f77bcf86cd799439011
+        postal_code: "10001"
+        email: john.doe@example.com
+        updatedAt: 2024-01-01T12:00:00Z
+      properties:
+        id:
+          description: Unique customer identifier
+          example: 507f1f77bcf86cd799439011
+          pattern: "^[0-9a-fA-F]{24}$"
+          type: string
+        name:
+          description: The full name of the customer
+          example: John Doe
+          type: string
+        email:
+          description: The email address of the customer
+          example: john.doe@example.com
+          format: email
+          type: string
+        address:
+          description: Customer's address
+          example: 123 Main St
+          maxLength: 100
+          minLength: 1
+          type: string
+        city:
+          description: Customer's city
+          example: New York
+          maxLength: 100
+          minLength: 1
+          type: string
+        postal_code:
+          description: Customer's postal code
+          example: "10001"
+          maxLength: 32
+          minLength: 5
+          type: string
+        country_code:
+          description: Customer's country code in ISO 3166-1 alpha-2 format
+          example: US
+          maxLength: 2
+          minLength: 2
+          type: string
+        createdAt:
+          description: The timestamp when the customer was created
+          example: 2024-01-01T12:00:00Z
+          format: date-time
+          type: string
+        updatedAt:
+          description: The timestamp when the customer was last updated
+          example: 2024-01-01T12:00:00Z
+          format: date-time
+          type: string
+      required:
+      - address
+      - city
+      - country_code
+      - createdAt
+      - email
+      - id
+      - name
+      - postal_code
+      - updatedAt
+      type: object
+    Pagination:
+      example:
+        total_pages: 10
+        total_items: 200
+        current_page: 1
+        page_size: 20
+      properties:
+        total_items:
+          description: Total number of elements across all pages
+          example: 200
+          type: integer
+        total_pages:
+          description: Total number of pages
+          example: 10
+          type: integer
+        current_page:
+          description: Current page number
+          example: 1
+          type: integer
+        page_size:
+          description: Number of elements per page
+          example: 20
+          type: integer
+      required:
+      - page
+      - size
+      - totalElements
+      - totalPages
+      type: object
+    GetCustomersResponse:
+      example:
+        pagination:
+          total_pages: 10
+          total_items: 200
+          current_page: 1
+          page_size: 20
+        items:
+        - country_code: US
+          createdAt: 2024-01-01T12:00:00Z
+          address: 123 Main St
+          city: New York
+          name: John Doe
+          id: 507f1f77bcf86cd799439011
+          postal_code: "10001"
+          email: john.doe@example.com
+          updatedAt: 2024-01-01T12:00:00Z
+        - country_code: US
+          createdAt: 2024-01-01T12:00:00Z
+          address: 123 Main St
+          city: New York
+          name: John Doe
+          id: 507f1f77bcf86cd799439011
+          postal_code: "10001"
+          email: john.doe@example.com
+          updatedAt: 2024-01-01T12:00:00Z
+      properties:
+        items:
+          description: List of customers
+          items:
+            $ref: "#/components/schemas/Customer"
+          type: array
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+      required:
+      - items
+      - pagination
+      type: object
+    ErrorResponse:
+      example:
+        code: VALIDATION_ERROR
+        details:
+        - email is required
+        - password is required
+        message: validation failed
+      properties:
+        code:
+          description: Error code identifier
+          example: VALIDATION_ERROR
+          type: string
+        message:
+          description: Human-readable error message
+          example: validation failed
+          type: string
+        details:
+          description: Additional error details
+          example:
+          - email is required
+          - password is required
+          items:
+            type: string
+          type: array
+      required:
+      - code
+      - message
+      type: object
     RegisterCustomerRequest:
       example:
         country_code: US
@@ -174,14 +454,14 @@ components:
         city: New York
         name: John Doe
         created_at: 2025-01-01T00:00:00Z
-        id: cust-123abc
+        id: 507f1f77bcf86cd799439011
         postal_code: "10001"
         email: user@example.com
       properties:
         id:
           description: Unique customer identifier
-          example: cust-123abc
-          pattern: "^[a-zA-Z0-9\\-]+$"
+          example: 507f1f77bcf86cd799439011
+          pattern: "^[0-9a-fA-F]{24}$"
           type: string
         email:
           description: Customer's email address
@@ -230,34 +510,6 @@ components:
       - id
       - name
       - postal_code
-      type: object
-    ErrorResponse:
-      example:
-        code: VALIDATION_ERROR
-        details:
-        - email is required
-        - password is required
-        message: validation failed
-      properties:
-        code:
-          description: Error code identifier
-          example: VALIDATION_ERROR
-          type: string
-        message:
-          description: Human-readable error message
-          example: validation failed
-          type: string
-        details:
-          description: Additional error details
-          example:
-          - email is required
-          - password is required
-          items:
-            type: string
-          type: array
-      required:
-      - code
-      - message
       type: object
   securitySchemes:
     BearerAuth:

@@ -23,7 +23,7 @@ var _ MappedNullable = &RegisterCustomerResponse{}
 // RegisterCustomerResponse struct for RegisterCustomerResponse
 type RegisterCustomerResponse struct {
 	// Unique customer identifier
-	Id string `json:"id" validate:"regexp=^[a-zA-Z0-9\\\\-]+$"`
+	Id string `json:"id" validate:"regexp=^[0-9a-fA-F]{24}$"`
 	// Customer's email address
 	Email string `json:"email"`
 	// Customer's full name

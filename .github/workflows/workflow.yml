@@ -34,7 +34,12 @@ jobs:
               - 'deployments/**'
               - 'e2e/**'
               - 'scripts/**'
-              - 'services/**'
+              - 'services/*/cmd/**'
+              - 'services/*/internal/**'
+              - 'services/*/Dockerfile'
+              - 'services/*/go.mod'
+              - 'services/*/go.sum'
+              - 'services/*/Makefile'
             openapi_specs_changed:
               - 'services/*/docs/dist/openapi.yaml'
               - 'services/*/client-gen-config.yaml'

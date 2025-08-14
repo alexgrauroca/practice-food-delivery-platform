@@ -1,0 +1,12 @@
+type: object
+required:
+  - items
+  - pagination
+properties:
+  items:
+    type: array
+    description: List of customers
+    items:
+      $ref: '../models/Customer.yaml'
+  pagination:
+    $ref: '../models/Pagination.yaml'

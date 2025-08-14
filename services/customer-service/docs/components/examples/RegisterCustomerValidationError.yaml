@@ -1,0 +1,21 @@
+summary: Validation error
+value:
+  code: VALIDATION_ERROR
+  message: validation failed
+  details:
+    - email is required
+    - password is required
+    - name is required
+    - address is required
+    - city is required
+    - postal_code is required
+    - country_code is required
+    - email must be a valid email address
+    - password must be a valid password with at least 8 characters long
+    - postal_code must be at least 5 characters long
+    - country_code must be at least 2 characters long
+    - name must not exceed 100 characters long
+    - address must not exceed 100 characters long
+    - city must not exceed 100 characters long
+    - postal_code must not exceed 32 characters long
+    - country_code must not exceed 2 characters long

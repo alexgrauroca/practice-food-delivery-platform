@@ -17,17 +17,17 @@ import (
 	"fmt"
 )
 
-// checks if the RegisterCustomerResponse type satisfies the MappedNullable interface at compile time
-var _ MappedNullable = &RegisterCustomerResponse{}
+// checks if the Customer type satisfies the MappedNullable interface at compile time
+var _ MappedNullable = &Customer{}
 
-// RegisterCustomerResponse struct for RegisterCustomerResponse
-type RegisterCustomerResponse struct {
+// Customer struct for Customer
+type Customer struct {
 	// Unique customer identifier
 	Id string `json:"id" validate:"regexp=^[0-9a-fA-F]{24}$"`
-	// Customer's email address
-	Email string `json:"email"`
-	// Customer's full name
+	// The full name of the customer
 	Name string `json:"name"`
+	// The email address of the customer
+	Email string `json:"email"`
 	// Customer's address
 	Address string `json:"address"`
 	// Customer's city
@@ -36,39 +36,42 @@ type RegisterCustomerResponse struct {
 	PostalCode string `json:"postal_code"`
 	// Customer's country code in ISO 3166-1 alpha-2 format
 	CountryCode string `json:"country_code"`
-	// Account creation timestamp
-	CreatedAt time.Time `json:"created_at"`
+	// The timestamp when the customer was created
+	CreatedAt time.Time `json:"createdAt"`
+	// The timestamp when the customer was last updated
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-type _RegisterCustomerResponse RegisterCustomerResponse
+type _Customer Customer
 
-// NewRegisterCustomerResponse instantiates a new RegisterCustomerResponse object
+// NewCustomer instantiates a new Customer object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewRegisterCustomerResponse(id string, email string, name string, address string, city string, postalCode string, countryCode string, createdAt time.Time) *RegisterCustomerResponse {
-	this := RegisterCustomerResponse{}
+func NewCustomer(id string, name string, email string, address string, city string, postalCode string, countryCode string, createdAt time.Time, updatedAt time.Time) *Customer {
+	this := Customer{}
 	this.Id = id
-	this.Email = email
 	this.Name = name
+	this.Email = email
 	this.Address = address
 	this.City = city
 	this.PostalCode = postalCode
 	this.CountryCode = countryCode
 	this.CreatedAt = createdAt
+	this.UpdatedAt = updatedAt
 	return &this
 }
 
-// NewRegisterCustomerResponseWithDefaults instantiates a new RegisterCustomerResponse object
+// NewCustomerWithDefaults instantiates a new Customer object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewRegisterCustomerResponseWithDefaults() *RegisterCustomerResponse {
-	this := RegisterCustomerResponse{}
+func NewCustomerWithDefaults() *Customer {
+	this := Customer{}
 	return &this
 }
 
 // GetId returns the Id field value
-func (o *RegisterCustomerResponse) GetId() string {
+func (o *Customer) GetId() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -79,7 +82,7 @@ func (o *RegisterCustomerResponse) GetId() string {
 
 // GetIdOk returns a tuple with the Id field value
 // and a boolean to check if the value has been set.
-func (o *RegisterCustomerResponse) GetIdOk() (*string, bool) {
+func (o *Customer) GetIdOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -87,36 +90,12 @@ func (o *RegisterCustomerResponse) GetIdOk() (*string, bool) {
 }
 
 // SetId sets field value
-func (o *RegisterCustomerResponse) SetId(v string) {
+func (o *Customer) SetId(v string) {
 	o.Id = v
 }
 
-// GetEmail returns the Email field value
-func (o *RegisterCustomerResponse) GetEmail() string {
-	if o == nil {
-		var ret string
-		return ret
-	}
-
-	return o.Email
-}
-
-// GetEmailOk returns a tuple with the Email field value
-// and a boolean to check if the value has been set.
-func (o *RegisterCustomerResponse) GetEmailOk() (*string, bool) {
-	if o == nil {
-		return nil, false
-	}
-	return &o.Email, true
-}
-
-// SetEmail sets field value
-func (o *RegisterCustomerResponse) SetEmail(v string) {
-	o.Email = v
-}
-
 // GetName returns the Name field value
-func (o *RegisterCustomerResponse) GetName() string {
+func (o *Customer) GetName() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -127,7 +106,7 @@ func (o *RegisterCustomerResponse) GetName() string {
 
 // GetNameOk returns a tuple with the Name field value
 // and a boolean to check if the value has been set.
-func (o *RegisterCustomerResponse) GetNameOk() (*string, bool) {
+func (o *Customer) GetNameOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -135,12 +114,36 @@ func (o *RegisterCustomerResponse) GetNameOk() (*string, bool) {
 }
 
 // SetName sets field value
-func (o *RegisterCustomerResponse) SetName(v string) {
+func (o *Customer) SetName(v string) {
 	o.Name = v
 }
 
+// GetEmail returns the Email field value
+func (o *Customer) GetEmail() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.Email
+}
+
+// GetEmailOk returns a tuple with the Email field value
+// and a boolean to check if the value has been set.
+func (o *Customer) GetEmailOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Email, true
+}
+
+// SetEmail sets field value
+func (o *Customer) SetEmail(v string) {
+	o.Email = v
+}
+
 // GetAddress returns the Address field value
-func (o *RegisterCustomerResponse) GetAddress() string {
+func (o *Customer) GetAddress() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -151,7 +154,7 @@ func (o *RegisterCustomerResponse) GetAddress() string {
 
 // GetAddressOk returns a tuple with the Address field value
 // and a boolean to check if the value has been set.
-func (o *RegisterCustomerResponse) GetAddressOk() (*string, bool) {
+func (o *Customer) GetAddressOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -159,12 +162,12 @@ func (o *RegisterCustomerResponse) GetAddressOk() (*string, bool) {
 }
 
 // SetAddress sets field value
-func (o *RegisterCustomerResponse) SetAddress(v string) {
+func (o *Customer) SetAddress(v string) {
 	o.Address = v
 }
 
 // GetCity returns the City field value
-func (o *RegisterCustomerResponse) GetCity() string {
+func (o *Customer) GetCity() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -175,7 +178,7 @@ func (o *RegisterCustomerResponse) GetCity() string {
 
 // GetCityOk returns a tuple with the City field value
 // and a boolean to check if the value has been set.
-func (o *RegisterCustomerResponse) GetCityOk() (*string, bool) {
+func (o *Customer) GetCityOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -183,12 +186,12 @@ func (o *RegisterCustomerResponse) GetCityOk() (*string, bool) {
 }
 
 // SetCity sets field value
-func (o *RegisterCustomerResponse) SetCity(v string) {
+func (o *Customer) SetCity(v string) {
 	o.City = v
 }
 
 // GetPostalCode returns the PostalCode field value
-func (o *RegisterCustomerResponse) GetPostalCode() string {
+func (o *Customer) GetPostalCode() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -199,7 +202,7 @@ func (o *RegisterCustomerResponse) GetPostalCode() string {
 
 // GetPostalCodeOk returns a tuple with the PostalCode field value
 // and a boolean to check if the value has been set.
-func (o *RegisterCustomerResponse) GetPostalCodeOk() (*string, bool) {
+func (o *Customer) GetPostalCodeOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -207,12 +210,12 @@ func (o *RegisterCustomerResponse) GetPostalCodeOk() (*string, bool) {
 }
 
 // SetPostalCode sets field value
-func (o *RegisterCustomerResponse) SetPostalCode(v string) {
+func (o *Customer) SetPostalCode(v string) {
 	o.PostalCode = v
 }
 
 // GetCountryCode returns the CountryCode field value
-func (o *RegisterCustomerResponse) GetCountryCode() string {
+func (o *Customer) GetCountryCode() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -223,7 +226,7 @@ func (o *RegisterCustomerResponse) GetCountryCode() string {
 
 // GetCountryCodeOk returns a tuple with the CountryCode field value
 // and a boolean to check if the value has been set.
-func (o *RegisterCustomerResponse) GetCountryCodeOk() (*string, bool) {
+func (o *Customer) GetCountryCodeOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -231,12 +234,12 @@ func (o *RegisterCustomerResponse) GetCountryCodeOk() (*string, bool) {
 }
 
 // SetCountryCode sets field value
-func (o *RegisterCustomerResponse) SetCountryCode(v string) {
+func (o *Customer) SetCountryCode(v string) {
 	o.CountryCode = v
 }
 
 // GetCreatedAt returns the CreatedAt field value
-func (o *RegisterCustomerResponse) GetCreatedAt() time.Time {
+func (o *Customer) GetCreatedAt() time.Time {
 	if o == nil {
 		var ret time.Time
 		return ret
@@ -247,7 +250,7 @@ func (o *RegisterCustomerResponse) GetCreatedAt() time.Time {
 
 // GetCreatedAtOk returns a tuple with the CreatedAt field value
 // and a boolean to check if the value has been set.
-func (o *RegisterCustomerResponse) GetCreatedAtOk() (*time.Time, bool) {
+func (o *Customer) GetCreatedAtOk() (*time.Time, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -255,11 +258,35 @@ func (o *RegisterCustomerResponse) GetCreatedAtOk() (*time.Time, bool) {
 }
 
 // SetCreatedAt sets field value
-func (o *RegisterCustomerResponse) SetCreatedAt(v time.Time) {
+func (o *Customer) SetCreatedAt(v time.Time) {
 	o.CreatedAt = v
 }
 
-func (o RegisterCustomerResponse) MarshalJSON() ([]byte, error) {
+// GetUpdatedAt returns the UpdatedAt field value
+func (o *Customer) GetUpdatedAt() time.Time {
+	if o == nil {
+		var ret time.Time
+		return ret
+	}
+
+	return o.UpdatedAt
+}
+
+// GetUpdatedAtOk returns a tuple with the UpdatedAt field value
+// and a boolean to check if the value has been set.
+func (o *Customer) GetUpdatedAtOk() (*time.Time, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.UpdatedAt, true
+}
+
+// SetUpdatedAt sets field value
+func (o *Customer) SetUpdatedAt(v time.Time) {
+	o.UpdatedAt = v
+}
+
+func (o Customer) MarshalJSON() ([]byte, error) {
 	toSerialize,err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
@@ -267,32 +294,34 @@ func (o RegisterCustomerResponse) MarshalJSON() ([]byte, error) {
 	return json.Marshal(toSerialize)
 }
 
-func (o RegisterCustomerResponse) ToMap() (map[string]interface{}, error) {
+func (o Customer) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["id"] = o.Id
-	toSerialize["email"] = o.Email
 	toSerialize["name"] = o.Name
+	toSerialize["email"] = o.Email
 	toSerialize["address"] = o.Address
 	toSerialize["city"] = o.City
 	toSerialize["postal_code"] = o.PostalCode
 	toSerialize["country_code"] = o.CountryCode
-	toSerialize["created_at"] = o.CreatedAt
+	toSerialize["createdAt"] = o.CreatedAt
+	toSerialize["updatedAt"] = o.UpdatedAt
 	return toSerialize, nil
 }
 
-func (o *RegisterCustomerResponse) UnmarshalJSON(data []byte) (err error) {
+func (o *Customer) UnmarshalJSON(data []byte) (err error) {
 	// This validates that all required properties are included in the JSON object
 	// by unmarshalling the object into a generic map with string keys and checking
 	// that every required field exists as a key in the generic map.
 	requiredProperties := []string{
 		"id",
-		"email",
 		"name",
+		"email",
 		"address",
 		"city",
 		"postal_code",
 		"country_code",
-		"created_at",
+		"createdAt",
+		"updatedAt",
 	}
 
 	allProperties := make(map[string]interface{})
@@ -309,53 +338,53 @@ func (o *RegisterCustomerResponse) UnmarshalJSON(data []byte) (err error) {
 		}
 	}
 
-	varRegisterCustomerResponse := _RegisterCustomerResponse{}
+	varCustomer := _Customer{}
 
 	decoder := json.NewDecoder(bytes.NewReader(data))
 	decoder.DisallowUnknownFields()
-	err = decoder.Decode(&varRegisterCustomerResponse)
+	err = decoder.Decode(&varCustomer)
 
 	if err != nil {
 		return err
 	}
 
-	*o = RegisterCustomerResponse(varRegisterCustomerResponse)
+	*o = Customer(varCustomer)
 
 	return err
 }
 
-type NullableRegisterCustomerResponse struct {
-	value *RegisterCustomerResponse
+type NullableCustomer struct {
+	value *Customer
 	isSet bool
 }
 
-func (v NullableRegisterCustomerResponse) Get() *RegisterCustomerResponse {
+func (v NullableCustomer) Get() *Customer {
 	return v.value
 }
 
-func (v *NullableRegisterCustomerResponse) Set(val *RegisterCustomerResponse) {
+func (v *NullableCustomer) Set(val *Customer) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableRegisterCustomerResponse) IsSet() bool {
+func (v NullableCustomer) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableRegisterCustomerResponse) Unset() {
+func (v *NullableCustomer) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableRegisterCustomerResponse(val *RegisterCustomerResponse) *NullableRegisterCustomerResponse {
-	return &NullableRegisterCustomerResponse{value: val, isSet: true}
+func NewNullableCustomer(val *Customer) *NullableCustomer {
+	return &NullableCustomer{value: val, isSet: true}
 }
 
-func (v NullableRegisterCustomerResponse) MarshalJSON() ([]byte, error) {
+func (v NullableCustomer) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableRegisterCustomerResponse) UnmarshalJSON(src []byte) error {
+func (v *NullableCustomer) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }

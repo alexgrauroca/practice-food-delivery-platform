@@ -7,9 +7,9 @@ required:
 properties:
   id:
     type: string
-    pattern: '^[a-zA-Z0-9\-]+$'
+    pattern: '^[0-9a-fA-F]{24}$'
     description: Unique customer identifier
-    example: cust-123abc
+    example: 507f1f77bcf86cd799439011
   email:
     type: string
     format: email

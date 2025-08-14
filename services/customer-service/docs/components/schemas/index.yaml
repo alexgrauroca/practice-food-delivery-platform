@@ -1,9 +1,17 @@
+# Models schemas
+Customer:
+  $ref: './models/Customer.yaml'
+Pagination:
+  $ref: './models/Pagination.yaml'
+
 # Request schemas
 RegisterCustomerRequest:
   $ref: './requests/RegisterCustomerRequest.yaml'
 
 # Response schemas
-RegisterCustomerResponse:
-  $ref: './responses/RegisterCustomerResponse.yaml'
 ErrorResponse:
   $ref: './responses/ErrorResponse.yaml'
+GetCustomersResponse:
+  $ref: './responses/GetCustomersResponse.yaml'
+RegisterCustomerResponse:
+  $ref: './responses/RegisterCustomerResponse.yaml'

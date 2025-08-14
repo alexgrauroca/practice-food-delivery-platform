@@ -1,0 +1,219 @@
+# Customer
+
+## Properties
+
+Name | Type | Description | Notes
+------------ | ------------- | ------------- | -------------
+**Id** | **string** | Unique customer identifier | 
+**Name** | **string** | The full name of the customer | 
+**Email** | **string** | The email address of the customer | 
+**Address** | **string** | Customer&#39;s address | 
+**City** | **string** | Customer&#39;s city | 
+**PostalCode** | **string** | Customer&#39;s postal code | 
+**CountryCode** | **string** | Customer&#39;s country code in ISO 3166-1 alpha-2 format | 
+**CreatedAt** | **time.Time** | The timestamp when the customer was created | 
+**UpdatedAt** | **time.Time** | The timestamp when the customer was last updated | 
+
+## Methods
+
+### NewCustomer
+
+`func NewCustomer(id string, name string, email string, address string, city string, postalCode string, countryCode string, createdAt time.Time, updatedAt time.Time, ) *Customer`
+
+NewCustomer instantiates a new Customer object
+This constructor will assign default values to properties that have it defined,
+and makes sure properties required by API are set, but the set of arguments
+will change when the set of required properties is changed
+
+### NewCustomerWithDefaults
+
+`func NewCustomerWithDefaults() *Customer`
+
+NewCustomerWithDefaults instantiates a new Customer object
+This constructor will only assign default values to properties that have it defined,
+but it doesn't guarantee that properties required by API are set
+
+### GetId
+
+`func (o *Customer) GetId() string`
+
+GetId returns the Id field if non-nil, zero value otherwise.
+
+### GetIdOk
+
+`func (o *Customer) GetIdOk() (*string, bool)`
+
+GetIdOk returns a tuple with the Id field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetId
+
+`func (o *Customer) SetId(v string)`
+
+SetId sets Id field to given value.
+
+
+### GetName
+
+`func (o *Customer) GetName() string`
+
+GetName returns the Name field if non-nil, zero value otherwise.
+
+### GetNameOk
+
+`func (o *Customer) GetNameOk() (*string, bool)`
+
+GetNameOk returns a tuple with the Name field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetName
+
+`func (o *Customer) SetName(v string)`
+
+SetName sets Name field to given value.
+
+
+### GetEmail
+
+`func (o *Customer) GetEmail() string`
+
+GetEmail returns the Email field if non-nil, zero value otherwise.
+
+### GetEmailOk
+
+`func (o *Customer) GetEmailOk() (*string, bool)`
+
+GetEmailOk returns a tuple with the Email field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetEmail
+
+`func (o *Customer) SetEmail(v string)`
+
+SetEmail sets Email field to given value.
+
+
+### GetAddress
+
+`func (o *Customer) GetAddress() string`
+
+GetAddress returns the Address field if non-nil, zero value otherwise.
+
+### GetAddressOk
+
+`func (o *Customer) GetAddressOk() (*string, bool)`
+
+GetAddressOk returns a tuple with the Address field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetAddress
+
+`func (o *Customer) SetAddress(v string)`
+
+SetAddress sets Address field to given value.
+
+
+### GetCity
+
+`func (o *Customer) GetCity() string`
+
+GetCity returns the City field if non-nil, zero value otherwise.
+
+### GetCityOk
+
+`func (o *Customer) GetCityOk() (*string, bool)`
+
+GetCityOk returns a tuple with the City field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetCity
+
+`func (o *Customer) SetCity(v string)`
+
+SetCity sets City field to given value.
+
+
+### GetPostalCode
+
+`func (o *Customer) GetPostalCode() string`
+
+GetPostalCode returns the PostalCode field if non-nil, zero value otherwise.
+
+### GetPostalCodeOk
+
+`func (o *Customer) GetPostalCodeOk() (*string, bool)`
+
+GetPostalCodeOk returns a tuple with the PostalCode field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetPostalCode
+
+`func (o *Customer) SetPostalCode(v string)`
+
+SetPostalCode sets PostalCode field to given value.
+
+
+### GetCountryCode
+
+`func (o *Customer) GetCountryCode() string`
+
+GetCountryCode returns the CountryCode field if non-nil, zero value otherwise.
+
+### GetCountryCodeOk
+
+`func (o *Customer) GetCountryCodeOk() (*string, bool)`
+
+GetCountryCodeOk returns a tuple with the CountryCode field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetCountryCode
+
+`func (o *Customer) SetCountryCode(v string)`
+
+SetCountryCode sets CountryCode field to given value.
+
+
+### GetCreatedAt
+
+`func (o *Customer) GetCreatedAt() time.Time`
+
+GetCreatedAt returns the CreatedAt field if non-nil, zero value otherwise.
+
+### GetCreatedAtOk
+
+`func (o *Customer) GetCreatedAtOk() (*time.Time, bool)`
+
+GetCreatedAtOk returns a tuple with the CreatedAt field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetCreatedAt
+
+`func (o *Customer) SetCreatedAt(v time.Time)`
+
+SetCreatedAt sets CreatedAt field to given value.
+
+
+### GetUpdatedAt
+
+`func (o *Customer) GetUpdatedAt() time.Time`
+
+GetUpdatedAt returns the UpdatedAt field if non-nil, zero value otherwise.
+
+### GetUpdatedAtOk
+
+`func (o *Customer) GetUpdatedAtOk() (*time.Time, bool)`
+
+GetUpdatedAtOk returns a tuple with the UpdatedAt field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetUpdatedAt
+
+`func (o *Customer) SetUpdatedAt(v time.Time)`
+
+SetUpdatedAt sets UpdatedAt field to given value.
+
+
+
+[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+
+

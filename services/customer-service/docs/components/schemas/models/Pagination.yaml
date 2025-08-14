@@ -1,0 +1,23 @@
+type: object
+required:
+  - page
+  - size
+  - totalElements
+  - totalPages
+properties:
+  total_items:
+    type: integer
+    description: Total number of elements across all pages
+    example: 200
+  total_pages:
+    type: integer
+    description: Total number of pages
+    example: 10
+  current_page:
+    type: integer
+    description: Current page number
+    example: 1
+  page_size:
+    type: integer
+    description: Number of elements per page
+    example: 20

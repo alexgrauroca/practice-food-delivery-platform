@@ -263,13 +263,13 @@ components:
       example:
         name: John Doe
         created_at: 2025-01-01T00:00:00Z
-        id: cust-123abc
+        id: 507f1f77bcf86cd799439011
         email: user@example.com
       properties:
         id:
           description: Unique customer identifier
-          example: cust-123abc
-          pattern: "^[a-zA-Z0-9\\-]+$"
+          example: 507f1f77bcf86cd799439011
+          pattern: "^[0-9a-fA-F]{24}$"
           type: string
         email:
           description: Customer's email address

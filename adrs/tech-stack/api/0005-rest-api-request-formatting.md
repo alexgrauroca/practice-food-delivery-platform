@@ -55,6 +55,54 @@ We will adopt the following conventions for API request formatting:
    - For currency values, use integer numbers with explicit currency code and considering the number of decimals for 
      that currency (e.g. `1.00€` will be exposed as `{"amount": 100, "currency": "EUR"}`)
 
+### Query Parameters
+
+1. **Parameter Naming**
+   - Use `kebab-case` for parameter names to maintain consistency with JSON property naming
+   - Use meaningful and descriptive names
+   - Prefix parameters with their context when necessary (e.g., `user-id` instead of just `id`)
+
+2. **Pagination**
+   - Standard pagination parameters:
+     - `page`: Current page number ([1-based indexing](https://rosalind.info/glossary/1-based-numbering/))
+     - `page-size`: Number of items per page
+   - Default values:
+     - `page-size`: 10 items
+     - `page`: 1
+   - Maximum allowed page size: 100 items
+
+3. **Sorting**
+   - Use the `sort` parameter for all sorting operations
+   - Prefix field with `-` for descending order, no prefix means ascending order
+   - Multiple sort criteria should be comma-separated
+   - Examples:
+       - Single field ascending: `?sort=created-at`
+       - Single field descending: `?sort=-created-at`
+       - Multiple fields: `?sort=-created-at,name,-status`
+   - Default sorting must be documented per endpoint
+   - Important considerations:
+       - Field names in sort parameters should use `kebab-case`
+       - Only allow sorting by documented sortable fields
+       - Document the default sort order in API specifications
+       - Consider performance implications when allowing sorting on non-indexed fields
+
+4. **Filtering**
+   - Basic filtering:
+     - Use the field name as the parameter: `?status=active`
+     - Multiple values: `?status[]=active&status[]=pending`
+   - Advanced filtering:
+     - Operators in parameter names:
+       - `field-gt`: Greater than
+       - `field-gte`: Greater than or equal
+       - `field-lt`: Less than
+       - `field-lte`: Less than or equal
+       - `field-like`: Pattern matching
+       - `field-between`: Range (comma-separated values)
+     - Examples:
+       - `?created-at-gte=2025-01-01`
+       - `?price-between=10,20`
+       - `?name-like=john`
+
 ### Request Validation
 
 1. **Required Fields**
@@ -91,7 +139,7 @@ We will adopt the following conventions for API request formatting:
 
 ## Implementation Notes
 
-### Example Request Body
+### Example Request with Query Parameters
 
 ```json
 {
@@ -124,7 +172,7 @@ We will adopt the following conventions for API request formatting:
 }
 ```
 
-### Request Validation Example (Gin Framework)
+### Pagination and Filtering Example (Gin Framework)
 
 ```go
 // OrderRequest represents the structure for an order creation request
@@ -187,6 +235,7 @@ Consider:
 - [REST API Error Response Format](./0002-rest-api-error-response-format.md)
 - [OpenAPI Specification 3.0.3](https://spec.openapis.org/oas/v3.0.3)
 - [JSON Schema](https://json-schema.org/)
+- [1-based indexing](https://rosalind.info/glossary/1-based-numbering/)
 
 ## Contributors
 
