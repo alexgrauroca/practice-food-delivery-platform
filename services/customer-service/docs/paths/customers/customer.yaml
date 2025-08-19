@@ -11,6 +11,9 @@ get:
       in: path
       required: true
       description: Customer identifier
+      schema:
+        type: string
+        pattern: ^[0-9a-fA-F]{24}$
   responses:
     '200':
       description: Customer retrieved successfully

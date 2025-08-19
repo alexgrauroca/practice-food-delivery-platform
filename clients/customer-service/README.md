@@ -82,7 +82,7 @@ All URIs are relative to *http://localhost:80*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*CustomersAPI* | [**GetCustomers**](docs/CustomersAPI.md#getcustomers) | **Get** /v1.0/customers | Get the list of customers
+*CustomersAPI* | [**GetCustomer**](docs/CustomersAPI.md#getcustomer) | **Get** /v1.0/customers/{customerID} | Get a specific customer data
 *CustomersAPI* | [**RegisterCustomer**](docs/CustomersAPI.md#registercustomer) | **Post** /v1.0/customers | Register a new customer
 
 
@@ -90,7 +90,6 @@ Class | Method | HTTP request | Description
 
  - [Customer](docs/Customer.md)
  - [ErrorResponse](docs/ErrorResponse.md)
- - [GetCustomersResponse](docs/GetCustomersResponse.md)
  - [Pagination](docs/Pagination.md)
  - [RegisterCustomerRequest](docs/RegisterCustomerRequest.md)
  - [RegisterCustomerResponse](docs/RegisterCustomerResponse.md)

@@ -16,96 +16,62 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 
 // CustomersAPIService CustomersAPI service
 type CustomersAPIService service
 
-type ApiGetCustomersRequest struct {
+type ApiGetCustomerRequest struct {
 	ctx context.Context
 	ApiService *CustomersAPIService
-	page *int32
-	pageSize *int32
-	sort *string
+	customerID string
 }
 
-// Page number for pagination
-func (r ApiGetCustomersRequest) Page(page int32) ApiGetCustomersRequest {
-	r.page = &page
-	return r
-}
-
-// Number of items per page
-func (r ApiGetCustomersRequest) PageSize(pageSize int32) ApiGetCustomersRequest {
-	r.pageSize = &pageSize
-	return r
-}
-
-// Sort fields and directions, comma-separated. Prefix field with &#39;-&#39; for descending order. Multiple fields can be specified (e.g., &#39;name,-email&#39;). Available sort fields:   - name: Customer&#39;s full name   - email: Customer&#39;s email address   - created-at: Account creation date 
-func (r ApiGetCustomersRequest) Sort(sort string) ApiGetCustomersRequest {
-	r.sort = &sort
-	return r
-}
-
-func (r ApiGetCustomersRequest) Execute() (*GetCustomersResponse, *http.Response, error) {
-	return r.ApiService.GetCustomersExecute(r)
+func (r ApiGetCustomerRequest) Execute() (*Customer, *http.Response, error) {
+	return r.ApiService.GetCustomerExecute(r)
 }
 
 /*
-GetCustomers Get the list of customers
+GetCustomer Get a specific customer data
 
-Returns a list of customers
+Returns the customer data. It can only be accessed by the customer itself
 
  @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return ApiGetCustomersRequest
+ @param customerID Customer identifier
+ @return ApiGetCustomerRequest
 */
-func (a *CustomersAPIService) GetCustomers(ctx context.Context) ApiGetCustomersRequest {
-	return ApiGetCustomersRequest{
+func (a *CustomersAPIService) GetCustomer(ctx context.Context, customerID string) ApiGetCustomerRequest {
+	return ApiGetCustomerRequest{
 		ApiService: a,
 		ctx: ctx,
+		customerID: customerID,
 	}
 }
 
 // Execute executes the request
-//  @return GetCustomersResponse
-func (a *CustomersAPIService) GetCustomersExecute(r ApiGetCustomersRequest) (*GetCustomersResponse, *http.Response, error) {
+//  @return Customer
+func (a *CustomersAPIService) GetCustomerExecute(r ApiGetCustomerRequest) (*Customer, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
 		formFiles            []formFile
-		localVarReturnValue  *GetCustomersResponse
+		localVarReturnValue  *Customer
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "CustomersAPIService.GetCustomers")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "CustomersAPIService.GetCustomer")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
-	localVarPath := localBasePath + "/v1.0/customers"
+	localVarPath := localBasePath + "/v1.0/customers/{customerID}"
+	localVarPath = strings.Replace(localVarPath, "{"+"customerID"+"}", url.PathEscape(parameterValueToString(r.customerID, "customerID")), -1)
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
-	if r.page != nil {
-		parameterAddToHeaderOrQuery(localVarQueryParams, "page", r.page, "form", "")
-	} else {
-		var defaultValue int32 = 1
-		r.page = &defaultValue
-	}
-	if r.pageSize != nil {
-		parameterAddToHeaderOrQuery(localVarQueryParams, "page-size", r.pageSize, "form", "")
-	} else {
-		var defaultValue int32 = 10
-		r.pageSize = &defaultValue
-	}
-	if r.sort != nil {
-		parameterAddToHeaderOrQuery(localVarQueryParams, "sort", r.sort, "form", "")
-	} else {
-		var defaultValue string = "name"
-		r.sort = &defaultValue
-	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
 
@@ -145,17 +111,6 @@ func (a *CustomersAPIService) GetCustomersExecute(r ApiGetCustomersRequest) (*Ge
 			body:  localVarBody,
 			error: localVarHTTPResponse.Status,
 		}
-		if localVarHTTPResponse.StatusCode == 400 {
-			var v ErrorResponse
-			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-			if err != nil {
-				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
-			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
-			return localVarReturnValue, localVarHTTPResponse, newErr
-		}
 		if localVarHTTPResponse.StatusCode == 401 {
 			var v ErrorResponse
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
@@ -168,6 +123,17 @@ func (a *CustomersAPIService) GetCustomersExecute(r ApiGetCustomersRequest) (*Ge
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 403 {
+			var v ErrorResponse
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+					newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 404 {
 			var v ErrorResponse
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {

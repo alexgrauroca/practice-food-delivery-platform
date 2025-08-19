@@ -4,16 +4,16 @@ All URIs are relative to *http://localhost:80*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**GetCustomers**](CustomersAPI.md#GetCustomers) | **Get** /v1.0/customers | Get the list of customers
+[**GetCustomer**](CustomersAPI.md#GetCustomer) | **Get** /v1.0/customers/{customerID} | Get a specific customer data
 [**RegisterCustomer**](CustomersAPI.md#RegisterCustomer) | **Post** /v1.0/customers | Register a new customer
 
 
 
-## GetCustomers
+## GetCustomer
 
-> GetCustomersResponse GetCustomers(ctx).Page(page).PageSize(pageSize).Sort(sort).Execute()
+> Customer GetCustomer(ctx, customerID).Execute()
 
-Get the list of customers
+Get a specific customer data
 
 
 
@@ -30,40 +30,40 @@ import (
 )
 
 func main() {
-	page := int32(1) // int32 | Page number for pagination (optional) (default to 1)
-	pageSize := int32(20) // int32 | Number of items per page (optional) (default to 10)
-	sort := "name,-email" // string | Sort fields and directions, comma-separated. Prefix field with '-' for descending order. Multiple fields can be specified (e.g., 'name,-email'). Available sort fields:   - name: Customer's full name   - email: Customer's email address   - created-at: Account creation date  (optional) (default to "name")
+	customerID := "customerID_example" // string | Customer identifier
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)
-	resp, r, err := apiClient.CustomersAPI.GetCustomers(context.Background()).Page(page).PageSize(pageSize).Sort(sort).Execute()
+	resp, r, err := apiClient.CustomersAPI.GetCustomer(context.Background(), customerID).Execute()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error when calling `CustomersAPI.GetCustomers``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Error when calling `CustomersAPI.GetCustomer``: %v\n", err)
 		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
 	}
-	// response from `GetCustomers`: GetCustomersResponse
-	fmt.Fprintf(os.Stdout, "Response from `CustomersAPI.GetCustomers`: %v\n", resp)
+	// response from `GetCustomer`: Customer
+	fmt.Fprintf(os.Stdout, "Response from `CustomersAPI.GetCustomer`: %v\n", resp)
 }
 ```
 
 ### Path Parameters
 
 
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+**ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
+**customerID** | **string** | Customer identifier | 
 
 ### Other Parameters
 
-Other parameters are passed through a pointer to a apiGetCustomersRequest struct via the builder pattern
+Other parameters are passed through a pointer to a apiGetCustomerRequest struct via the builder pattern
 
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **page** | **int32** | Page number for pagination | [default to 1]
- **pageSize** | **int32** | Number of items per page | [default to 10]
- **sort** | **string** | Sort fields and directions, comma-separated. Prefix field with &#39;-&#39; for descending order. Multiple fields can be specified (e.g., &#39;name,-email&#39;). Available sort fields:   - name: Customer&#39;s full name   - email: Customer&#39;s email address   - created-at: Account creation date  | [default to &quot;name&quot;]
+
 
 ### Return type
 
-[**GetCustomersResponse**](GetCustomersResponse.md)
+[**Customer**](Customer.md)
 
 ### Authorization
 
