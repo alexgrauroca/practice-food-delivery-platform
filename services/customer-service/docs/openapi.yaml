@@ -14,6 +14,8 @@ tags:
 paths:
   /v1.0/customers:
     $ref: './paths/customers/customers.yaml'
+  /v1.0/customers/{customerID}:
+    $ref: './paths/customers/customer.yaml'
 
 components:
   securitySchemes:

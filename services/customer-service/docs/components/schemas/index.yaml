@@ -11,7 +11,7 @@ RegisterCustomerRequest:
 # Response schemas
 ErrorResponse:
   $ref: './responses/ErrorResponse.yaml'
-GetCustomersResponse:
-  $ref: './responses/GetCustomersResponse.yaml'
+GetCustomerResponse:
+  $ref: './responses/GetCustomerResponse.yaml'
 RegisterCustomerResponse:
   $ref: './responses/RegisterCustomerResponse.yaml'
