@@ -1,0 +1,28 @@
+get:
+  summary: Get a specific customer data
+  description: Returns the customer data. It can only be accessed by the customer itself
+  operationId: getCustomer
+  tags:
+    - Customers
+  security:
+    - BearerAuth: [ ]
+  parameters:
+    - name: customerID
+      in: path
+      required: true
+      description: Customer identifier
+  responses:
+    '200':
+      description: Customer retrieved successfully
+      content:
+        application/json:
+          schema:
+            $ref: './../../components/schemas/responses/GetCustomerResponse.yaml'
+    '401':
+      $ref: './../../components/responses/Unauthorized.yaml'
+    '403':
+      $ref: './../../components/responses/Forbidden.yaml'
+    '404':
+      $ref: './../../components/responses/NotFound.yaml'
+    '500':
+      $ref: './../../components/responses/InternalError.yaml'
