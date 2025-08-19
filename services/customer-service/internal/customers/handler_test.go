@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -23,6 +24,7 @@ import (
 
 type customerHandlerTestCase struct {
 	name        string
+	queryParams map[string]string
 	jsonPayload string
 	mocksSetup  func(service *customersmocks.MockService)
 	wantJSON    string
@@ -231,7 +233,194 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			runCustomerHandlerTestCase(t, logger, "/v1.0/customers", tt)
+			runCustomerHandlerTestCase(t, logger, http.MethodPost, "/v1.0/customers", tt, "")
+		})
+	}
+}
+
+func TestHandler_GetCustomers(t *testing.T) {
+	logger := setupTestEnv()
+	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	tests := []customerHandlerTestCase{
+		{
+			name: "when invalid params are provided, then it should return a 400 with invalid request error",
+			queryParams: map[string]string{
+				"page": "invalid-page",
+				"size": "invalid-size",
+				"sort": "1",
+			},
+			wantJSON: `{
+				"code": "INVALID_REQUEST",
+				"message": "invalid request",
+				"details": []
+			}`,
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name: "when invalid sort is provided, then it should return a 400 with the sort validation error",
+			queryParams: map[string]string{
+				"sort": "invalid",
+			},
+			wantJSON: `{
+				"code": "VALIDATION_ERROR",
+				"message": "validation failed",
+				"details": [
+					"sort must be one of name, email, created_at"
+				]
+			}`,
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name: "when values are lower than the minimum, " +
+				"then it should return a 400 with the min value validation errors",
+			queryParams: map[string]string{
+				"page":      "0",
+				"page-size": "0",
+			},
+			wantJSON: `{
+				"code": "VALIDATION_ERROR",
+				"message": "validation failed",
+				"details": [
+					"page must be greater than 1",
+					"page-size must be greater than 1"
+				]
+			}`,
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name: "when values are higher than the maximum, " +
+				"then it should return a 400 with the max value validation errors",
+			queryParams: map[string]string{
+				"page-size": "101",
+			},
+			wantJSON: `{
+				"code": "VALIDATION_ERROR",
+				"message": "validation failed",
+				"details": [
+					"page-size must be lower than 100"
+				]
+			}`,
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name: "when unexpected error when searching customers, " +
+				"then it should return a 500 with the internal error",
+			queryParams: map[string]string{},
+			mocksSetup: func(service *customersmocks.MockService) {
+				// TODO: set the right function
+				service.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
+					Return(customers.RegisterCustomerOutput{}, errUnexpected)
+			},
+			wantJSON: `{
+				"code": "INTERNAL_ERROR",
+				"message": "an unexpected error occurred",
+				"details": []
+			}`,
+			wantStatus: http.StatusInternalServerError,
+		},
+		{
+			name:        "when there are no customers, then it should return a 200 with an empty list",
+			queryParams: map[string]string{},
+			mocksSetup: func(service *customersmocks.MockService) {
+				// TODO: set the right function
+				service.EXPECT().RegisterCustomer(gomock.Any(), customers.RegisterCustomerInput{
+					Email:       "test@example.com",
+					Password:    "ValidPassword123",
+					Name:        "John Doe",
+					Address:     "a valid address",
+					City:        "a valid city",
+					PostalCode:  "12345",
+					CountryCode: "US",
+				}).Return(customers.RegisterCustomerOutput{
+					ID:          "fake-id",
+					Email:       "test@example.com",
+					Name:        "John Doe",
+					Address:     "a valid address",
+					City:        "a valid city",
+					PostalCode:  "12345",
+					CountryCode: "US",
+					CreatedAt:   now,
+				}, nil)
+			},
+			wantJSON: `{
+				"items": [],
+				"pagination": {
+					"total_items": 0,
+					"total_pages": 0,
+					"current_page": 1,
+					"page_size": 10
+				}
+			}`,
+			wantStatus: http.StatusOK,
+		},
+		{
+			name: "when there are customers, then it should return a 200 with the list of customers",
+			queryParams: map[string]string{
+				"page":      "1",
+				"page-size": "2",
+				"sort":      "name,-email",
+			},
+			mocksSetup: func(service *customersmocks.MockService) {
+				// TODO: set the right function
+				service.EXPECT().RegisterCustomer(gomock.Any(), customers.RegisterCustomerInput{
+					Email:       "test@example.com",
+					Password:    "ValidPassword123",
+					Name:        "John Doe",
+					Address:     "a valid address",
+					City:        "a valid city",
+					PostalCode:  "12345",
+					CountryCode: "US",
+				}).Return(customers.RegisterCustomerOutput{
+					ID:          "fake-id",
+					Email:       "test@example.com",
+					Name:        "John Doe",
+					Address:     "a valid address",
+					City:        "a valid city",
+					PostalCode:  "12345",
+					CountryCode: "US",
+					CreatedAt:   now,
+				}, nil)
+			},
+			wantJSON: `{
+				"items": [
+					{
+						"id": "fake-id",
+						"name": "John Doe",
+						"email": "test@example.com",
+						"address": "a valid address",
+						"city": "a valid city",
+						"postal_code": "12345",
+						"country_code": "US",
+						"created_at": "2025-01-01T00:00:00Z",
+						"updated_at": "2025-01-01T00:00:00Z"
+					},
+					{
+						"id": "fake-id-2",
+						"name": "John Doe 2",
+						"email": "test2@example.com",
+						"address": "a valid address 2",
+						"city": "a valid city 2",
+						"postal_code": "67890",
+						"country_code": "ES",
+						"created_at": "2025-01-01T00:00:00Z",
+						"updated_at": "2025-01-01T00:00:00Z"
+					}
+				],
+				"pagination": {
+					"total_items": 3,
+					"total_pages": 2,
+					"current_page": 1,
+					"page_size": 2
+				}
+			}`,
+			wantStatus: http.StatusOK,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			runCustomerHandlerTestCase(t, logger, http.MethodGet, "/v1.0/customers", tt, "")
 		})
 	}
 }
@@ -248,8 +437,10 @@ func setupTestEnv() log.Logger {
 func runCustomerHandlerTestCase(
 	t *testing.T,
 	logger log.Logger,
+	httpMethod string,
 	route string,
 	tt customerHandlerTestCase,
+	token string,
 ) {
 	// Create a new mock service
 	service := customersmocks.NewMockService(gomock.NewController(t))
@@ -264,9 +455,39 @@ func runCustomerHandlerTestCase(
 	router := gin.New()
 	h.RegisterRoutes(router)
 
-	// Create a new HTTP request with the test case's JSON payload
-	req := httptest.NewRequest(http.MethodPost, route, strings.NewReader(tt.jsonPayload))
-	req.Header.Set("Content-Type", "application/json")
+	// Create a new HTTP request with the test case's params
+	var req *http.Request
+
+	switch httpMethod {
+	case http.MethodGet:
+		baseURL, err := url.Parse(route)
+		if err != nil {
+			t.Fatalf("failed to parse route: %v", err)
+		}
+
+		// Add query parameters
+		if len(tt.queryParams) > 0 {
+			q := baseURL.Query()
+			for k, v := range tt.queryParams {
+				q.Add(k, v)
+			}
+			baseURL.RawQuery = q.Encode()
+		}
+
+		req = httptest.NewRequest(http.MethodGet, baseURL.String(), nil)
+
+	case http.MethodPost:
+		req = httptest.NewRequest(httpMethod, route, strings.NewReader(tt.jsonPayload))
+		req.Header.Set("Content-Type", "application/json")
+
+	default:
+		t.Fatalf("unsupported HTTP method: %s", httpMethod)
+	}
+
+	if token != "" {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	}
+
 	w := httptest.NewRecorder()
 
 	// Make the request to the handler
