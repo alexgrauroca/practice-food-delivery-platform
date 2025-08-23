@@ -6,10 +6,10 @@ import (
 
 // Internal errors
 var (
-	// ErrInvalidToken represents an error indicating that the authentication token provided is invalid or malformed
-	ErrInvalidToken = errors.New("invalid token")
-	// ErrTokenExpired represents an error indicating that the authentication token has expired and is no longer valid
-	ErrTokenExpired = errors.New("token expired")
+	errInvalidToken      = errors.New("invalid token")
+	errTokenExpired      = errors.New("token expired")
+	errAuthHeaderMissing = errors.New("authorization header is missing")
+	errInvalidAuthHeader = errors.New("invalid authorization header format")
 )
 
 // HTTP errors

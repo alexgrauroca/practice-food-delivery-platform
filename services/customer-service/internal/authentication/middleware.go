@@ -40,7 +40,6 @@ func NewMiddleware(logger log.Logger, service Service) Middleware {
 }
 
 func (m *middleware) RequireCustomer() gin.HandlerFunc {
-	// TODO: review the implementation
 	return func(c *gin.Context) {
 		claims, err := m.validateToken(c)
 		if err != nil {
@@ -61,8 +60,10 @@ func (m *middleware) RequireCustomer() gin.HandlerFunc {
 	}
 }
 
+// GetSubject retrieves the token subject from the given context.
+// It returns the subject value and a boolean indicating whether the subject was found
+// and successfully type asserted to string.
 func GetSubject(ctx context.Context) (string, bool) {
-	// TODO: review the implementation
 	v := ctx.Value(subjectCtxKey)
 	if v == nil {
 		return "", false
@@ -73,15 +74,12 @@ func GetSubject(ctx context.Context) (string, bool) {
 }
 
 func (m *middleware) validateToken(c *gin.Context) (*Claims, error) {
-	// TODO: review the implementation
-	token, err := extractBearerToken(c.GetHeader(authHeader))
+	token, err := extractBearerToken(c)
 	if err != nil {
 		return nil, err
 	}
 
-	output, err := m.service.ValidateAccessToken(c.Request.Context(), ValidateAccessTokenInput{
-		AccessToken: token,
-	})
+	output, err := m.service.ValidateAccessToken(c.Request.Context(), ValidateAccessTokenInput{AccessToken: token})
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +91,7 @@ func (m *middleware) validateToken(c *gin.Context) (*Claims, error) {
 func (m *middleware) handleAuthError(c *gin.Context, err error) {
 	code := CodeUnauthorizedError
 	msg := MessageUnauthorizedError
-	if errors.Is(err, ErrTokenExpired) {
+	if errors.Is(err, errTokenExpired) {
 		code = CodeForbiddenError
 		msg = MessageForbiddenError
 	}
@@ -101,14 +99,14 @@ func (m *middleware) handleAuthError(c *gin.Context, err error) {
 	c.AbortWithStatusJSON(http.StatusUnauthorized, newErrorResponse(code, msg))
 }
 
-func extractBearerToken(header string) (string, error) {
-	// TODO: review the implementation
+func extractBearerToken(c *gin.Context) (string, error) {
+	header := c.GetHeader(authHeader)
 	if header == "" {
-		return "", errors.New("authorization header is missing")
+		return "", errAuthHeaderMissing
 	}
 
 	if !strings.HasPrefix(header, bearerPrefix) {
-		return "", errors.New("invalid authorization header format")
+		return "", errInvalidAuthHeader
 	}
 
 	return strings.TrimPrefix(header, bearerPrefix), nil
