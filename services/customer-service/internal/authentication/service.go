@@ -2,12 +2,18 @@ package authentication
 
 import (
 	"context"
+	"fmt"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/log"
 )
 
-// Claims represent the authentication claims containing subject and role information
+// Claims represent the authentication claims
 type Claims struct {
-	Subject string
-	Role    string
+	jwt.RegisteredClaims
+	Role string `json:"role"`
 }
 
 // Service defines the interface for authentication operations
@@ -18,11 +24,44 @@ type Service interface {
 	ValidateAccessToken(ctx context.Context, input ValidateAccessTokenInput) (ValidateAccessTokenOutput, error)
 }
 
+type service struct {
+	logger log.Logger
+	cli    Client
+	secret []byte
+}
+
+// NewService creates a new authentication service instance.
+func NewService(logger log.Logger, cli Client, secret []byte) Service {
+	return &service{
+		logger: logger,
+		cli:    cli,
+		secret: secret,
+	}
+}
+
 // RegisterCustomerInput TODO: implement me
-type RegisterCustomerInput struct{}
+type RegisterCustomerInput struct {
+	Email    string
+	Password string
+	Name     string
+}
 
 // RegisterCustomerOutput TODO: implement me
-type RegisterCustomerOutput struct{}
+type RegisterCustomerOutput struct {
+	ID        string
+	Email     string
+	Name      string
+	CreatedAt time.Time
+}
+
+func (s service) RegisterCustomer(ctx context.Context, input RegisterCustomerInput) (RegisterCustomerOutput, error) {
+	s.logger.Info("registering customer in authentication service")
+	resp, err := s.cli.RegisterCustomer(ctx, RegisterCustomerRequest(input))
+	if err != nil {
+		return RegisterCustomerOutput{}, err
+	}
+	return RegisterCustomerOutput(resp), nil
+}
 
 // ValidateAccessTokenInput contains the access token to be validated
 type ValidateAccessTokenInput struct {
@@ -32,4 +71,28 @@ type ValidateAccessTokenInput struct {
 // ValidateAccessTokenOutput contains the validated claims from the access token
 type ValidateAccessTokenOutput struct {
 	Claims *Claims
+}
+
+func (s service) ValidateAccessToken(
+	_ context.Context,
+	input ValidateAccessTokenInput,
+) (ValidateAccessTokenOutput, error) {
+	token, err := jwt.ParseWithClaims(input.AccessToken, &Claims{}, func(token *jwt.Token) (any, error) {
+		// Validate the signing method
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return s.secret, nil
+	}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Name}))
+
+	if err != nil {
+		return ValidateAccessTokenOutput{}, errInvalidToken
+	}
+
+	claims, ok := token.Claims.(*Claims)
+	if !ok || !token.Valid {
+		return ValidateAccessTokenOutput{}, errInvalidToken
+	}
+
+	return ValidateAccessTokenOutput{Claims: claims}, nil
 }
