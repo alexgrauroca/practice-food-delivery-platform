@@ -49,7 +49,10 @@ func (m *middleware) RequireCustomer() gin.HandlerFunc {
 		}
 
 		if claims.Role != string(RoleCustomer) {
-			c.AbortWithStatusJSON(401, gin.H{"error": "unauthorized"})
+			c.AbortWithStatusJSON(
+				http.StatusForbidden,
+				newErrorResponse(CodeForbiddenError, MessageForbiddenError),
+			)
 			return
 		}
 
@@ -88,21 +91,14 @@ func (m *middleware) validateToken(c *gin.Context) (*Claims, error) {
 }
 
 func (m *middleware) handleAuthError(c *gin.Context, err error) {
-	// TODO: review the implementation
-	status := http.StatusUnauthorized
-	code := "UNAUTHORIZED"
-	msg := "Invalid credentials"
-
-	if errors.Is(err, ErrExpiredToken) {
-		status = http.StatusForbidden
-		code = "EXPIRED_TOKEN"
-		msg = "Token has expired"
+	code := CodeUnauthorizedError
+	msg := MessageUnauthorizedError
+	if errors.Is(err, ErrTokenExpired) {
+		code = CodeForbiddenError
+		msg = MessageForbiddenError
 	}
 
-	c.AbortWithStatusJSON(status, gin.H{
-		"code":    code,
-		"message": msg,
-	})
+	c.AbortWithStatusJSON(http.StatusUnauthorized, newErrorResponse(code, msg))
 }
 
 func extractBearerToken(header string) (string, error) {

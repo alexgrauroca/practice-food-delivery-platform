@@ -4,5 +4,7 @@ content:
     schema:
       $ref: './../schemas/responses/ErrorResponse.yaml'
     examples:
-      internalError:
+      unauthorizedError:
         $ref: './../examples/Unauthorized.yaml'
+      tokenExpiredError:
+        $ref: './../examples/TokenExpired.yaml'
