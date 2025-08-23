@@ -1,19 +1,20 @@
 package authentication
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/authentication/contextutil"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/log"
 )
 
 const (
-	authHeader   = "Authorization"
-	bearerPrefix = "Bearer "
+	authHeader    = "Authorization"
+	bearerPrefix  = "Bearer "
+	subjectCtxKey = "token-subject"
 )
 
 // Middleware defines the interface for authentication-related middleware functions used
@@ -52,9 +53,20 @@ func (m *middleware) RequireCustomer() gin.HandlerFunc {
 			return
 		}
 
-		c.Set(contextutil.SubjectCtxKey, claims.Subject)
+		c.Set(subjectCtxKey, claims.Subject)
 		c.Next()
 	}
+}
+
+func GetSubject(ctx context.Context) (string, bool) {
+	// TODO: review the implementation
+	v := ctx.Value(subjectCtxKey)
+	if v == nil {
+		return "", false
+	}
+	subject, ok := v.(string)
+
+	return subject, ok
 }
 
 func (m *middleware) validateToken(c *gin.Context) (*Claims, error) {
