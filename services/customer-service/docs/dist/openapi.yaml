@@ -150,6 +150,12 @@ components:
         code: UNAUTHORIZED
         message: Authentication is required to access this resource
         details: []
+    TokenExpired:
+      summary: Token expired
+      value:
+        code: TOKEN_EXPIRED
+        message: Token has expired
+        details: []
     Forbidden:
       summary: Access forbidden
       value:
@@ -398,8 +404,10 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
           examples:
-            internalError:
+            unauthorizedError:
               $ref: '#/components/examples/Unauthorized'
+            tokenExpiredError:
+              $ref: '#/components/examples/TokenExpired'
     Forbidden:
       description: Forbidden
       content:

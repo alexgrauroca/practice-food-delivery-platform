@@ -9,6 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/iancoleman/strcase"
 
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/authentication"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/log"
 )
 
@@ -21,6 +22,8 @@ const (
 	CodeCustomerAlreadyExists = "CUSTOMER_ALREADY_EXISTS"
 	// CodeInternalError represents the error code for an unspecified internal server error encountered in the system.
 	CodeInternalError = "INTERNAL_ERROR"
+	// CodeNotFound represents the error code indicating that the requested resource could not be found in the system.
+	CodeNotFound = "NOT_FOUND"
 
 	// MsgValidationError represents the error message for validation failures during input validation checks.
 	MsgValidationError = "validation failed"
@@ -30,25 +33,74 @@ const (
 	MsgCustomerAlreadyExists = "customer already exists"
 	// MsgInternalError represents the error message returned when the system fails to log in a customer.
 	MsgInternalError = "an unexpected error occurred"
+	// MsgNotFound represents the error message indicating that the requested resource could not be found.
+	MsgNotFound = "resource not found"
 )
 
 // Handler manages HTTP requests for customer-related operations.
 type Handler struct {
-	logger  log.Logger
-	service Service
+	logger         log.Logger
+	service        Service
+	authMiddleware authentication.Middleware
 }
 
 // NewHandler creates a new instance of Handler.
-func NewHandler(logger log.Logger, service Service) *Handler {
+func NewHandler(logger log.Logger, service Service, authMiddleware authentication.Middleware) *Handler {
 	return &Handler{
-		logger:  logger,
-		service: service,
+		logger:         logger,
+		service:        service,
+		authMiddleware: authMiddleware,
 	}
 }
 
 // RegisterRoutes registers the customer-related HTTP routes.
 func (h *Handler) RegisterRoutes(router *gin.Engine) {
 	router.POST("/v1.0/customers", h.RegisterCustomer)
+	router.GET("/v1.0/customers/:customerID", h.authMiddleware.RequireCustomer(), h.GetCustomer)
+}
+
+// GetCustomerResponse represents the response returned after successfully retrieving a customer.
+type GetCustomerResponse struct {
+	ID          string    `json:"id"`
+	Email       string    `json:"email"`
+	Name        string    `json:"name"`
+	Address     string    `json:"address"`
+	City        string    `json:"city"`
+	PostalCode  string    `json:"postal_code"`
+	CountryCode string    `json:"country_code"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+// GetCustomer handles retrieving a customer by ID.
+func (h *Handler) GetCustomer(c *gin.Context) {
+	ctx := c.Request.Context()
+	logger := h.logger.WithContext(ctx)
+
+	logger.Info("GetCustomer handler called")
+
+	customerID := c.Param("customerID")
+	if customerID == "" {
+		logger.Warn("Customer ID is required")
+		c.JSON(http.StatusBadRequest, newErrorResponse(CodeInvalidRequest, MsgInvalidRequest))
+		return
+	}
+
+	output, err := h.service.GetCustomer(ctx, GetCustomerInput{CustomerID: customerID})
+	if err != nil {
+		if errors.Is(err, ErrCustomerNotFound) {
+			logger.Warn("Customer not found", log.Field{Key: "customerID", Value: customerID})
+			c.JSON(http.StatusNotFound, newErrorResponse(CodeNotFound, MsgNotFound))
+			return
+		}
+		logger.Error("Failed to get customer", err)
+		c.JSON(http.StatusInternalServerError, newErrorResponse(CodeInternalError, MsgInternalError))
+		return
+	}
+
+	resp := GetCustomerResponse(output)
+	logger.Info("Customer retrieved successfully", log.Field{Key: "customer", Value: resp})
+	c.JSON(http.StatusOK, resp)
 }
 
 // RegisterCustomerRequest represents the request payload for registering a new customer.

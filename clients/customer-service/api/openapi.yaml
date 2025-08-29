@@ -147,6 +147,12 @@ components:
         code: UNAUTHORIZED
         message: Authentication is required to access this resource
         details: []
+    TokenExpired:
+      summary: Token expired
+      value:
+        code: TOKEN_EXPIRED
+        message: Token has expired
+        details: []
     Forbidden:
       summary: Access forbidden
       value:
@@ -173,8 +179,10 @@ components:
       content:
         application/json:
           examples:
-            internalError:
+            unauthorizedError:
               $ref: "#/components/examples/Unauthorized"
+            tokenExpiredError:
+              $ref: "#/components/examples/TokenExpired"
           schema:
             $ref: "#/components/schemas/ErrorResponse"
       description: Unauthorized

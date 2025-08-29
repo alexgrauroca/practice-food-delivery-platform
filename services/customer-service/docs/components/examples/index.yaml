@@ -6,7 +6,11 @@ InternalError:
   $ref: './InternalError.yaml'
 InvalidRequest:
   $ref: './InvalidRequest.yaml'
+NotFound:
+  $ref: './NotFound.yaml'
 RegisterCustomerValidationError:
   $ref: './RegisterCustomerValidationError.yaml'
+TokenExpired:
+  $ref: './TokenExpired.yaml'
 Unauthorized:
   $ref: './Unauthorized.yaml'

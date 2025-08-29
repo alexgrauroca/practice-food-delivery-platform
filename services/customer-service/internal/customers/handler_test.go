@@ -16,6 +16,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/authentication"
+	authmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/authentication/mocks"
 	customersmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/customers/mocks"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/customers"
@@ -24,9 +26,11 @@ import (
 
 type customerHandlerTestCase struct {
 	name        string
+	token       string
+	pathParams  map[string]string
 	queryParams map[string]string
 	jsonPayload string
-	mocksSetup  func(service *customersmocks.MockService)
+	mocksSetup  func(service *customersmocks.MockService, authService *authmocks.MockService)
 	wantJSON    string
 	wantStatus  int
 }
@@ -151,7 +155,7 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 				"postal_code": "12345",
 				"country_code": "US"
 			}`,
-			mocksSetup: func(service *customersmocks.MockService) {
+			mocksSetup: func(service *customersmocks.MockService, _ *authmocks.MockService) {
 				service.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.RegisterCustomerOutput{}, customers.ErrCustomerAlreadyExists)
 			},
@@ -174,7 +178,7 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 				"postal_code": "12345",
 				"country_code": "US"
 			}`,
-			mocksSetup: func(service *customersmocks.MockService) {
+			mocksSetup: func(service *customersmocks.MockService, _ *authmocks.MockService) {
 				service.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.RegisterCustomerOutput{}, errUnexpected)
 			},
@@ -197,7 +201,7 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 				"postal_code": "12345",
 				"country_code": "US"
 			}`,
-			mocksSetup: func(service *customersmocks.MockService) {
+			mocksSetup: func(service *customersmocks.MockService, _ *authmocks.MockService) {
 				service.EXPECT().RegisterCustomer(gomock.Any(), customers.RegisterCustomerInput{
 					Email:       "test@example.com",
 					Password:    "ValidPassword123",
@@ -238,181 +242,125 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 	}
 }
 
-func TestHandler_GetCustomers(t *testing.T) {
+func TestHandler_GetCustomer(t *testing.T) {
 	logger := setupTestEnv()
 	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	tests := []customerHandlerTestCase{
 		{
-			name: "when invalid params are provided, then it should return a 400 with invalid request error",
-			queryParams: map[string]string{
-				"page": "invalid-page",
-				"size": "invalid-size",
-				"sort": "1",
+			name:  "when any token is provided, then it should return a 401 with the unauthorized error",
+			token: "",
+			pathParams: map[string]string{
+				"customerID": "fakeID",
 			},
 			wantJSON: `{
-				"code": "INVALID_REQUEST",
-				"message": "invalid request",
+				"code": "UNAUTHORIZED",
+				"message": "Authentication is required to access this resource",
 				"details": []
 			}`,
-			wantStatus: http.StatusBadRequest,
+			wantStatus: http.StatusUnauthorized,
 		},
 		{
-			name: "when invalid sort is provided, then it should return a 400 with the sort validation error",
-			queryParams: map[string]string{
-				"sort": "invalid",
+			name:  "when invalid token is provided, then it should return a 401 with the unauthorized error",
+			token: "invalid-token",
+			pathParams: map[string]string{
+				"customerID": "fakeID",
+			},
+			mocksSetup: func(_ *customersmocks.MockService, authService *authmocks.MockService) {
+				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
+					Return(authentication.ValidateAccessTokenOutput{}, authentication.ErrInvalidToken)
 			},
 			wantJSON: `{
-				"code": "VALIDATION_ERROR",
-				"message": "validation failed",
-				"details": [
-					"sort must be one of name, email, created_at"
-				]
-			}`,
-			wantStatus: http.StatusBadRequest,
-		},
-		{
-			name: "when values are lower than the minimum, " +
-				"then it should return a 400 with the min value validation errors",
-			queryParams: map[string]string{
-				"page":      "0",
-				"page-size": "0",
-			},
-			wantJSON: `{
-				"code": "VALIDATION_ERROR",
-				"message": "validation failed",
-				"details": [
-					"page must be greater than 1",
-					"page-size must be greater than 1"
-				]
-			}`,
-			wantStatus: http.StatusBadRequest,
-		},
-		{
-			name: "when values are higher than the maximum, " +
-				"then it should return a 400 with the max value validation errors",
-			queryParams: map[string]string{
-				"page-size": "101",
-			},
-			wantJSON: `{
-				"code": "VALIDATION_ERROR",
-				"message": "validation failed",
-				"details": [
-					"page-size must be lower than 100"
-				]
-			}`,
-			wantStatus: http.StatusBadRequest,
-		},
-		{
-			name: "when unexpected error when searching customers, " +
-				"then it should return a 500 with the internal error",
-			queryParams: map[string]string{},
-			mocksSetup: func(service *customersmocks.MockService) {
-				// TODO: set the right function
-				service.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
-					Return(customers.RegisterCustomerOutput{}, errUnexpected)
-			},
-			wantJSON: `{
-				"code": "INTERNAL_ERROR",
-				"message": "an unexpected error occurred",
+				"code": "UNAUTHORIZED",
+				"message": "Authentication is required to access this resource",
 				"details": []
 			}`,
-			wantStatus: http.StatusInternalServerError,
+			wantStatus: http.StatusUnauthorized,
 		},
 		{
-			name:        "when there are no customers, then it should return a 200 with an empty list",
-			queryParams: map[string]string{},
-			mocksSetup: func(service *customersmocks.MockService) {
-				// TODO: set the right function
-				service.EXPECT().RegisterCustomer(gomock.Any(), customers.RegisterCustomerInput{
-					Email:       "test@example.com",
-					Password:    "ValidPassword123",
-					Name:        "John Doe",
-					Address:     "a valid address",
-					City:        "a valid city",
-					PostalCode:  "12345",
-					CountryCode: "US",
-				}).Return(customers.RegisterCustomerOutput{
-					ID:          "fake-id",
-					Email:       "test@example.com",
-					Name:        "John Doe",
-					Address:     "a valid address",
-					City:        "a valid city",
-					PostalCode:  "12345",
-					CountryCode: "US",
-					CreatedAt:   now,
-				}, nil)
+			name: "when authenticated customer is not the same as the one requested, " +
+				"then it should return a 403 with the forbidden error",
+			token: "none-customer-token",
+			pathParams: map[string]string{
+				"customerID": "fakeID",
+			},
+			mocksSetup: func(_ *customersmocks.MockService, authService *authmocks.MockService) {
+				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
+					Return(authentication.ValidateAccessTokenOutput{
+						Claims: &authentication.Claims{
+							Role: "none-customer-role",
+						},
+					}, nil)
 			},
 			wantJSON: `{
-				"items": [],
-				"pagination": {
-					"total_items": 0,
-					"total_pages": 0,
-					"current_page": 1,
-					"page_size": 10
-				}
+				"code": "FORBIDDEN",
+				"message": "You do not have permission to access this resource",
+				"details": []
 			}`,
-			wantStatus: http.StatusOK,
+			wantStatus: http.StatusForbidden,
 		},
 		{
-			name: "when there are customers, then it should return a 200 with the list of customers",
-			queryParams: map[string]string{
-				"page":      "1",
-				"page-size": "2",
-				"sort":      "name,-email",
+			name:  "when the customer is not found, then it should return a 404 with the not found error",
+			token: "valid-token",
+			pathParams: map[string]string{
+				"customerID": "unexistingID",
 			},
-			mocksSetup: func(service *customersmocks.MockService) {
-				// TODO: set the right function
-				service.EXPECT().RegisterCustomer(gomock.Any(), customers.RegisterCustomerInput{
-					Email:       "test@example.com",
-					Password:    "ValidPassword123",
-					Name:        "John Doe",
-					Address:     "a valid address",
-					City:        "a valid city",
-					PostalCode:  "12345",
-					CountryCode: "US",
-				}).Return(customers.RegisterCustomerOutput{
-					ID:          "fake-id",
-					Email:       "test@example.com",
-					Name:        "John Doe",
-					Address:     "a valid address",
-					City:        "a valid city",
-					PostalCode:  "12345",
-					CountryCode: "US",
-					CreatedAt:   now,
-				}, nil)
+			mocksSetup: func(service *customersmocks.MockService, authService *authmocks.MockService) {
+				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
+					Return(authentication.ValidateAccessTokenOutput{
+						Claims: &authentication.Claims{
+							Role: string(authentication.RoleCustomer),
+						},
+					}, nil)
+
+				service.EXPECT().GetCustomer(gomock.Any(), gomock.Any()).
+					Return(customers.GetCustomerOutput{}, customers.ErrCustomerNotFound)
 			},
 			wantJSON: `{
-				"items": [
-					{
-						"id": "fake-id",
-						"name": "John Doe",
-						"email": "test@example.com",
-						"address": "a valid address",
-						"city": "a valid city",
-						"postal_code": "12345",
-						"country_code": "US",
-						"created_at": "2025-01-01T00:00:00Z",
-						"updated_at": "2025-01-01T00:00:00Z"
+				"code": "NOT_FOUND",
+				"message": "resource not found",
+				"details": []
+			}`,
+			wantStatus: http.StatusNotFound,
+		},
+		{
+			name:  "when a valid customerID is provided, then it should return a 200 with the customer details",
+			token: "valid-token",
+			pathParams: map[string]string{
+				"customerID": "fakeID",
+			},
+			mocksSetup: func(service *customersmocks.MockService, authService *authmocks.MockService) {
+				authService.EXPECT().ValidateAccessToken(gomock.Any(), authentication.ValidateAccessTokenInput{
+					AccessToken: "valid-token",
+				}).Return(authentication.ValidateAccessTokenOutput{
+					Claims: &authentication.Claims{
+						Role: string(authentication.RoleCustomer),
 					},
-					{
-						"id": "fake-id-2",
-						"name": "John Doe 2",
-						"email": "test2@example.com",
-						"address": "a valid address 2",
-						"city": "a valid city 2",
-						"postal_code": "67890",
-						"country_code": "ES",
-						"created_at": "2025-01-01T00:00:00Z",
-						"updated_at": "2025-01-01T00:00:00Z"
-					}
-				],
-				"pagination": {
-					"total_items": 3,
-					"total_pages": 2,
-					"current_page": 1,
-					"page_size": 2
-				}
+				}, nil)
+
+				service.EXPECT().GetCustomer(gomock.Any(), customers.GetCustomerInput{CustomerID: "fakeID"}).
+					Return(customers.GetCustomerOutput{
+						ID:          "fakeID",
+						Name:        "John Doe",
+						Email:       "test@example.com",
+						Address:     "123 Main St",
+						City:        "New York",
+						PostalCode:  "10001",
+						CountryCode: "US",
+						CreatedAt:   now,
+						UpdatedAt:   now,
+					}, nil)
+			},
+			wantJSON: `{
+				"id": "fakeID",
+				"name": "John Doe",
+			    "email": "test@example.com",
+			    "address": "123 Main St",
+			    "city": "New York",
+			    "postal_code": "10001",
+			    "country_code": "US",
+				"created_at": "2025-01-01T00:00:00Z",
+				"updated_at": "2025-01-01T00:00:00Z"
 			}`,
 			wantStatus: http.StatusOK,
 		},
@@ -420,7 +368,8 @@ func TestHandler_GetCustomers(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			runCustomerHandlerTestCase(t, logger, http.MethodGet, "/v1.0/customers", tt, "")
+			getCustomerPath := fmt.Sprintf("/v1.0/customers/%s", tt.pathParams["customerID"])
+			runCustomerHandlerTestCase(t, logger, http.MethodGet, getCustomerPath, tt, tt.token)
 		})
 	}
 }
@@ -442,14 +391,17 @@ func runCustomerHandlerTestCase(
 	tt customerHandlerTestCase,
 	token string,
 ) {
-	// Create a new mock service
 	service := customersmocks.NewMockService(gomock.NewController(t))
+	authService := authmocks.NewMockService(gomock.NewController(t))
 	if tt.mocksSetup != nil {
-		tt.mocksSetup(service)
+		tt.mocksSetup(service, authService)
 	}
 
+	// Initialize the authentication middleware
+	authMiddleware := authentication.NewMiddleware(logger, authService)
+
 	// Initialize the handler
-	h := customers.NewHandler(logger, service)
+	h := customers.NewHandler(logger, service, authMiddleware)
 
 	// Initialize the Gin router and register the routes
 	router := gin.New()
