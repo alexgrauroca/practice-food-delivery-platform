@@ -2,6 +2,7 @@ package customers
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -21,6 +22,8 @@ const (
 	FieldEmail = "email"
 	// FieldActive represents the field name used to indicate the active status of a customer in the database.
 	FieldActive = "active"
+	// FieldID represents the field name used to store the unique ID of a customer in the database.
+	FieldID = "_id"
 )
 
 // Customer represents a user in the system with associated details such as email, name, and account activation status.
@@ -124,6 +127,26 @@ func (r *repository) PurgeCustomer(ctx context.Context, email string) error {
 }
 
 func (r *repository) GetCustomer(ctx context.Context, customerID string) (Customer, error) {
-	//TODO implement me
-	panic("implement me")
+	logger := r.logger.WithContext(ctx)
+	logger.Info("Getting customer", log.Field{Key: "customer_id", Value: customerID})
+
+	id, err := primitive.ObjectIDFromHex(customerID)
+	if err != nil {
+		logger.Warn("Invalid customer ID format", log.Field{Key: "customer_id", Value: customerID})
+		return Customer{}, ErrCustomerNotFound
+	}
+
+	var customer Customer
+	err = r.collection.FindOne(ctx, bson.M{FieldID: id}).Decode(&customer)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			logger.Warn("Customer not found", log.Field{Key: "customerID", Value: customerID})
+			return Customer{}, ErrCustomerNotFound
+		}
+		logger.Error("Failed to get customer", err)
+		return Customer{}, err
+	}
+
+	return customer, nil
+
 }
