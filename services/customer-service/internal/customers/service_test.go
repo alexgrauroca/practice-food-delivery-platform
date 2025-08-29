@@ -214,11 +214,13 @@ func TestService_RegisterCustomer(t *testing.T) {
 
 			repo := customersmocks.NewMockRepository(ctrl)
 			authcli := authmocks.NewMockClient(ctrl)
+			authctx := authmocks.NewMockContextReader(ctrl)
+
 			if tt.mocksSetup != nil {
 				tt.mocksSetup(repo, authcli)
 			}
 
-			service := customers.NewService(logger, repo, authcli)
+			service := customers.NewService(logger, repo, authcli, authctx)
 			got, err := service.RegisterCustomer(context.Background(), tt.input)
 
 			assert.ErrorIs(t, err, tt.wantErr)

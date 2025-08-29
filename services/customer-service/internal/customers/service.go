@@ -21,14 +21,16 @@ type service struct {
 	logger  log.Logger
 	repo    Repository
 	authcli authentication.Client
+	authctx authentication.ContextReader
 }
 
 // NewService creates a new instance of Service with the provided logger and repository dependencies.
-func NewService(logger log.Logger, repo Repository, authcli authentication.Client) Service {
+func NewService(logger log.Logger, repo Repository, authcli authentication.Client, authctx authentication.ContextReader) Service {
 	return &service{
 		logger:  logger,
 		repo:    repo,
 		authcli: authcli,
+		authctx: authctx,
 	}
 }
 
@@ -125,6 +127,10 @@ type GetCustomerOutput struct {
 }
 
 func (s *service) GetCustomer(ctx context.Context, input GetCustomerInput) (GetCustomerOutput, error) {
-	//TODO implement me
-	panic("implement me")
+	_, ok := s.authctx.GetSubject(ctx)
+	if !ok {
+		return GetCustomerOutput{}, authentication.ErrInvalidToken
+	}
+
+	return GetCustomerOutput{}, nil
 }

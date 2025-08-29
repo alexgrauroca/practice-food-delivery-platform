@@ -93,6 +93,12 @@ func (h *Handler) GetCustomer(c *gin.Context) {
 			c.JSON(http.StatusNotFound, newErrorResponse(CodeNotFound, MsgNotFound))
 			return
 		}
+		if errors.Is(err, ErrCustomerIDMismatch) {
+			logger.Warn("Customer ID mismatch with the token", log.Field{Key: "customerID", Value: customerID})
+			errResp := newErrorResponse(authentication.CodeForbiddenError, authentication.MessageForbiddenError)
+			c.JSON(http.StatusForbidden, errResp)
+			return
+		}
 		logger.Error("Failed to get customer", err)
 		c.JSON(http.StatusInternalServerError, newErrorResponse(CodeInternalError, MsgInternalError))
 		return
