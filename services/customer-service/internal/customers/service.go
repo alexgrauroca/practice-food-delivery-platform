@@ -141,5 +141,26 @@ func (s *service) GetCustomer(ctx context.Context, input GetCustomerInput) (GetC
 		return GetCustomerOutput{}, ErrCustomerIDMismatch
 	}
 
-	return GetCustomerOutput{}, nil
+	customer, err := s.repo.GetCustomer(ctx, input.CustomerID)
+	if err != nil {
+		if errors.Is(err, ErrCustomerNotFound) {
+			s.logger.Warn("customer not found", log.Field{Key: "customerID", Value: input.CustomerID})
+			return GetCustomerOutput{}, ErrCustomerNotFound
+		}
+
+		s.logger.Error("failed to get customer", err)
+		return GetCustomerOutput{}, err
+	}
+
+	return GetCustomerOutput{
+		ID:          customer.ID,
+		Email:       customer.Email,
+		Name:        customer.Name,
+		Address:     customer.Address,
+		City:        customer.City,
+		PostalCode:  customer.PostalCode,
+		CountryCode: customer.CountryCode,
+		CreatedAt:   customer.CreatedAt,
+		UpdatedAt:   customer.UpdatedAt,
+	}, nil
 }
