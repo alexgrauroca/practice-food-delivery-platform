@@ -6,10 +6,14 @@ import (
 
 // Internal errors
 var (
-	errInvalidToken      = errors.New("invalid token")
-	errTokenExpired      = errors.New("token expired")
-	errAuthHeaderMissing = errors.New("authorization header is missing")
-	errInvalidAuthHeader = errors.New("invalid authorization header format")
+	// ErrInvalidToken represents an error when the token's signature, claims, or format is invalid
+	ErrInvalidToken = errors.New("invalid token")
+	// ErrTokenExpired represents an error when the token has exceeded its expiration time
+	ErrTokenExpired = errors.New("token expired")
+	// ErrAuthHeaderMissing represents an error when the Authorization header is not present in the request
+	ErrAuthHeaderMissing = errors.New("authorization header is missing")
+	// ErrInvalidAuthHeader represents an error when the Authorization header format does not match "Bearer <token>"
+	ErrInvalidAuthHeader = errors.New("invalid authorization header format")
 )
 
 // HTTP errors

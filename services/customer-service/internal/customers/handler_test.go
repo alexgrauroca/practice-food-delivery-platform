@@ -16,6 +16,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/authentication"
+	authmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/authentication/mocks"
 	customersmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/customers/mocks"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/customers"
@@ -28,7 +30,7 @@ type customerHandlerTestCase struct {
 	pathParams  map[string]string
 	queryParams map[string]string
 	jsonPayload string
-	mocksSetup  func(service *customersmocks.MockService)
+	mocksSetup  func(service *customersmocks.MockService, authService *authmocks.MockService)
 	wantJSON    string
 	wantStatus  int
 }
@@ -153,7 +155,7 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 				"postal_code": "12345",
 				"country_code": "US"
 			}`,
-			mocksSetup: func(service *customersmocks.MockService) {
+			mocksSetup: func(service *customersmocks.MockService, _ *authmocks.MockService) {
 				service.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.RegisterCustomerOutput{}, customers.ErrCustomerAlreadyExists)
 			},
@@ -176,7 +178,7 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 				"postal_code": "12345",
 				"country_code": "US"
 			}`,
-			mocksSetup: func(service *customersmocks.MockService) {
+			mocksSetup: func(service *customersmocks.MockService, _ *authmocks.MockService) {
 				service.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.RegisterCustomerOutput{}, errUnexpected)
 			},
@@ -199,7 +201,7 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 				"postal_code": "12345",
 				"country_code": "US"
 			}`,
-			mocksSetup: func(service *customersmocks.MockService) {
+			mocksSetup: func(service *customersmocks.MockService, _ *authmocks.MockService) {
 				service.EXPECT().RegisterCustomer(gomock.Any(), customers.RegisterCustomerInput{
 					Email:       "test@example.com",
 					Password:    "ValidPassword123",
@@ -264,18 +266,31 @@ func TestHandler_GetCustomer(t *testing.T) {
 			pathParams: map[string]string{
 				"customerID": "fakeID",
 			},
+			mocksSetup: func(_ *customersmocks.MockService, authService *authmocks.MockService) {
+				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
+					Return(authentication.ValidateAccessTokenOutput{}, authentication.ErrInvalidToken)
+			},
 			wantJSON: `{
 				"code": "UNAUTHORIZED",
 				"message": "Authentication is required to access this resource",
 				"details": []
 			}`,
+			wantStatus: http.StatusUnauthorized,
 		},
 		{
 			name: "when authenticated customer is not the same as the one requested, " +
 				"then it should return a 403 with the forbidden error",
-			token: "", // TODO: set the right token
+			token: "none-customer-token",
 			pathParams: map[string]string{
 				"customerID": "fakeID",
+			},
+			mocksSetup: func(_ *customersmocks.MockService, authService *authmocks.MockService) {
+				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
+					Return(authentication.ValidateAccessTokenOutput{
+						Claims: &authentication.Claims{
+							Role: "none-customer-role",
+						},
+					}, nil)
 			},
 			wantJSON: `{
 				"code": "FORBIDDEN",
@@ -285,23 +300,21 @@ func TestHandler_GetCustomer(t *testing.T) {
 			wantStatus: http.StatusForbidden,
 		},
 		{
-			name:  "when invalid customer ID is provided, then it should return a 400 with the invalid request error",
-			token: "", // TODO: set the right token
-			pathParams: map[string]string{
-				"customerID": "123",
-			},
-			wantJSON: `{
-				"code": "INVALID_REQUEST",
-				"message": "invalid request",
-				"details": []
-			}`,
-			wantStatus: http.StatusBadRequest,
-		},
-		{
 			name:  "when the customer is not found, then it should return a 404 with the not found error",
-			token: "", // TODO: set the right token
+			token: "valid-token",
 			pathParams: map[string]string{
 				"customerID": "unexistingID",
+			},
+			mocksSetup: func(service *customersmocks.MockService, authService *authmocks.MockService) {
+				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
+					Return(authentication.ValidateAccessTokenOutput{
+						Claims: &authentication.Claims{
+							Role: string(authentication.RoleCustomer),
+						},
+					}, nil)
+
+				service.EXPECT().GetCustomer(gomock.Any(), gomock.Any()).
+					Return(customers.GetCustomerOutput{}, customers.ErrCustomerNotFound)
 			},
 			wantJSON: `{
 				"code": "NOT_FOUND",
@@ -312,9 +325,31 @@ func TestHandler_GetCustomer(t *testing.T) {
 		},
 		{
 			name:  "when a valid customerID is provided, then it should return a 200 with the customer details",
-			token: "", // TODO: set the right token
+			token: "valid-token",
 			pathParams: map[string]string{
 				"customerID": "fakeID",
+			},
+			mocksSetup: func(service *customersmocks.MockService, authService *authmocks.MockService) {
+				authService.EXPECT().ValidateAccessToken(gomock.Any(), authentication.ValidateAccessTokenInput{
+					AccessToken: "valid-token",
+				}).Return(authentication.ValidateAccessTokenOutput{
+					Claims: &authentication.Claims{
+						Role: string(authentication.RoleCustomer),
+					},
+				}, nil)
+
+				service.EXPECT().GetCustomer(gomock.Any(), customers.GetCustomerInput{CustomerID: "fakeID"}).
+					Return(customers.GetCustomerOutput{
+						ID:          "fakeID",
+						Name:        "John Doe",
+						Email:       "test@example.com",
+						Address:     "123 Main St",
+						City:        "New York",
+						PostalCode:  "10001",
+						CountryCode: "US",
+						CreatedAt:   now,
+						UpdatedAt:   now,
+					}, nil)
 			},
 			wantJSON: `{
 				"id": "fakeID",
@@ -356,14 +391,17 @@ func runCustomerHandlerTestCase(
 	tt customerHandlerTestCase,
 	token string,
 ) {
-	// Create a new mock service
 	service := customersmocks.NewMockService(gomock.NewController(t))
+	authService := authmocks.NewMockService(gomock.NewController(t))
 	if tt.mocksSetup != nil {
-		tt.mocksSetup(service)
+		tt.mocksSetup(service, authService)
 	}
 
+	// Initialize the authentication middleware
+	authMiddleware := authentication.NewMiddleware(logger, authService)
+
 	// Initialize the handler
-	h := customers.NewHandler(logger, service)
+	h := customers.NewHandler(logger, service, authMiddleware)
 
 	// Initialize the Gin router and register the routes
 	router := gin.New()

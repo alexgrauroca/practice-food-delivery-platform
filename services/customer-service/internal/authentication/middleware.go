@@ -91,7 +91,7 @@ func (m *middleware) validateToken(c *gin.Context) (*Claims, error) {
 func (m *middleware) handleAuthError(c *gin.Context, err error) {
 	code := CodeUnauthorizedError
 	msg := MessageUnauthorizedError
-	if errors.Is(err, errTokenExpired) {
+	if errors.Is(err, ErrTokenExpired) {
 		code = CodeForbiddenError
 		msg = MessageForbiddenError
 	}
@@ -102,11 +102,11 @@ func (m *middleware) handleAuthError(c *gin.Context, err error) {
 func extractBearerToken(c *gin.Context) (string, error) {
 	header := c.GetHeader(authHeader)
 	if header == "" {
-		return "", errAuthHeaderMissing
+		return "", ErrAuthHeaderMissing
 	}
 
 	if !strings.HasPrefix(header, bearerPrefix) {
-		return "", errInvalidAuthHeader
+		return "", ErrInvalidAuthHeader
 	}
 
 	return strings.TrimPrefix(header, bearerPrefix), nil

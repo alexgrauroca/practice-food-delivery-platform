@@ -14,6 +14,7 @@ import (
 //go:generate mockgen -destination=./mocks/service_mock.go -package=customers_mocks github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/customers Service
 type Service interface {
 	RegisterCustomer(ctx context.Context, input RegisterCustomerInput) (RegisterCustomerOutput, error)
+	GetCustomer(ctx context.Context, input GetCustomerInput) (GetCustomerOutput, error)
 }
 
 type service struct {
@@ -103,4 +104,27 @@ func (s *service) RegisterCustomer(ctx context.Context, input RegisterCustomerIn
 	}
 	logger.Info("customer registered successfully", log.Field{Key: "customerID", Value: customer.ID})
 	return output, nil
+}
+
+// GetCustomerInput represents the input parameters required for retrieving a customer.
+type GetCustomerInput struct {
+	CustomerID string
+}
+
+// GetCustomerOutput represents the output data containing customer details returned from GetCustomer operation.
+type GetCustomerOutput struct {
+	ID          string
+	Email       string
+	Name        string
+	Address     string
+	City        string
+	PostalCode  string
+	CountryCode string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+
+func (s *service) GetCustomer(ctx context.Context, input GetCustomerInput) (GetCustomerOutput, error) {
+	//TODO implement me
+	panic("implement me")
 }

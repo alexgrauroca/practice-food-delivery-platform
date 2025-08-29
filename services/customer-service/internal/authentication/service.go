@@ -30,7 +30,7 @@ type service struct {
 	secret []byte
 }
 
-// NewService creates a new authentication service instance.
+// NewService creates a new authentication service instance
 func NewService(logger log.Logger, cli Client, secret []byte) Service {
 	return &service{
 		logger: logger,
@@ -39,14 +39,14 @@ func NewService(logger log.Logger, cli Client, secret []byte) Service {
 	}
 }
 
-// RegisterCustomerInput TODO: implement me
+// RegisterCustomerInput represents the input data required to register a new customer
 type RegisterCustomerInput struct {
 	Email    string
 	Password string
 	Name     string
 }
 
-// RegisterCustomerOutput TODO: implement me
+// RegisterCustomerOutput represents the output data returned after successfully registering a customer
 type RegisterCustomerOutput struct {
 	ID        string
 	Email     string
@@ -86,12 +86,12 @@ func (s service) ValidateAccessToken(
 	}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Name}))
 
 	if err != nil {
-		return ValidateAccessTokenOutput{}, errInvalidToken
+		return ValidateAccessTokenOutput{}, ErrInvalidToken
 	}
 
 	claims, ok := token.Claims.(*Claims)
 	if !ok || !token.Valid {
-		return ValidateAccessTokenOutput{}, errInvalidToken
+		return ValidateAccessTokenOutput{}, ErrInvalidToken
 	}
 
 	return ValidateAccessTokenOutput{Claims: claims}, nil
