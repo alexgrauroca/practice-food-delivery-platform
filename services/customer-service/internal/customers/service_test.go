@@ -26,7 +26,7 @@ var (
 type customersServiceTestCase[I, W any] struct {
 	name       string
 	input      I
-	mocksSetup func(repo *customersmocks.MockRepository, authcli *authmocks.MockClient)
+	mocksSetup func(repo *customersmocks.MockRepository, authcli *authmocks.MockClient, authctx *authmocks.MockContextReader)
 	want       W
 	wantErr    error
 }
@@ -48,7 +48,11 @@ func TestService_RegisterCustomer(t *testing.T) {
 				PostalCode:  "12345",
 				CountryCode: "US",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository, _ *authmocks.MockClient) {
+			mocksSetup: func(
+				repo *customersmocks.MockRepository,
+				_ *authmocks.MockClient,
+				_ *authmocks.MockContextReader,
+			) {
 				repo.EXPECT().CreateCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, customers.ErrCustomerAlreadyExists)
 			},
@@ -66,7 +70,11 @@ func TestService_RegisterCustomer(t *testing.T) {
 				PostalCode:  "12345",
 				CountryCode: "US",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository, _ *authmocks.MockClient) {
+			mocksSetup: func(
+				repo *customersmocks.MockRepository,
+				_ *authmocks.MockClient,
+				_ *authmocks.MockContextReader,
+			) {
 				repo.EXPECT().CreateCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, errRepo)
 			},
@@ -85,7 +93,11 @@ func TestService_RegisterCustomer(t *testing.T) {
 				PostalCode:  "12345",
 				CountryCode: "US",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository, authcli *authmocks.MockClient) {
+			mocksSetup: func(
+				repo *customersmocks.MockRepository,
+				authcli *authmocks.MockClient,
+				_ *authmocks.MockContextReader,
+			) {
 				// The returned customer is not relevant for this case
 				repo.EXPECT().CreateCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, nil)
@@ -110,7 +122,11 @@ func TestService_RegisterCustomer(t *testing.T) {
 				PostalCode:  "12345",
 				CountryCode: "US",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository, authcli *authmocks.MockClient) {
+			mocksSetup: func(
+				repo *customersmocks.MockRepository,
+				authcli *authmocks.MockClient,
+				_ *authmocks.MockContextReader,
+			) {
 				// The returned customer is not relevant for this case
 				repo.EXPECT().CreateCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, nil)
@@ -135,7 +151,11 @@ func TestService_RegisterCustomer(t *testing.T) {
 				PostalCode:  "12345",
 				CountryCode: "US",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository, authcli *authmocks.MockClient) {
+			mocksSetup: func(
+				repo *customersmocks.MockRepository,
+				authcli *authmocks.MockClient,
+				_ *authmocks.MockContextReader,
+			) {
 				// The returned customer is not relevant for this case
 				repo.EXPECT().CreateCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, nil)
@@ -159,7 +179,11 @@ func TestService_RegisterCustomer(t *testing.T) {
 				PostalCode:  "12345",
 				CountryCode: "US",
 			},
-			mocksSetup: func(repo *customersmocks.MockRepository, authcli *authmocks.MockClient) {
+			mocksSetup: func(
+				repo *customersmocks.MockRepository,
+				authcli *authmocks.MockClient,
+				_ *authmocks.MockContextReader,
+			) {
 				repo.EXPECT().CreateCustomer(gomock.Any(), customers.CreateCustomerParams{
 					Email:       "test@example.com",
 					Name:        "John Doe",
@@ -214,12 +238,139 @@ func TestService_RegisterCustomer(t *testing.T) {
 
 			repo := customersmocks.NewMockRepository(ctrl)
 			authcli := authmocks.NewMockClient(ctrl)
+			authctx := authmocks.NewMockContextReader(ctrl)
+
 			if tt.mocksSetup != nil {
-				tt.mocksSetup(repo, authcli)
+				tt.mocksSetup(repo, authcli, authctx)
 			}
 
-			service := customers.NewService(logger, repo, authcli)
+			service := customers.NewService(logger, repo, authcli, authctx)
 			got, err := service.RegisterCustomer(context.Background(), tt.input)
+
+			assert.ErrorIs(t, err, tt.wantErr)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestService_GetCustomer(t *testing.T) {
+	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	logger, _ := log.NewTest()
+
+	tests := []customersServiceTestCase[customers.GetCustomerInput, customers.GetCustomerOutput]{
+		{
+			name: "when there is an unexpected error when getting the auth subject, " +
+				"then it should return an invalid token error",
+			input: customers.GetCustomerInput{},
+			mocksSetup: func(
+				_ *customersmocks.MockRepository,
+				_ *authmocks.MockClient,
+				authctx *authmocks.MockContextReader,
+			) {
+				authctx.EXPECT().GetSubject(gomock.Any()).Return("", false)
+			},
+			want:    customers.GetCustomerOutput{},
+			wantErr: authentication.ErrInvalidToken,
+		},
+		{
+			name: "when the authenticated customer id is different than the requested customer id, " +
+				"then it should return a customer id mismatch error",
+			input: customers.GetCustomerInput{CustomerID: "fake-id"},
+			mocksSetup: func(
+				_ *customersmocks.MockRepository,
+				_ *authmocks.MockClient,
+				authctx *authmocks.MockContextReader,
+			) {
+				authctx.EXPECT().GetSubject(gomock.Any()).Return("another-fake-id", true)
+			},
+			want:    customers.GetCustomerOutput{},
+			wantErr: customers.ErrCustomerIDMismatch,
+		},
+		{
+			name:  "when there is an unexpected error when getting the customer, then it should propagate the error",
+			input: customers.GetCustomerInput{CustomerID: "fake-id"},
+			mocksSetup: func(
+				repo *customersmocks.MockRepository,
+				_ *authmocks.MockClient,
+				authctx *authmocks.MockContextReader,
+			) {
+				authctx.EXPECT().GetSubject(gomock.Any()).Return("fake-id", true)
+
+				repo.EXPECT().GetCustomer(gomock.Any(), gomock.Any()).Return(customers.Customer{}, errRepo)
+			},
+			want:    customers.GetCustomerOutput{},
+			wantErr: errRepo,
+		},
+		{
+			name:  "when the customer is not found, then it should return a customer not found error",
+			input: customers.GetCustomerInput{CustomerID: "fake-id"},
+			mocksSetup: func(
+				repo *customersmocks.MockRepository,
+				_ *authmocks.MockClient,
+				authctx *authmocks.MockContextReader,
+			) {
+				authctx.EXPECT().GetSubject(gomock.Any()).Return("fake-id", true)
+
+				repo.EXPECT().GetCustomer(gomock.Any(), gomock.Any()).
+					Return(customers.Customer{}, customers.ErrCustomerNotFound)
+			},
+			want:    customers.GetCustomerOutput{},
+			wantErr: customers.ErrCustomerNotFound,
+		},
+		{
+			name:  "when the customer is found, then it should return the customer data",
+			input: customers.GetCustomerInput{CustomerID: "fake-id"},
+			mocksSetup: func(
+				repo *customersmocks.MockRepository,
+				_ *authmocks.MockClient,
+				authctx *authmocks.MockContextReader,
+			) {
+				authctx.EXPECT().GetSubject(gomock.Any()).Return("fake-id", true)
+
+				repo.EXPECT().GetCustomer(gomock.Any(), "fake-id").
+					Return(customers.Customer{
+						ID:          "fake-id",
+						Email:       "test@example.com",
+						Name:        "John Doe",
+						Active:      true,
+						Address:     "123 Main St",
+						City:        "New York",
+						PostalCode:  "10001",
+						CountryCode: "US",
+						CreatedAt:   now,
+						UpdatedAt:   now,
+					}, nil)
+			},
+			want: customers.GetCustomerOutput{
+				ID:          "fake-id",
+				Email:       "test@example.com",
+				Name:        "John Doe",
+				Address:     "123 Main St",
+				City:        "New York",
+				PostalCode:  "10001",
+				CountryCode: "US",
+				CreatedAt:   now,
+				UpdatedAt:   now,
+			},
+			wantErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			repo := customersmocks.NewMockRepository(ctrl)
+			authcli := authmocks.NewMockClient(ctrl)
+			authctx := authmocks.NewMockContextReader(ctrl)
+
+			if tt.mocksSetup != nil {
+				tt.mocksSetup(repo, authcli, authctx)
+			}
+
+			service := customers.NewService(logger, repo, authcli, authctx)
+			got, err := service.GetCustomer(context.Background(), tt.input)
 
 			assert.ErrorIs(t, err, tt.wantErr)
 			assert.Equal(t, tt.want, got)

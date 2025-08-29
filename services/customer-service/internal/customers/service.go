@@ -21,14 +21,16 @@ type service struct {
 	logger  log.Logger
 	repo    Repository
 	authcli authentication.Client
+	authctx authentication.ContextReader
 }
 
 // NewService creates a new instance of Service with the provided logger and repository dependencies.
-func NewService(logger log.Logger, repo Repository, authcli authentication.Client) Service {
+func NewService(logger log.Logger, repo Repository, authcli authentication.Client, authctx authentication.ContextReader) Service {
 	return &service{
 		logger:  logger,
 		repo:    repo,
 		authcli: authcli,
+		authctx: authctx,
 	}
 }
 
@@ -125,6 +127,40 @@ type GetCustomerOutput struct {
 }
 
 func (s *service) GetCustomer(ctx context.Context, input GetCustomerInput) (GetCustomerOutput, error) {
-	//TODO implement me
-	panic("implement me")
+	authCustomerID, ok := s.authctx.GetSubject(ctx)
+	if !ok {
+		s.logger.Warn("authentication context not found")
+		return GetCustomerOutput{}, authentication.ErrInvalidToken
+	}
+	if authCustomerID != input.CustomerID {
+		s.logger.Warn(
+			"customer ID mismatch with the token",
+			log.Field{Key: "customerID", Value: input.CustomerID},
+			log.Field{Key: "authCustomerID", Value: authCustomerID},
+		)
+		return GetCustomerOutput{}, ErrCustomerIDMismatch
+	}
+
+	customer, err := s.repo.GetCustomer(ctx, input.CustomerID)
+	if err != nil {
+		if errors.Is(err, ErrCustomerNotFound) {
+			s.logger.Warn("customer not found", log.Field{Key: "customerID", Value: input.CustomerID})
+			return GetCustomerOutput{}, ErrCustomerNotFound
+		}
+
+		s.logger.Error("failed to get customer", err)
+		return GetCustomerOutput{}, err
+	}
+
+	return GetCustomerOutput{
+		ID:          customer.ID,
+		Email:       customer.Email,
+		Name:        customer.Name,
+		Address:     customer.Address,
+		City:        customer.City,
+		PostalCode:  customer.PostalCode,
+		CountryCode: customer.CountryCode,
+		CreatedAt:   customer.CreatedAt,
+		UpdatedAt:   customer.UpdatedAt,
+	}, nil
 }

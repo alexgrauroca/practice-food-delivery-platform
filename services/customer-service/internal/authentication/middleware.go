@@ -1,7 +1,6 @@
 package authentication
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"strings"
@@ -58,19 +57,6 @@ func (m *middleware) RequireCustomer() gin.HandlerFunc {
 		c.Set(subjectCtxKey, claims.Subject)
 		c.Next()
 	}
-}
-
-// GetSubject retrieves the token subject from the given context.
-// It returns the subject value and a boolean indicating whether the subject was found
-// and successfully type asserted to string.
-func GetSubject(ctx context.Context) (string, bool) {
-	v := ctx.Value(subjectCtxKey)
-	if v == nil {
-		return "", false
-	}
-	subject, ok := v.(string)
-
-	return subject, ok
 }
 
 func (m *middleware) validateToken(c *gin.Context) (*Claims, error) {

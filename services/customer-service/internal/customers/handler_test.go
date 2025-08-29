@@ -278,8 +278,7 @@ func TestHandler_GetCustomer(t *testing.T) {
 			wantStatus: http.StatusUnauthorized,
 		},
 		{
-			name: "when authenticated customer is not the same as the one requested, " +
-				"then it should return a 403 with the forbidden error",
+			name:  "when authenticated user is not a customer, then it should return a 403 with the forbidden error",
 			token: "none-customer-token",
 			pathParams: map[string]string{
 				"customerID": "fakeID",
@@ -291,6 +290,31 @@ func TestHandler_GetCustomer(t *testing.T) {
 							Role: "none-customer-role",
 						},
 					}, nil)
+			},
+			wantJSON: `{
+				"code": "FORBIDDEN",
+				"message": "You do not have permission to access this resource",
+				"details": []
+			}`,
+			wantStatus: http.StatusForbidden,
+		},
+		{
+			name: "when authenticated customer is not the same as the one requested, " +
+				"then it should return a 403 with the forbidden error",
+			token: "none-customer-token",
+			pathParams: map[string]string{
+				"customerID": "fakeID",
+			},
+			mocksSetup: func(service *customersmocks.MockService, authService *authmocks.MockService) {
+				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
+					Return(authentication.ValidateAccessTokenOutput{
+						Claims: &authentication.Claims{
+							Role: string(authentication.RoleCustomer),
+						},
+					}, nil)
+
+				service.EXPECT().GetCustomer(gomock.Any(), gomock.Any()).
+					Return(customers.GetCustomerOutput{}, customers.ErrCustomerIDMismatch)
 			},
 			wantJSON: `{
 				"code": "FORBIDDEN",

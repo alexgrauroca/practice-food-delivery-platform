@@ -44,6 +44,7 @@ type Customer struct {
 type Repository interface {
 	CreateCustomer(ctx context.Context, params CreateCustomerParams) (Customer, error)
 	PurgeCustomer(ctx context.Context, email string) error
+	GetCustomer(ctx context.Context, customerID string) (Customer, error)
 }
 
 type repository struct {
@@ -120,4 +121,9 @@ func (r *repository) PurgeCustomer(ctx context.Context, email string) error {
 
 	logger.Info("Customer purged successfully", log.Field{Key: "email", Value: email})
 	return nil
+}
+
+func (r *repository) GetCustomer(ctx context.Context, customerID string) (Customer, error) {
+	//TODO implement me
+	panic("implement me")
 }

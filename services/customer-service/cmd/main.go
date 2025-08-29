@@ -50,8 +50,8 @@ func main() {
 	db := client.Database("customer_service")
 
 	// Initialize features
-	authcli, authMiddleware := initAuthenticationFeature(logger)
-	initCustomersFeature(logger, db, router, authcli, authMiddleware)
+	authcli, authMiddleware, authctx := initAuthenticationFeature(logger)
+	initCustomersFeature(logger, db, router, authcli, authMiddleware, authctx)
 
 	logger.Info("Starting http server")
 	// Start the server
@@ -60,13 +60,18 @@ func main() {
 	}
 }
 
-func initAuthenticationFeature(logger customlog.Logger) (authentication.Client, authentication.Middleware) {
-	authCli := authentication.NewClient(logger, authentication.Config{Debug: false})
+func initAuthenticationFeature(logger customlog.Logger) (
+	authentication.Client,
+	authentication.Middleware,
+	authentication.ContextReader,
+) {
+	authcli := authentication.NewClient(logger, authentication.Config{Debug: false})
 	//TODO configure secret by env vars
-	authService := authentication.NewService(logger, authCli, []byte("a-string-secret-at-least-256-bits-long"))
+	authService := authentication.NewService(logger, authcli, []byte("a-string-secret-at-least-256-bits-long"))
 	authMiddleware := authentication.NewMiddleware(logger, authService)
+	authctx := authentication.NewContextReader()
 
-	return authCli, authMiddleware
+	return authcli, authMiddleware, authctx
 }
 
 func initCustomersFeature(
@@ -75,12 +80,13 @@ func initCustomersFeature(
 	router *gin.Engine,
 	authcli authentication.Client,
 	authMiddleware authentication.Middleware,
+	authctx authentication.ContextReader,
 ) {
 	// Initialize the customer's repository
 	repo := customers.NewRepository(logger, db, clock.RealClock{})
 
 	// Initialize the customer's service
-	service := customers.NewService(logger, repo, authcli)
+	service := customers.NewService(logger, repo, authcli, authctx)
 
 	// Initialize the customer's handler and register routes
 	handler := customers.NewHandler(logger, service, authMiddleware)
