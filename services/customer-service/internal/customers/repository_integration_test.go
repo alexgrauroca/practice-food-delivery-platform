@@ -191,7 +191,7 @@ func TestRepository_PurgeCustomer_UnexpectedFailure(t *testing.T) {
 func TestRepository_GetCustomer(t *testing.T) {
 	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 	logger, _ := log.NewTest()
-	customerID := primitive.NewObjectIDFromTimestamp(now)
+	customerID := primitive.NewObjectIDFromTimestamp(now).Hex()
 
 	// Params is just string as id. We don't need want, so it will be any type
 	tests := []customersRepositoryTestCase[string, customers.Customer]{
@@ -210,14 +210,14 @@ func TestRepository_GetCustomer(t *testing.T) {
 					UpdatedAt: now,
 				})
 			},
-			params:  customerID.Hex(),
+			params:  customerID,
 			wantErr: customers.ErrCustomerNotFound,
 		},
 		{
 			name: "when the customer exist, then it should return the customer",
 			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
 				mongodb.InsertTestDocument(t, coll, customers.Customer{
-					ID:          customerID.Hex(),
+					ID:          customerID,
 					Email:       "test@example.com",
 					Name:        "John Doe",
 					Active:      true,
@@ -229,9 +229,9 @@ func TestRepository_GetCustomer(t *testing.T) {
 					UpdatedAt:   now,
 				})
 			},
-			params: customerID.Hex(),
+			params: customerID,
 			want: customers.Customer{
-				ID:          customerID.Hex(),
+				ID:          customerID,
 				Email:       "test@example.com",
 				Name:        "John Doe",
 				Active:      true,
