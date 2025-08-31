@@ -1,5 +1,6 @@
 //go:build e2e || customer
 
+//nolint:revive
 package customer_management_test
 
 import (
