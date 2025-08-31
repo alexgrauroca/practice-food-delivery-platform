@@ -9,6 +9,7 @@ const (
 
 // TestCustomer represents a test customer with email, password, and name information.
 type TestCustomer struct {
+	ID          string
 	Email       string
 	Password    string
 	Name        string
