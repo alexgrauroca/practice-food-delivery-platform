@@ -213,7 +213,7 @@ func (s *service) generateTokenPair(ctx context.Context, customer Customer) (Tok
 	}
 
 	refreshToken, err := s.refreshService.Generate(ctx, refresh.GenerateTokenInput{
-		UserID: customer.ID,
+		UserID: customer.CustomerID,
 		Role:   DefaultTokenRole,
 	})
 	if err != nil {
