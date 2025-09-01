@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**CustomerID** | **string** | Unique customer identifier | 
+**CustomerId** | **string** | Unique customer identifier | 
 **Email** | **string** | Customer&#39;s email address | 
 **Password** | **string** | Password must be at least 8 characters long | 
 **Name** | **string** | Customer&#39;s full name | 
@@ -32,20 +32,20 @@ but it doesn't guarantee that properties required by API are set
 
 `func (o *RegisterCustomerRequest) GetCustomerId() string`
 
-GetCustomerId returns the CustomerID field if non-nil, zero value otherwise.
+GetCustomerId returns the CustomerId field if non-nil, zero value otherwise.
 
 ### GetCustomerIdOk
 
 `func (o *RegisterCustomerRequest) GetCustomerIdOk() (*string, bool)`
 
-GetCustomerIdOk returns a tuple with the CustomerID field if it's non-nil, zero value otherwise
+GetCustomerIdOk returns a tuple with the CustomerId field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetCustomerId
 
 `func (o *RegisterCustomerRequest) SetCustomerId(v string)`
 
-SetCustomerId sets CustomerID field to given value.
+SetCustomerId sets CustomerId field to given value.
 
 
 ### GetEmail
