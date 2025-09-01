@@ -176,7 +176,7 @@ func (s *service) RefreshCustomer(ctx context.Context, input RefreshCustomerInpu
 		return RefreshCustomerOutput{}, ErrTokenMismatch
 	}
 
-	tokenPair, err := s.generateTokenPair(ctx, Customer{ID: refreshToken.UserID})
+	tokenPair, err := s.generateTokenPair(ctx, Customer{CustomerID: refreshToken.UserID})
 	if err != nil {
 		logger.Error("failed to generate token pair", err)
 		return RefreshCustomerOutput{}, err

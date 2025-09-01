@@ -261,13 +261,14 @@ func TestService_LoginCustomer(t *testing.T) {
 
 				repo.EXPECT().FindByEmail(gomock.Any(), "test@example.com").
 					Return(customers.Customer{
-						ID:        "fake-id",
-						Email:     "test@example.com",
-						Name:      "John Doe",
-						Password:  hashedPassword, // This should be a hashed password
-						CreatedAt: now,
-						UpdatedAt: now,
-						Active:    true,
+						ID:         "fake-customer-id",
+						CustomerID: "fake-id",
+						Email:      "test@example.com",
+						Name:       "John Doe",
+						Password:   hashedPassword, // This should be a hashed password
+						CreatedAt:  now,
+						UpdatedAt:  now,
+						Active:     true,
 					}, nil)
 
 				jwtService.EXPECT().GenerateToken(gomock.Any(), gomock.Any()).
