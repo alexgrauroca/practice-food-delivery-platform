@@ -203,7 +203,7 @@ type TokenPair struct {
 func (s *service) generateTokenPair(ctx context.Context, customer Customer) (TokenPair, error) {
 	logger := s.logger.WithContext(ctx)
 
-	accessToken, err := s.jwtService.GenerateToken(customer.ID, jwt.Config{
+	accessToken, err := s.jwtService.GenerateToken(customer.CustomerID, jwt.Config{
 		Expiration: DefaultTokenExpiration,
 		Role:       DefaultTokenRole,
 	})
