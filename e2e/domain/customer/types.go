@@ -22,11 +22,11 @@ type TestCustomer struct {
 
 // RegisterRequest represents the payload required to register a new customer, containing personal details and credentials.
 type RegisterRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Name     string `json:"name"`
-	Address  string `json:"address"`
-	City     string `json:"city"`
+	Email       string `json:"email"`
+	Password    string `json:"password"`
+	Name        string `json:"name"`
+	Address     string `json:"address"`
+	City        string `json:"city"`
 	PostalCode  string `json:"postal_code"`
 	CountryCode string `json:"country_code"`
 }
@@ -37,4 +37,20 @@ type RegisterResponse struct {
 	Email     string `json:"email"`
 	Name      string `json:"name"`
 	CreatedAt string `json:"created_at"`
+}
+
+type GetCustomerRequest struct {
+	ID string `path:"customerID"`
+}
+
+type GetCustomerResponse struct {
+	ID          string `json:"id"`
+	Email       string `json:"email"`
+	Name        string `json:"name"`
+	Address     string `json:"address"`
+	City        string `json:"city"`
+	PostalCode  string `json:"postal_code"`
+	CountryCode string `json:"country_code"`
+	CreatedAt   string `json:"created_at"`
+	UpdatedAt   string `json:"updated_at"`
 }

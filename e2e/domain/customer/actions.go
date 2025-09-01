@@ -16,7 +16,7 @@ func (c *TestCustomer) Register() (*RegisterResponse, error) {
 		PostalCode:  c.PostalCode,
 		CountryCode: c.CountryCode,
 	}
-	res, err := api.DoPost[RegisterRequest, RegisterResponse](RegisterEndpoint, req)
+	res, err := api.DoPost[RegisterRequest, RegisterResponse](RegisterEndpoint, req, nil)
 	if err == nil {
 		if res == nil {
 			err = ErrUnexpectedResponse
@@ -34,7 +34,7 @@ func (c *TestCustomer) Login() (*authentication.LoginResponse, error) {
 		Email:    c.Email,
 		Password: c.Password,
 	}
-	res, err := api.DoPost[authentication.LoginRequest, authentication.LoginResponse](LoginEndpoint, req)
+	res, err := api.DoPost[authentication.LoginRequest, authentication.LoginResponse](LoginEndpoint, req, nil)
 	if err == nil {
 		if res == nil {
 			err = ErrUnexpectedResponse
@@ -53,7 +53,7 @@ func (c *TestCustomer) Refresh() (*authentication.RefreshResponse, error) {
 		RefreshToken: c.Auth.RefreshToken,
 	}
 
-	return api.DoPost[authentication.RefreshRequest, authentication.RefreshResponse](RefreshEndpoint, req)
+	return api.DoPost[authentication.RefreshRequest, authentication.RefreshResponse](RefreshEndpoint, req, nil)
 }
 
 // SetAuth sets the authentication token for the TestCustomer instance.
@@ -71,4 +71,12 @@ func (c *TestCustomer) RegisterAndLogin() error {
 		return err
 	}
 	return nil
+}
+
+// Get retrieves the customer details for the TestCustomer instance from the customer's service.
+func (c *TestCustomer) Get() (*GetCustomerResponse, error) {
+	req := GetCustomerRequest{ID: c.ID}
+	config := &api.RequestConfig{BearerToken: &c.Auth.AccessToken}
+
+	return api.DoGet[GetCustomerRequest, GetCustomerResponse](GetCustomerEndpoint, req, config)
 }

@@ -233,8 +233,14 @@ components:
       example:
         password: strongpassword123
         name: John Doe
+        customer_id: 507f1f77bcf86cd799439011
         email: user@example.com
       properties:
+        customer_id:
+          description: Unique customer identifier
+          example: 507f1f77bcf86cd799439011
+          pattern: "^[0-9a-fA-F]{24}$"
+          type: string
         email:
           description: Customer's email address
           example: user@example.com
@@ -255,6 +261,7 @@ components:
           minLength: 1
           type: string
       required:
+      - customer_id
       - email
       - name
       - password
@@ -267,7 +274,7 @@ components:
         email: user@example.com
       properties:
         id:
-          description: Unique customer identifier
+          description: Unique customer identifier in the auth service
           example: 507f1f77bcf86cd799439011
           pattern: "^[0-9a-fA-F]{24}$"
           type: string

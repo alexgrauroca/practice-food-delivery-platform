@@ -1,7 +1,7 @@
 /*
 Authentication Service API
 
-API documentation for the authentication service.  This service provides endpoints for customer and staff registration and authentication. 
+API documentation for the authentication service.  This service provides endpoints for customer and staff registration and authentication.
 
 API version: 1.0.0
 */
@@ -11,8 +11,8 @@ API version: 1.0.0
 package authclient
 
 import (
-	"encoding/json"
 	"bytes"
+	"encoding/json"
 	"fmt"
 )
 
@@ -21,6 +21,8 @@ var _ MappedNullable = &RegisterCustomerRequest{}
 
 // RegisterCustomerRequest struct for RegisterCustomerRequest
 type RegisterCustomerRequest struct {
+	// Unique customer identifier
+	CustomerId string `json:"customer_id" validate:"regexp=^[0-9a-fA-F]{24}$"`
 	// Customer's email address
 	Email string `json:"email" validate:"regexp=^[\\\\w\\\\.-]+@[\\\\w\\\\.-]+\\\\.\\\\w{2,}$"`
 	// Password must be at least 8 characters long
@@ -35,8 +37,9 @@ type _RegisterCustomerRequest RegisterCustomerRequest
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewRegisterCustomerRequest(email string, password string, name string) *RegisterCustomerRequest {
+func NewRegisterCustomerRequest(customerId string, email string, password string, name string) *RegisterCustomerRequest {
 	this := RegisterCustomerRequest{}
+	this.CustomerId = customerId
 	this.Email = email
 	this.Password = password
 	this.Name = name
@@ -49,6 +52,30 @@ func NewRegisterCustomerRequest(email string, password string, name string) *Reg
 func NewRegisterCustomerRequestWithDefaults() *RegisterCustomerRequest {
 	this := RegisterCustomerRequest{}
 	return &this
+}
+
+// GetCustomerId returns the CustomerId field value
+func (o *RegisterCustomerRequest) GetCustomerId() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.CustomerId
+}
+
+// GetCustomerIdOk returns a tuple with the CustomerId field value
+// and a boolean to check if the value has been set.
+func (o *RegisterCustomerRequest) GetCustomerIdOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.CustomerId, true
+}
+
+// SetCustomerId sets field value
+func (o *RegisterCustomerRequest) SetCustomerId(v string) {
+	o.CustomerId = v
 }
 
 // GetEmail returns the Email field value
@@ -124,7 +151,7 @@ func (o *RegisterCustomerRequest) SetName(v string) {
 }
 
 func (o RegisterCustomerRequest) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -133,6 +160,7 @@ func (o RegisterCustomerRequest) MarshalJSON() ([]byte, error) {
 
 func (o RegisterCustomerRequest) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
+	toSerialize["customer_id"] = o.CustomerId
 	toSerialize["email"] = o.Email
 	toSerialize["password"] = o.Password
 	toSerialize["name"] = o.Name
@@ -144,6 +172,7 @@ func (o *RegisterCustomerRequest) UnmarshalJSON(data []byte) (err error) {
 	// by unmarshalling the object into a generic map with string keys and checking
 	// that every required field exists as a key in the generic map.
 	requiredProperties := []string{
+		"customer_id",
 		"email",
 		"password",
 		"name",
@@ -154,10 +183,10 @@ func (o *RegisterCustomerRequest) UnmarshalJSON(data []byte) (err error) {
 	err = json.Unmarshal(data, &allProperties)
 
 	if err != nil {
-		return err;
+		return err
 	}
 
-	for _, requiredProperty := range(requiredProperties) {
+	for _, requiredProperty := range requiredProperties {
 		if _, exists := allProperties[requiredProperty]; !exists {
 			return fmt.Errorf("no value given for required property %v", requiredProperty)
 		}
@@ -213,5 +242,3 @@ func (v *NullableRegisterCustomerRequest) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

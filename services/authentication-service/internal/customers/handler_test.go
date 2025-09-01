@@ -53,6 +53,7 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 				"code": "VALIDATION_ERROR",
 				"message": "validation failed",
 				"details": [
+					"customer_id is required",
 					"email is required",
 					"password is required",
 					"name is required"
@@ -61,8 +62,13 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 			wantStatus: http.StatusBadRequest,
 		},
 		{
-			name:        "when invalid email is provided, then it should return a 400 with the email validation error",
-			jsonPayload: `{"email": "invalid-email", "name": "John Doe", "password": "ValidPassword123"}`,
+			name: "when invalid email is provided, then it should return a 400 with the email validation error",
+			jsonPayload: `{
+				"customer_id": "fake-customer-id",
+				"email": "invalid-email",
+				"name": "John Doe", 
+				"password": "ValidPassword123"
+			}`,
 			wantJSON: `{
 				"code": "VALIDATION_ERROR",
 				"message": "validation failed",
@@ -73,8 +79,13 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 			wantStatus: http.StatusBadRequest,
 		},
 		{
-			name:        "when invalid password is provided, then it should return a 400 with the pwd validation error",
-			jsonPayload: `{"email":"test@example.com", "name": "John Doe", "password": "short"}`,
+			name: "when invalid password is provided, then it should return a 400 with the pwd validation error",
+			jsonPayload: `{
+				"customer_id": "fake-customer-id",
+				"email": "test@example.com",
+				"name": "John Doe", 
+				"password": "short"
+			}`,
 			wantJSON: `{
 				"code": "VALIDATION_ERROR",
 				"message": "validation failed",
@@ -85,8 +96,12 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 			wantStatus: http.StatusBadRequest,
 		},
 		{
-			name:        "when no name is provided, then it should return a 400 with the name validation error",
-			jsonPayload: `{"email":"test@example.com", "password": "ValidPassword123"}`,
+			name: "when no name is provided, then it should return a 400 with the name validation error",
+			jsonPayload: `{
+				"customer_id": "fake-customer-id",
+				"email": "test@example.com",
+				"password": "ValidPassword123"
+			}`,
 			wantJSON: `{
 				"code":"VALIDATION_ERROR",
 				"message":"validation failed",
@@ -97,8 +112,12 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 			wantStatus: http.StatusBadRequest,
 		},
 		{
-			name:        "when no email is provided, then it should return a 400 with the email validation error",
-			jsonPayload: `{"name": "John Doe", "password": "ValidPassword123"}`,
+			name: "when no email is provided, then it should return a 400 with the email validation error",
+			jsonPayload: `{
+				"customer_id": "fake-customer-id",
+				"name": "John Doe", 
+				"password": "ValidPassword123"
+			}`,
 			wantJSON: `{
 				"code":"VALIDATION_ERROR",
 				"message":"validation failed",
@@ -109,8 +128,12 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 			wantStatus: http.StatusBadRequest,
 		},
 		{
-			name:        "when no password is provided, then it should return a 400 with the email validation error",
-			jsonPayload: `{"email": "test@example.com", "name": "John Doe"}`,
+			name: "when no password is provided, then it should return a 400 with the email validation error",
+			jsonPayload: `{
+				"customer_id": "fake-customer-id",
+				"email": "test@example.com",
+				"name": "John Doe"
+			}`,
 			wantJSON: `{
 				"code":"VALIDATION_ERROR",
 				"message":"validation failed",
@@ -121,8 +144,13 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 			wantStatus: http.StatusBadRequest,
 		},
 		{
-			name:        "when the customer already exists, then it should return a 409 with the customer already exists error",
-			jsonPayload: `{"email": "test@example.com", "name": "John Doe", "password": "ValidPassword123"}`,
+			name: "when the customer already exists, then it should return a 409 with the customer already exists error",
+			jsonPayload: `{
+				"customer_id": "fake-customer-id",
+				"email": "test@example.com",
+				"name": "John Doe", 
+				"password": "ValidPassword123"
+			}`,
 			mocksSetup: func(service *customersmocks.MockService) {
 				service.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.RegisterCustomerOutput{}, customers.ErrCustomerAlreadyExists)
@@ -135,8 +163,13 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 			wantStatus: http.StatusConflict,
 		},
 		{
-			name:        "when unexpected error when registering the customer, then it should return a 500 with the internal error",
-			jsonPayload: `{"email": "test@example.com", "name": "John Doe", "password": "ValidPassword123"}`,
+			name: "when unexpected error when registering the customer, then it should return a 500 with the internal error",
+			jsonPayload: `{
+				"customer_id": "fake-customer-id",
+				"email": "test@example.com",
+				"name": "John Doe", 
+				"password": "ValidPassword123"
+			}`,
 			mocksSetup: func(service *customersmocks.MockService) {
 				service.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.RegisterCustomerOutput{}, errUnexpected)
@@ -149,13 +182,19 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 			wantStatus: http.StatusInternalServerError,
 		},
 		{
-			name:        "when the customer is successfully registered, then it should return a 201 with the customer details",
-			jsonPayload: `{"email": "test@example.com", "name": "John Doe", "password": "ValidPassword123"}`,
+			name: "when the customer is successfully registered, then it should return a 201 with the customer details",
+			jsonPayload: `{
+				"customer_id": "fake-customer-id",
+				"email": "test@example.com",
+				"name": "John Doe", 
+				"password": "ValidPassword123"
+			}`,
 			mocksSetup: func(service *customersmocks.MockService) {
 				service.EXPECT().RegisterCustomer(gomock.Any(), customers.RegisterCustomerInput{
-					Email:    "test@example.com",
-					Password: "ValidPassword123",
-					Name:     "John Doe",
+					CustomerID: "fake-customer-id",
+					Email:      "test@example.com",
+					Password:   "ValidPassword123",
+					Name:       "John Doe",
 				}).Return(customers.RegisterCustomerOutput{
 					ID:        "fake-id",
 					Email:     "test@example.com",

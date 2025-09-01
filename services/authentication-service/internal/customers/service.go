@@ -47,9 +47,10 @@ func NewService(logger log.Logger, repo Repository, refreshService refresh.Servi
 
 // RegisterCustomerInput defines the input structure required for registering a new customer.
 type RegisterCustomerInput struct {
-	Email    string
-	Password string
-	Name     string
+	CustomerID string
+	Email      string
+	Password   string
+	Name       string
 }
 
 // RegisterCustomerOutput represents the output data returned after successfully registering a new customer.
@@ -72,9 +73,10 @@ func (s *service) RegisterCustomer(ctx context.Context, input RegisterCustomerIn
 	}
 
 	params := CreateCustomerParams{
-		Email:    input.Email,
-		Password: hashedPassword,
-		Name:     input.Name,
+		CustomerID: input.CustomerID,
+		Email:      input.Email,
+		Password:   hashedPassword,
+		Name:       input.Name,
 	}
 
 	customer, err := s.repo.CreateCustomer(ctx, params)

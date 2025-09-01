@@ -163,7 +163,7 @@ import (
 )
 
 func main() {
-	registerCustomerRequest := *openapiclient.NewRegisterCustomerRequest("user@example.com", "strongpassword123", "John Doe") // RegisterCustomerRequest | 
+	registerCustomerRequest := *openapiclient.NewRegisterCustomerRequest("507f1f77bcf86cd799439011", "user@example.com", "strongpassword123", "John Doe") // RegisterCustomerRequest | 
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)

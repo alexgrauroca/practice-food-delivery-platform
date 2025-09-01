@@ -41,9 +41,10 @@ func NewService(logger log.Logger, cli Client, secret []byte) Service {
 
 // RegisterCustomerInput represents the input data required to register a new customer
 type RegisterCustomerInput struct {
-	Email    string
-	Password string
-	Name     string
+	CustomerID string
+	Email      string
+	Password   string
+	Name       string
 }
 
 // RegisterCustomerOutput represents the output data returned after successfully registering a customer
