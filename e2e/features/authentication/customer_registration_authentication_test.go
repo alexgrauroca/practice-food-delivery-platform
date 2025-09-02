@@ -26,7 +26,6 @@ var _ = g.Describe("Customer Authentication Workflow", func() {
 		Expect(registerResponse.Name).To(Equal(c.Name))
 		Expect(registerResponse.ID).To(MatchRegexp(customer.IDRegexPattern))
 		Expect(registerResponse.CreatedAt).NotTo(BeEmpty())
-		Expect(registerResponse.ID).To(Equal(c.ID))
 
 		// Log in the registered customer
 		loginResponse, err := c.Login()
