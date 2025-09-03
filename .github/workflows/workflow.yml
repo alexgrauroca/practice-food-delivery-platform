@@ -193,6 +193,7 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Run E2E Tests
+        id: run-e2e-tests
         run: make run-e2e-tests
       - name: Docker logs
         if: failure() && steps.run-e2e-tests.conclusion == 'failure'
