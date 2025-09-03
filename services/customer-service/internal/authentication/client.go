@@ -27,9 +27,10 @@ type Config struct {
 // RegisterCustomerRequest represents the data required to register a new customer
 // in the authentication service.
 type RegisterCustomerRequest struct {
-	Email    string
-	Password string
-	Name     string
+	CustomerID string
+	Email      string
+	Password   string
+	Name       string
 }
 
 // RegisterCustomerResponse contains the data returned after successfully
@@ -64,7 +65,12 @@ func NewClient(logger log.Logger, config Config) Client {
 }
 
 func (c *client) RegisterCustomer(ctx context.Context, req RegisterCustomerRequest) (RegisterCustomerResponse, error) {
-	authreq := authclient.RegisterCustomerRequest(req)
+	authreq := authclient.RegisterCustomerRequest{
+		CustomerId: req.CustomerID,
+		Email:      req.Email,
+		Password:   req.Password,
+		Name:       req.Name,
+	}
 	resp, r, err := c.apicli.CustomersAPI.RegisterCustomer(ctx).RegisterCustomerRequest(authreq).Execute()
 	if err != nil {
 		c.logger.Warn(

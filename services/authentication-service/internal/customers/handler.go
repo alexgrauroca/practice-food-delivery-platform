@@ -75,9 +75,10 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 
 // RegisterCustomerRequest represents the request payload for registering a new customer.
 type RegisterCustomerRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=8"`
-	Name     string `json:"name" binding:"required"`
+	CustomerID string `json:"customer_id" binding:"required"`
+	Email      string `json:"email" binding:"required,email"`
+	Password   string `json:"password" binding:"required,min=8"`
+	Name       string `json:"name" binding:"required"`
 }
 
 // RegisterCustomerResponse represents the response returned after successfully registering a new customer.

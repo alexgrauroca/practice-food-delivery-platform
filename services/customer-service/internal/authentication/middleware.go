@@ -1,6 +1,7 @@
 package authentication
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strings"
@@ -10,10 +11,12 @@ import (
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/log"
 )
 
+type contextKey string
+
 const (
-	authHeader    = "Authorization"
-	bearerPrefix  = "Bearer "
-	subjectCtxKey = "token-subject"
+	authHeader               = "Authorization"
+	bearerPrefix             = "Bearer "
+	subjectCtxKey contextKey = "token-subject"
 )
 
 // Middleware defines the interface for authentication-related middleware functions used
@@ -54,7 +57,9 @@ func (m *middleware) RequireCustomer() gin.HandlerFunc {
 			return
 		}
 
-		c.Set(subjectCtxKey, claims.Subject)
+		c.Set(string(subjectCtxKey), claims.Subject)
+		ctx := context.WithValue(c.Request.Context(), subjectCtxKey, claims.Subject)
+		c.Request = c.Request.WithContext(ctx)
 		c.Next()
 	}
 }

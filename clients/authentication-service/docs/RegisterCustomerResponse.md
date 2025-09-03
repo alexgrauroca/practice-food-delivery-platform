@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Id** | **string** | Unique customer identifier | 
+**Id** | **string** | Unique customer identifier in the auth service | 
 **Email** | **string** | Customer&#39;s email address | 
 **Name** | **string** | Customer&#39;s full name | 
 **CreatedAt** | **time.Time** | Account creation timestamp | 

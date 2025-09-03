@@ -47,9 +47,10 @@ func NewService(logger log.Logger, repo Repository, refreshService refresh.Servi
 
 // RegisterCustomerInput defines the input structure required for registering a new customer.
 type RegisterCustomerInput struct {
-	Email    string
-	Password string
-	Name     string
+	CustomerID string
+	Email      string
+	Password   string
+	Name       string
 }
 
 // RegisterCustomerOutput represents the output data returned after successfully registering a new customer.
@@ -72,9 +73,10 @@ func (s *service) RegisterCustomer(ctx context.Context, input RegisterCustomerIn
 	}
 
 	params := CreateCustomerParams{
-		Email:    input.Email,
-		Password: hashedPassword,
-		Name:     input.Name,
+		CustomerID: input.CustomerID,
+		Email:      input.Email,
+		Password:   hashedPassword,
+		Name:       input.Name,
 	}
 
 	customer, err := s.repo.CreateCustomer(ctx, params)
@@ -174,7 +176,7 @@ func (s *service) RefreshCustomer(ctx context.Context, input RefreshCustomerInpu
 		return RefreshCustomerOutput{}, ErrTokenMismatch
 	}
 
-	tokenPair, err := s.generateTokenPair(ctx, Customer{ID: refreshToken.UserID})
+	tokenPair, err := s.generateTokenPair(ctx, Customer{CustomerID: refreshToken.UserID})
 	if err != nil {
 		logger.Error("failed to generate token pair", err)
 		return RefreshCustomerOutput{}, err
@@ -201,7 +203,7 @@ type TokenPair struct {
 func (s *service) generateTokenPair(ctx context.Context, customer Customer) (TokenPair, error) {
 	logger := s.logger.WithContext(ctx)
 
-	accessToken, err := s.jwtService.GenerateToken(customer.ID, jwt.Config{
+	accessToken, err := s.jwtService.GenerateToken(customer.CustomerID, jwt.Config{
 		Expiration: DefaultTokenExpiration,
 		Role:       DefaultTokenRole,
 	})
@@ -211,7 +213,7 @@ func (s *service) generateTokenPair(ctx context.Context, customer Customer) (Tok
 	}
 
 	refreshToken, err := s.refreshService.Generate(ctx, refresh.GenerateTokenInput{
-		UserID: customer.ID,
+		UserID: customer.CustomerID,
 		Role:   DefaultTokenRole,
 	})
 	if err != nil {

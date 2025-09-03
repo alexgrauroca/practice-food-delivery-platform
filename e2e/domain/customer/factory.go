@@ -2,11 +2,18 @@
 package customer
 
 import (
+	"fmt"
+	"sync/atomic"
 	"time"
 )
 
+var counter atomic.Int64
+var uniqueKey string
+
 // New creates and returns a new TestCustomer with predefined and dynamically generated fields.
 func New() TestCustomer {
+	uniqueKey = fmt.Sprintf("%d_%d", time.Now().Nanosecond(), counter.Add(1))
+
 	return TestCustomer{
 		Email:       generateEmail(),
 		Password:    "strongpassword123",
@@ -19,9 +26,9 @@ func New() TestCustomer {
 }
 
 func generateEmail() string {
-	return "e2e_test_user_" + time.Now().Format("150405") + "@example.com"
+	return "e2e_test_user_" + uniqueKey + "@example.com"
 }
 
 func generateName() string {
-	return "E2E Test User" + time.Now().Format("150405")
+	return "E2E Test User " + uniqueKey
 }
