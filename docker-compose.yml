@@ -28,8 +28,10 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: rootpassword
     volumes:
       - ./mongo_data:/data/db
-      - ./deployments/mongodb/authentication-service/init:/docker-entrypoint-initdb.d/authentication-service
-      - ./deployments/mongodb/customer-service/init:/docker-entrypoint-initdb.d/customer-service
+      - ./deployments/mongodb/authentication-service/init:/mongodb-init/auth
+      - ./deployments/mongodb/customer-service/init:/mongodb-init/customer
+      - ./deployments/mongodb/entrypoint.sh:/usr/local/bin/custom-entrypoint.sh
+    entrypoint: [ "bash", "/usr/local/bin/custom-entrypoint.sh" ]
     healthcheck:
       test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
       interval: 2s
