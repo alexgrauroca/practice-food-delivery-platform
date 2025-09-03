@@ -2,6 +2,7 @@
 package customer
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -19,9 +20,9 @@ func New() TestCustomer {
 }
 
 func generateEmail() string {
-	return "e2e_test_user_" + time.Now().Format("150405") + "@example.com"
+	return fmt.Sprintf("e2e_test_user_%d@example.com", time.Now().UnixNano())
 }
 
 func generateName() string {
-	return "E2E Test User" + time.Now().Format("150405")
+	return fmt.Sprintf("E2E Test User%d", time.Now().UnixNano())
 }
