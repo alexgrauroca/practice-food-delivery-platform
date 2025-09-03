@@ -23,7 +23,7 @@ jobs:
       customer_service_internal: ${{ steps.filter.outputs.customer_service_internal }}
       customer_service_docs: ${{ steps.filter.outputs.customer_service_docs }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -58,7 +58,7 @@ jobs:
     if: ${{ needs.changes.outputs.openapi_specs_changed == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ github.head_ref }}
 
@@ -95,7 +95,7 @@ jobs:
       run:
         working-directory: services/authentication-service
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -111,7 +111,7 @@ jobs:
       run:
         working-directory: services/authentication-service
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -127,7 +127,7 @@ jobs:
       run:
         working-directory: services/authentication-service
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Validate OpenAPI sync
         run: make openapi-validate-sync
       - name: Validate OpenAPI documentation
@@ -141,7 +141,7 @@ jobs:
       run:
         working-directory: services/customer-service
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -173,7 +173,7 @@ jobs:
       run:
         working-directory: services/customer-service
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Validate OpenAPI sync
         run: make openapi-validate-sync
       - name: Validate OpenAPI documentation
@@ -182,15 +182,21 @@ jobs:
   e2e-tests:
     needs: changes
     if: ${{ needs.changes.outputs.run_e2e == 'true' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: e2e
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Run E2E Tests
         run: make run-e2e-tests
+      - name: Docker logs
+        if: failure() && steps.run-e2e-tests.conclusion == 'failure'
+        run: |
+          docker logs api-gateway
+          docker logs authentication-service
+          docker logs customer-service
