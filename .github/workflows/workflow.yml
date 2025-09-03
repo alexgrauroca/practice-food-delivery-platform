@@ -46,10 +46,14 @@ jobs:
               - 'scripts/validate-service-clients.sh'
             auth_service_internal:
               - 'services/authentication-service/internal/**'
+              - 'services/authentication-service/go.mod'
+              - 'services/authentication-service/go.sum'
             auth_service_docs:
               - 'services/authentication-service/docs/**'
             customer_service_internal:
               - 'services/customer-service/internal/**'
+              - 'services/customer-service/go.mod'
+              - 'services/customer-service/go.sum'
             customer_service_docs:
               - 'services/customer-service/docs/**'
 
