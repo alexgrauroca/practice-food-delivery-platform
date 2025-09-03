@@ -9,7 +9,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/clock"
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/clock"
+
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/infraestructure/mongodb"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/log"
 )

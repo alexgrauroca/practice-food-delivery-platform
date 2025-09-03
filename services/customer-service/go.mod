@@ -4,6 +4,7 @@ go 1.25.0
 
 require (
 	github.com/alexgrauroca/practice-food-delivery-platform/authclient v0.0.0-00010101000000-000000000000
+	github.com/alexgrauroca/practice-food-delivery-platform/pkg v0.0.0-00010101000000-000000000000
 	github.com/caarlos0/env/v10 v10.0.0
 	github.com/gin-gonic/gin v1.10.1
 	github.com/go-playground/validator/v10 v10.27.0
@@ -59,3 +60,5 @@ require (
 )
 
 replace github.com/alexgrauroca/practice-food-delivery-platform/authclient => ../../clients/authentication-service
+
+replace github.com/alexgrauroca/practice-food-delivery-platform/pkg => ../../pkg

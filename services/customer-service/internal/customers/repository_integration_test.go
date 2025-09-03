@@ -13,7 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/clock"
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/clock"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/customers"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/infraestructure/mongodb"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/log"

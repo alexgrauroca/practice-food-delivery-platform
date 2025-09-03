@@ -10,8 +10,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/clock"
+
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/authentication"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/clock"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/customers"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/infraestructure/mongodb"
 	customlog "github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/log"

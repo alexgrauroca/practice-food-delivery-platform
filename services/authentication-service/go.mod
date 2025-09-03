@@ -3,6 +3,7 @@ module github.com/alexgrauroca/practice-food-delivery-platform/services/authenti
 go 1.25.0
 
 require (
+	github.com/alexgrauroca/practice-food-delivery-platform/pkg v0.0.0-00010101000000-000000000000
 	github.com/caarlos0/env/v10 v10.0.0
 	github.com/gin-gonic/gin v1.10.1
 	github.com/go-playground/validator/v10 v10.27.0
@@ -53,3 +54,5 @@ require (
 	google.golang.org/protobuf v1.36.8 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/alexgrauroca/practice-food-delivery-platform/pkg => ../../pkg
