@@ -106,7 +106,7 @@ func TestRepository_Create(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tdb := mongodb.NewTestDB(t)
+			tdb := mongodb.NewTestDB(t, "customers_test_authentication_service")
 			defer tdb.Close(t)
 
 			coll := setupTestRefreshTokenCollection(t, tdb.DB)
@@ -138,7 +138,7 @@ func TestRepository_Create_UnexpectedFailure(t *testing.T) {
 	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 	logger, _ := log.NewTest()
 
-	tdb := mongodb.NewTestDB(t)
+	tdb := mongodb.NewTestDB(t, "customers_test_authentication_service")
 	setupTestRefreshTokenCollection(t, tdb.DB)
 
 	repo := refresh.NewRepository(logger, tdb.DB, clock.FixedClock{FixedTime: now})
@@ -273,7 +273,7 @@ func TestRepository_FindActiveToken(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tdb := mongodb.NewTestDB(t)
+			tdb := mongodb.NewTestDB(t, "customers_test_authentication_service")
 			defer tdb.Close(t)
 
 			coll := setupTestRefreshTokenCollection(t, tdb.DB)
@@ -305,7 +305,7 @@ func TestRepository_FindActiveToken_UnexpectedFailure(t *testing.T) {
 	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 	logger, _ := log.NewTest()
 
-	tdb := mongodb.NewTestDB(t)
+	tdb := mongodb.NewTestDB(t, "customers_test_authentication_service")
 	setupTestRefreshTokenCollection(t, tdb.DB)
 
 	repo := refresh.NewRepository(logger, tdb.DB, clock.FixedClock{FixedTime: now})
@@ -447,7 +447,7 @@ func TestRepository_Expire(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tdb := mongodb.NewTestDB(t)
+			tdb := mongodb.NewTestDB(t, "customers_test_authentication_service")
 			defer tdb.Close(t)
 
 			coll := setupTestRefreshTokenCollection(t, tdb.DB)
@@ -479,7 +479,7 @@ func TestRepository_Expire_UnexpectedFailure(t *testing.T) {
 	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 	logger, _ := log.NewTest()
 
-	tdb := mongodb.NewTestDB(t)
+	tdb := mongodb.NewTestDB(t, "customers_test_authentication_service")
 	setupTestRefreshTokenCollection(t, tdb.DB)
 
 	repo := refresh.NewRepository(logger, tdb.DB, clock.FixedClock{FixedTime: now})

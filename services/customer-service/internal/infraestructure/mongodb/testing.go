@@ -27,7 +27,7 @@ type TestDB struct {
 // NewTestDB creates and returns a new TestDB instance for testing purposes with an isolated MongoDB database.
 // It generates a unique database name to avoid conflicts and initializes cleanup logic for resource management.
 // The function requires a *testing.T instance for logging and error handling during test execution.
-func NewTestDB(t *testing.T) *TestDB {
+func NewTestDB(t *testing.T, dbPrefix string) *TestDB {
 	t.Helper()
 
 	ctx := context.Background()
@@ -38,7 +38,7 @@ func NewTestDB(t *testing.T) *TestDB {
 	}
 
 	// Setting up a unique database name for each test to avoid conflicts
-	dbName := fmt.Sprintf("customers_test_authentication_service_%d_%d", time.Now().UnixNano(), rand.Intn(10000))
+	dbName := fmt.Sprintf("%s_%d_%d", dbPrefix, time.Now().UnixNano(), rand.Intn(10000))
 	db := client.Database(dbName)
 
 	return &TestDB{

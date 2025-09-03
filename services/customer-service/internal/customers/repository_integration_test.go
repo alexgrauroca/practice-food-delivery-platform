@@ -86,7 +86,7 @@ func TestRepository_CreateCustomer(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tdb := mongodb.NewTestDB(t)
+			tdb := mongodb.NewTestDB(t, "customers_test_authentication_service")
 			defer tdb.Close(t)
 
 			coll := setupTestCustomersCollection(t, tdb.DB)
@@ -117,7 +117,7 @@ func TestRepository_CreateCustomer_UnexpectedFailure(t *testing.T) {
 	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 	logger, _ := log.NewTest()
 
-	tdb := mongodb.NewTestDB(t)
+	tdb := mongodb.NewTestDB(t, "customers_test_authentication_service")
 	repo := customers.NewRepository(logger, tdb.DB, clock.FixedClock{FixedTime: now})
 
 	// Simulating an unexpected failure by closing the opened connection
@@ -156,7 +156,7 @@ func TestRepository_PurgeCustomer(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tdb := mongodb.NewTestDB(t)
+			tdb := mongodb.NewTestDB(t, "customers_test_authentication_service")
 			defer tdb.Close(t)
 
 			coll := setupTestCustomersCollection(t, tdb.DB)
@@ -177,7 +177,7 @@ func TestRepository_PurgeCustomer_UnexpectedFailure(t *testing.T) {
 	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 	logger, _ := log.NewTest()
 
-	tdb := mongodb.NewTestDB(t)
+	tdb := mongodb.NewTestDB(t, "customers_test_authentication_service")
 	repo := customers.NewRepository(logger, tdb.DB, clock.FixedClock{FixedTime: now})
 
 	// Simulating an unexpected failure by closing the opened connection
@@ -248,7 +248,7 @@ func TestRepository_GetCustomer(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tdb := mongodb.NewTestDB(t)
+			tdb := mongodb.NewTestDB(t, "customers_test_authentication_service")
 			defer tdb.Close(t)
 
 			coll := setupTestCustomersCollection(t, tdb.DB)
@@ -274,7 +274,7 @@ func TestRepository_GetCustomer_UnexpectedFailure(t *testing.T) {
 	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 	logger, _ := log.NewTest()
 
-	tdb := mongodb.NewTestDB(t)
+	tdb := mongodb.NewTestDB(t, "customers_test_authentication_service")
 	repo := customers.NewRepository(logger, tdb.DB, clock.FixedClock{FixedTime: now})
 
 	// Simulating an unexpected failure by closing the opened connection
