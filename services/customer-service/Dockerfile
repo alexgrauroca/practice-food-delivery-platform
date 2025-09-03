@@ -1,6 +1,10 @@
 # Build stage
 FROM golang:1.25-alpine AS builder
 
+# Copy pkg
+WORKDIR /app/pkg
+COPY ./pkg/ ./
+
 # Copy clients
 WORKDIR /app/clients/authentication-service
 COPY ./clients/authentication-service/ ./

@@ -1,19 +1,23 @@
 # Build stage
 FROM golang:1.25-alpine AS builder
 
-WORKDIR /app
+# Copy pkg
+WORKDIR /app/pkg
+COPY ./pkg/ ./
 
-COPY go.mod go.sum ./
+# Copy and build the service
+WORKDIR /app/services/authentication-service
+COPY ./services/authentication-service/go.mod ./services/authentication-service/go.sum ./
 RUN go mod download
 
-COPY . .
+COPY ./services/authentication-service/ ./
 
-RUN go build -o auth-service ./cmd/main.go
+RUN go build -o authentication-service ./cmd/main.go
 
 # Final stage
 FROM alpine:latest
 
-COPY --from=builder /app/auth-service .
+COPY --from=builder /app/services/authentication-service/authentication-service .
 EXPOSE 8080
 
-CMD ["./auth-service"]
+CMD ["./authentication-service"]
