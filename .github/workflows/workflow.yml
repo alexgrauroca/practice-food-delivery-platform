@@ -198,6 +198,6 @@ jobs:
       - name: Docker logs
         if: ${{ failure() && steps.run-e2e-tests.conclusion == 'failure' }}
         run: |
-          docker logs api-gateway
-          docker logs authentication-service
-          docker logs customer-service
+          echo "=== API Gateway Logs ===\n" && docker logs api-gateway
+          echo "\n=== Auth Service Logs ===\n" && docker logs authentication-service
+          echo "\n=== Customer Service Logs ===\n" && docker logs customer-service
