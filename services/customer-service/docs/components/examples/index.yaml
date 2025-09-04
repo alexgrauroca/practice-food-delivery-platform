@@ -14,3 +14,5 @@ TokenExpired:
   $ref: './TokenExpired.yaml'
 Unauthorized:
   $ref: './Unauthorized.yaml'
+UpdateCustomerValidationError:
+  $ref: './UpdateCustomerValidationError.yaml'

@@ -15,6 +15,7 @@ import (
 type Service interface {
 	RegisterCustomer(ctx context.Context, input RegisterCustomerInput) (RegisterCustomerOutput, error)
 	GetCustomer(ctx context.Context, input GetCustomerInput) (GetCustomerOutput, error)
+	UpdateCustomer(ctx context.Context, input UpdateCustomerInput) (UpdateCustomerOutput, error)
 }
 
 type service struct {
@@ -164,4 +165,33 @@ func (s *service) GetCustomer(ctx context.Context, input GetCustomerInput) (GetC
 		CreatedAt:   customer.CreatedAt,
 		UpdatedAt:   customer.UpdatedAt,
 	}, nil
+}
+
+// UpdateCustomerInput represents the input parameters required for updating a customer's details.
+type UpdateCustomerInput struct {
+	ID          string
+	Name        string
+	Address     string
+	City        string
+	PostalCode  string
+	CountryCode string
+}
+
+// UpdateCustomerOutput represents the output data containing updated customer details returned from UpdateCustomer
+// operation.
+type UpdateCustomerOutput struct {
+	ID          string
+	Email       string
+	Name        string
+	Address     string
+	City        string
+	PostalCode  string
+	CountryCode string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+
+func (s *service) UpdateCustomer(ctx context.Context, input UpdateCustomerInput) (UpdateCustomerOutput, error) {
+	//TODO implement me
+	panic("implement me")
 }
