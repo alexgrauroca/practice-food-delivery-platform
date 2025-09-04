@@ -1,9 +1,9 @@
 type: object
 required:
-  - page
-  - size
-  - totalElements
-  - totalPages
+  - total_items
+  - total_pages
+  - current_page
+  - page_size
 properties:
   total_items:
     type: integer

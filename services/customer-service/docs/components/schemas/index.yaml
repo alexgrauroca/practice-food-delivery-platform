@@ -7,11 +7,15 @@ Pagination:
 # Request schemas
 RegisterCustomerRequest:
   $ref: './requests/RegisterCustomerRequest.yaml'
+UpdateCustomerRequest:
+  $ref: './requests/UpdateCustomerRequest.yaml'
 
 # Response schemas
 ErrorResponse:
   $ref: './responses/ErrorResponse.yaml'
 GetCustomerResponse:
   $ref: './responses/GetCustomerResponse.yaml'
+UpdateCustomerResponse:
+  $ref: './responses/UpdateCustomerResponse.yaml'
 RegisterCustomerResponse:
   $ref: './responses/RegisterCustomerResponse.yaml'

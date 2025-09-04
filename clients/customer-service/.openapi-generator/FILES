@@ -11,6 +11,7 @@ docs/ErrorResponse.md
 docs/Pagination.md
 docs/RegisterCustomerRequest.md
 docs/RegisterCustomerResponse.md
+docs/UpdateCustomerRequest.md
 git_push.sh
 go.mod
 go.sum
@@ -19,5 +20,6 @@ model_error_response.go
 model_pagination.go
 model_register_customer_request.go
 model_register_customer_response.go
+model_update_customer_request.go
 response.go
 utils.go

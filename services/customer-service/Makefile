@@ -1,11 +1,12 @@
-openapi-validate-sync:
-	@cd ../.. && ./scripts/openapi-validate-sync.sh services/customer-service
+openapi-generate:
+	@cd ../.. && ./scripts/openapi-bundle.sh services/customer-service
+	@$(MAKE) openapi-validate-docs
 
 openapi-validate-docs:
 	@cd ../.. && ./scripts/openapi-validate-docs.sh services/customer-service
 
-openapi-generate:
-	@cd ../.. && ./scripts/openapi-bundle.sh services/customer-service
+openapi-validate-sync:
+	@cd ../.. && ./scripts/openapi-validate-sync.sh services/customer-service
 
 generate-clients: install-openapi-generator
 	@echo "Generating clients for customer service..."

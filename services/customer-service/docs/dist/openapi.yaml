@@ -96,6 +96,43 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
+    put:
+      summary: Update a specific customer data
+      description: Returns the customer data updated. It can only be accessed by the customer itself
+      operationId: updateCustomer
+      tags:
+        - Customers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: customerID
+          in: path
+          required: true
+          description: Customer identifier
+          schema:
+            type: string
+            pattern: ^[0-9a-fA-F]{24}$
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCustomerRequest'
+      responses:
+        '200':
+          description: Customer updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
 components:
   securitySchemes:
     BearerAuth:
@@ -361,13 +398,52 @@ components:
           format: date-time
           description: The timestamp when the customer was last updated
           example: '2024-01-01T12:00:00Z'
+    UpdateCustomerRequest:
+      type: object
+      required:
+        - name
+        - address
+        - city
+        - postal_code
+        - country_code
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Customer's full name
+          example: John Doe
+        address:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Customer's address
+          example: 123 Main St
+        city:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Customer's city
+          example: New York
+        postal_code:
+          type: string
+          minLength: 5
+          maxLength: 32
+          description: Customer's postal code
+          example: 10001
+        country_code:
+          type: string
+          minLength: 2
+          maxLength: 2
+          description: Customer's country code in ISO 3166-1 alpha-2 format
+          example: US
     Pagination:
       type: object
       required:
-        - page
-        - size
-        - totalElements
-        - totalPages
+        - total_items
+        - total_pages
+        - current_page
+        - page_size
       properties:
         total_items:
           type: integer
@@ -386,6 +462,8 @@ components:
           description: Number of elements per page
           example: 20
     GetCustomerResponse:
+      $ref: '#/components/schemas/Customer'
+    UpdateCustomerResponse:
       $ref: '#/components/schemas/Customer'
   responses:
     InternalError:

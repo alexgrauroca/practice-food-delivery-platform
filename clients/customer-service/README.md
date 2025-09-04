@@ -84,6 +84,7 @@ Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *CustomersAPI* | [**GetCustomer**](docs/CustomersAPI.md#getcustomer) | **Get** /v1.0/customers/{customerID} | Get a specific customer data
 *CustomersAPI* | [**RegisterCustomer**](docs/CustomersAPI.md#registercustomer) | **Post** /v1.0/customers | Register a new customer
+*CustomersAPI* | [**UpdateCustomer**](docs/CustomersAPI.md#updatecustomer) | **Put** /v1.0/customers/{customerID} | Update a specific customer data
 
 
 ## Documentation For Models
@@ -93,6 +94,7 @@ Class | Method | HTTP request | Description
  - [Pagination](docs/Pagination.md)
  - [RegisterCustomerRequest](docs/RegisterCustomerRequest.md)
  - [RegisterCustomerResponse](docs/RegisterCustomerResponse.md)
+ - [UpdateCustomerRequest](docs/UpdateCustomerRequest.md)
 
 
 ## Documentation For Authorization
