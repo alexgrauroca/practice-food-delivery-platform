@@ -136,7 +136,7 @@ func (s *service) GetCustomer(ctx context.Context, input GetCustomerInput) (GetC
 	}
 	if authCustomerID != input.CustomerID {
 		s.logger.Warn(
-			"customer ID mismatch with the token",
+			"customer CustomerID mismatch with the token",
 			log.Field{Key: "customerID", Value: input.CustomerID},
 			log.Field{Key: "authCustomerID", Value: authCustomerID},
 		)
@@ -169,7 +169,7 @@ func (s *service) GetCustomer(ctx context.Context, input GetCustomerInput) (GetC
 
 // UpdateCustomerInput represents the input parameters required for updating a customer's details.
 type UpdateCustomerInput struct {
-	ID          string
+	CustomerID  string
 	Name        string
 	Address     string
 	City        string

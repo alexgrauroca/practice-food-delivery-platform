@@ -10,7 +10,7 @@ var (
 	ErrCustomerAlreadyExists = errors.New("customer already exists")
 	// ErrCustomerNotFound indicates that a customer with the specified details could not be found in the system.
 	ErrCustomerNotFound = errors.New("customer not found")
-	// ErrCustomerIDMismatch indicates that the requested customer ID does not match the authenticated customer's identity,
+	// ErrCustomerIDMismatch indicates that the requested customer CustomerID does not match the authenticated customer's identity,
 	// which is typically used when validating access permissions for customer-specific operations.
-	ErrCustomerIDMismatch = errors.New("customer ID does not match authenticated customer")
+	ErrCustomerIDMismatch = errors.New("customer CustomerID does not match authenticated customer")
 )

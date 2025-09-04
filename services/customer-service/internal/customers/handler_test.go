@@ -724,7 +724,7 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 				}, nil)
 
 				service.EXPECT().UpdateCustomer(gomock.Any(), customers.UpdateCustomerInput{
-					ID:          "fakeID",
+					CustomerID:  "fakeID",
 					Name:        "New John Doe",
 					Address:     "New 123 Main St",
 					City:        "Los Angeles",

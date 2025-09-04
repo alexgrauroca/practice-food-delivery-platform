@@ -73,7 +73,7 @@ type GetCustomerResponse struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
-// GetCustomer handles retrieving a customer by ID.
+// GetCustomer handles retrieving a customer by CustomerID.
 func (h *Handler) GetCustomer(c *gin.Context) {
 	ctx := c.Request.Context()
 	logger := h.logger.WithContext(ctx)
@@ -90,7 +90,7 @@ func (h *Handler) GetCustomer(c *gin.Context) {
 			return
 		}
 		if errors.Is(err, ErrCustomerIDMismatch) {
-			logger.Warn("Customer ID mismatch with the token", log.Field{Key: "customerID", Value: customerID})
+			logger.Warn("Customer CustomerID mismatch with the token", log.Field{Key: "customerID", Value: customerID})
 			errResp := newErrorResponse(authentication.CodeForbiddenError, authentication.MessageForbiddenError)
 			c.JSON(http.StatusForbidden, errResp)
 			return
@@ -202,7 +202,7 @@ func (h *Handler) UpdateCustomer(c *gin.Context) {
 	}
 
 	input := UpdateCustomerInput{
-		ID:          customerID,
+		CustomerID:  customerID,
 		Name:        req.Name,
 		Address:     req.Address,
 		City:        req.City,
@@ -218,7 +218,7 @@ func (h *Handler) UpdateCustomer(c *gin.Context) {
 			return
 		}
 		if errors.Is(err, ErrCustomerIDMismatch) {
-			logger.Warn("Customer ID mismatch with the token", log.Field{Key: "customerID", Value: customerID})
+			logger.Warn("Customer CustomerID mismatch with the token", log.Field{Key: "customerID", Value: customerID})
 			errResp := newErrorResponse(authentication.CodeForbiddenError, authentication.MessageForbiddenError)
 			c.JSON(http.StatusForbidden, errResp)
 			return

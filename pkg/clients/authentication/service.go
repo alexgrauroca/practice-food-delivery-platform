@@ -22,6 +22,7 @@ type Claims struct {
 type Service interface {
 	RegisterCustomer(ctx context.Context, input RegisterCustomerInput) (RegisterCustomerOutput, error)
 	ValidateAccessToken(ctx context.Context, input ValidateAccessTokenInput) (ValidateAccessTokenOutput, error)
+	UpdateCustomer(ctx context.Context, input UpdateCustomerInput) (UpdateCustomerOutput, error)
 }
 
 type service struct {
@@ -96,4 +97,24 @@ func (s service) ValidateAccessToken(
 	}
 
 	return ValidateAccessTokenOutput{Claims: claims}, nil
+}
+
+// UpdateCustomerInput represents the input data required to update a customer
+type UpdateCustomerInput struct {
+	CustomerID string
+	Name       string
+}
+
+// UpdateCustomerOutput represents the output data returned after successfully updating a customer
+type UpdateCustomerOutput struct {
+	ID        string
+	Email     string
+	Name      string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+func (s service) UpdateCustomer(ctx context.Context, input UpdateCustomerInput) (UpdateCustomerOutput, error) {
+	//TODO implement me
+	panic("implement me")
 }

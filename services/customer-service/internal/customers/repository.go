@@ -22,7 +22,7 @@ const (
 	FieldEmail = "email"
 	// FieldActive represents the field name used to indicate the active status of a customer in the database.
 	FieldActive = "active"
-	// FieldID represents the field name used to store the unique ID of a customer in the database.
+	// FieldID represents the field name used to store the unique CustomerID of a customer in the database.
 	FieldID = "_id"
 )
 
@@ -48,6 +48,7 @@ type Repository interface {
 	CreateCustomer(ctx context.Context, params CreateCustomerParams) (Customer, error)
 	PurgeCustomer(ctx context.Context, email string) error
 	GetCustomer(ctx context.Context, customerID string) (Customer, error)
+	UpdateCustomer(ctx context.Context, params UpdateCustomerParams) (Customer, error)
 }
 
 type repository struct {
@@ -77,7 +78,7 @@ type CreateCustomerParams struct {
 }
 
 // CreateCustomer creates a new customer record in the database.
-// It returns the created customer with an assigned ID or an error if the operation fails.
+// It returns the created customer with an assigned CustomerID or an error if the operation fails.
 // If a customer with the same email already exists, it returns ErrCustomerAlreadyExists.
 func (r *repository) CreateCustomer(ctx context.Context, params CreateCustomerParams) (Customer, error) {
 	logger := r.logger.WithContext(ctx)
@@ -132,7 +133,7 @@ func (r *repository) GetCustomer(ctx context.Context, customerID string) (Custom
 
 	id, err := primitive.ObjectIDFromHex(customerID)
 	if err != nil {
-		logger.Warn("Invalid customer ID format", log.Field{Key: "customer_id", Value: customerID})
+		logger.Warn("Invalid customer CustomerID format", log.Field{Key: "customer_id", Value: customerID})
 		return Customer{}, ErrCustomerNotFound
 	}
 
@@ -148,5 +149,18 @@ func (r *repository) GetCustomer(ctx context.Context, customerID string) (Custom
 	}
 
 	return customer, nil
+}
 
+type UpdateCustomerParams struct {
+	CustomerID  string
+	Name        string
+	Address     string
+	City        string
+	PostalCode  string
+	CountryCode string
+}
+
+func (r *repository) UpdateCustomer(ctx context.Context, params UpdateCustomerParams) (Customer, error) {
+	//TODO implement me
+	panic("implement me")
 }
