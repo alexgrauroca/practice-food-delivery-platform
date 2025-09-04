@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/authentication"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/log"
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/clients/authentication"
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
 )
 
 // Service defines the interface for customer management service.

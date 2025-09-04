@@ -8,13 +8,13 @@ import (
 	"time"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/authclient"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/log"
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
 )
 
 // Client defines the interface for interacting with the authentication service.
 // It provides methods for customer registration and authentication operations.
 //
-//go:generate mockgen -destination=./mocks/authclient_mock.go -package=authentication_mocks github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/authentication Client
+//go:generate mockgen -destination=./mocks/authclient_mock.go -package=authentication_mocks github.com/alexgrauroca/practice-food-delivery-platform/pkg/clients/authentication Client
 type Client interface {
 	RegisterCustomer(ctx context.Context, req RegisterCustomerRequest) (RegisterCustomerResponse, error)
 }

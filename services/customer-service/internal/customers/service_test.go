@@ -11,11 +11,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/authentication"
-	authmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/authentication/mocks"
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/clients/authentication"
+	authmocks "github.com/alexgrauroca/practice-food-delivery-platform/pkg/clients/authentication/mocks"
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/customers"
 	customersmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/customers/mocks"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/log"
 )
 
 var (

@@ -9,7 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/iancoleman/strcase"
 
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/log"
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
 )
 
 const (

@@ -8,7 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/log"
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
 )
 
 type contextKey string
@@ -22,7 +22,7 @@ const (
 // Middleware defines the interface for authentication-related middleware functions used
 // to secure and validate requests.
 //
-//go:generate mockgen -destination=./mocks/middleware_mock.go -package=authentication_mocks github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/authentication Middleware
+//go:generate mockgen -destination=./mocks/middleware_mock.go -package=authentication_mocks github.com/alexgrauroca/practice-food-delivery-platform/pkg/clients/authentication Middleware
 type Middleware interface {
 	RequireCustomer() gin.HandlerFunc
 }

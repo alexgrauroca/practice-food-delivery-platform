@@ -1,12 +1,11 @@
-// Package middleware provides HTTP middleware components for handling cross-cutting
-// concerns in the authentication service
-package middleware
+// Package http provides custom HTTP components
+package http
 
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/log"
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
 )
 
 // RequestInfoMiddleware is a middleware that attaches request-specific information to the context.

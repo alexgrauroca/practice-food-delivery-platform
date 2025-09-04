@@ -11,8 +11,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/clock"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/log"
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/clock"
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
 )
 
 const (

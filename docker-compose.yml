@@ -41,8 +41,8 @@ services:
 
   authentication-service:
     build:
-      context: ./services/authentication-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./services/authentication-service/Dockerfile
     container_name: authentication-service
     depends_on:
       mongodb:
@@ -57,7 +57,7 @@ services:
 
   customer-service:
     build:
-      context: . # Context needs to be set to the root of the project because of clients import
+      context: .
       dockerfile: ./services/customer-service/Dockerfile
     container_name: customer-service
     depends_on:

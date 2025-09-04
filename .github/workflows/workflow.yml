@@ -33,6 +33,7 @@ jobs:
               - 'clients/**'
               - 'deployments/**'
               - 'e2e/**'
+              - 'pkg/**'
               - 'scripts/**'
               - 'services/*/cmd/**'
               - 'services/*/internal/**'
@@ -48,12 +49,14 @@ jobs:
               - 'services/authentication-service/internal/**'
               - 'services/authentication-service/go.mod'
               - 'services/authentication-service/go.sum'
+              - 'pkg/**'
             auth_service_docs:
               - 'services/authentication-service/docs/**'
             customer_service_internal:
               - 'services/customer-service/internal/**'
               - 'services/customer-service/go.mod'
               - 'services/customer-service/go.sum'
+              - 'pkg/**'
             customer_service_docs:
               - 'services/customer-service/docs/**'
 
