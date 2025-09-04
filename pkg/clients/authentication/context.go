@@ -4,7 +4,7 @@ import "context"
 
 // ContextReader defines operations for reading authentication data from context
 //
-//go:generate mockgen -destination=./mocks/context_mock.go -package=authentication_mocks github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/authentication ContextReader
+//go:generate mockgen -destination=./mocks/context_mock.go -package=authentication_mocks github.com/alexgrauroca/practice-food-delivery-platform/pkg/clients/authentication ContextReader
 type ContextReader interface {
 	GetSubject(ctx context.Context) (string, bool)
 }

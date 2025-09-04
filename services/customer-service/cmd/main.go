@@ -11,12 +11,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/clock"
+	customhttp "github.com/alexgrauroca/practice-food-delivery-platform/pkg/http"
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/infraestructure/mongodb"
 
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/clients/authentication"
 	customlog "github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/authentication"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/customers"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/middleware"
 )
 
 func main() {
@@ -36,7 +36,7 @@ func main() {
 
 	// Initialize the Gin router
 	router := gin.Default()
-	router.Use(middleware.RequestInfoMiddleware())
+	router.Use(customhttp.RequestInfoMiddleware())
 
 	// Initialize MongoDB connection
 	client, err := mongodb.NewClient(ctx, logger)

@@ -24,15 +24,16 @@ install-openapi-generator:
 	@bash ../../scripts/install-openapi-generator.sh
 
 generate-mocks: install-mockgen
-	@echo "Generating mocks for authentication service..."
+	@echo "Generating mocks for customer service..."
 	@go generate ./...
+	@cd ../../pkg && make generate-mocks
 
 install-mockgen:
 	@bash ../../scripts/install-mockgen.sh
 	@go get go.uber.org/mock/mockgen
 
 run-unit-tests: generate-mocks
-	@echo "Running unit tests for authentication service..."
+	@echo "Running unit tests for customer service..."
 	@go test -v -tags=unit ./...
 
 run-integration-tests: start-mongodb

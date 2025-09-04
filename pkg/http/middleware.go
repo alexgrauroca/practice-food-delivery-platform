@@ -1,6 +1,5 @@
-// Package middleware provides HTTP middleware components for handling cross-cutting
-// concerns in the authentication service
-package middleware
+// Package http provides custom HTTP components
+package http
 
 import (
 	"github.com/gin-gonic/gin"
