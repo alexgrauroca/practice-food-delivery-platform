@@ -484,7 +484,7 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 			wantStatus: http.StatusForbidden,
 		},
 		{
-			name: "when invalid payload is provided, then it should return a 400 with invalid request error",
+			name:  "when invalid payload is provided, then it should return a 400 with invalid request error",
 			token: "valid-token",
 			pathParams: map[string]string{
 				"customerID": "fakeID",
@@ -819,8 +819,7 @@ func runCustomerHandlerTestCase(
 
 		req = httptest.NewRequest(http.MethodGet, baseURL.String(), nil)
 
-	case http.MethodPost:
-	case http.MethodPut:
+	case http.MethodPost, http.MethodPut:
 		req = httptest.NewRequest(httpMethod, route, strings.NewReader(tt.jsonPayload))
 		req.Header.Set("Content-Type", "application/json")
 
