@@ -29,3 +29,40 @@ get:
       $ref: './../../components/responses/NotFound.yaml'
     '500':
       $ref: './../../components/responses/InternalError.yaml'
+put:
+  summary: Update a specific customer data
+  description: Returns the customer data updated. It can only be accessed by the customer itself
+  operationId: updateCustomer
+  tags:
+    - Customers
+  security:
+    - BearerAuth: [ ]
+  parameters:
+    - name: customerID
+      in: path
+      required: true
+      description: Customer identifier
+      schema:
+        type: string
+        pattern: ^[0-9a-fA-F]{24}$
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: './../../components/schemas/requests/UpdateCustomerRequest.yaml'
+  responses:
+    '200':
+      description: Customer updated successfully
+      content:
+        application/json:
+          schema:
+            $ref: './../../components/schemas/responses/UpdateCustomerResponse.yaml'
+    '401':
+      $ref: './../../components/responses/Unauthorized.yaml'
+    '403':
+      $ref: './../../components/responses/Forbidden.yaml'
+    '404':
+      $ref: './../../components/responses/NotFound.yaml'
+    '500':
+      $ref: './../../components/responses/InternalError.yaml'

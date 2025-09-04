@@ -99,6 +99,46 @@ paths:
       summary: Get a specific customer data
       tags:
       - Customers
+    put:
+      description: Returns the customer data updated. It can only be accessed by the
+        customer itself
+      operationId: updateCustomer
+      parameters:
+      - description: Customer identifier
+        explode: false
+        in: path
+        name: customerID
+        required: true
+        schema:
+          pattern: "^[0-9a-fA-F]{24}$"
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCustomerRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+          description: Customer updated successfully
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+      security:
+      - BearerAuth: []
+      summary: Update a specific customer data
+      tags:
+      - Customers
 components:
   examples:
     InvalidRequest:
@@ -430,6 +470,51 @@ components:
       - postal_code
       - updatedAt
       type: object
+    UpdateCustomerRequest:
+      example:
+        country_code: US
+        address: 123 Main St
+        city: New York
+        name: John Doe
+        postal_code: "10001"
+      properties:
+        name:
+          description: Customer's full name
+          example: John Doe
+          maxLength: 100
+          minLength: 1
+          type: string
+        address:
+          description: Customer's address
+          example: 123 Main St
+          maxLength: 100
+          minLength: 1
+          type: string
+        city:
+          description: Customer's city
+          example: New York
+          maxLength: 100
+          minLength: 1
+          type: string
+        postal_code:
+          description: Customer's postal code
+          example: "10001"
+          maxLength: 32
+          minLength: 5
+          type: string
+        country_code:
+          description: Customer's country code in ISO 3166-1 alpha-2 format
+          example: US
+          maxLength: 2
+          minLength: 2
+          type: string
+      required:
+      - address
+      - city
+      - country_code
+      - name
+      - postal_code
+      type: object
     Pagination:
       properties:
         total_items:
@@ -449,12 +534,14 @@ components:
           example: 20
           type: integer
       required:
-      - page
-      - size
-      - totalElements
-      - totalPages
+      - current_page
+      - page_size
+      - total_items
+      - total_pages
       type: object
     GetCustomerResponse:
+      $ref: "#/components/schemas/Customer"
+    UpdateCustomerResponse:
       $ref: "#/components/schemas/Customer"
   securitySchemes:
     BearerAuth:

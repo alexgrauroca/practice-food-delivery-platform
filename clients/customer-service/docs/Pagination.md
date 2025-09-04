@@ -4,16 +4,16 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**TotalItems** | Pointer to **int32** | Total number of elements across all pages | [optional] 
-**TotalPages** | Pointer to **int32** | Total number of pages | [optional] 
-**CurrentPage** | Pointer to **int32** | Current page number | [optional] 
-**PageSize** | Pointer to **int32** | Number of elements per page | [optional] 
+**TotalItems** | **int32** | Total number of elements across all pages | 
+**TotalPages** | **int32** | Total number of pages | 
+**CurrentPage** | **int32** | Current page number | 
+**PageSize** | **int32** | Number of elements per page | 
 
 ## Methods
 
 ### NewPagination
 
-`func NewPagination() *Pagination`
+`func NewPagination(totalItems int32, totalPages int32, currentPage int32, pageSize int32, ) *Pagination`
 
 NewPagination instantiates a new Pagination object
 This constructor will assign default values to properties that have it defined,
@@ -47,11 +47,6 @@ and a boolean to check if the value has been set.
 
 SetTotalItems sets TotalItems field to given value.
 
-### HasTotalItems
-
-`func (o *Pagination) HasTotalItems() bool`
-
-HasTotalItems returns a boolean if a field has been set.
 
 ### GetTotalPages
 
@@ -72,11 +67,6 @@ and a boolean to check if the value has been set.
 
 SetTotalPages sets TotalPages field to given value.
 
-### HasTotalPages
-
-`func (o *Pagination) HasTotalPages() bool`
-
-HasTotalPages returns a boolean if a field has been set.
 
 ### GetCurrentPage
 
@@ -97,11 +87,6 @@ and a boolean to check if the value has been set.
 
 SetCurrentPage sets CurrentPage field to given value.
 
-### HasCurrentPage
-
-`func (o *Pagination) HasCurrentPage() bool`
-
-HasCurrentPage returns a boolean if a field has been set.
 
 ### GetPageSize
 
@@ -122,11 +107,6 @@ and a boolean to check if the value has been set.
 
 SetPageSize sets PageSize field to given value.
 
-### HasPageSize
-
-`func (o *Pagination) HasPageSize() bool`
-
-HasPageSize returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
