@@ -107,7 +107,7 @@ func TestService_RegisterCustomer(t *testing.T) {
 					Return(customers.Customer{}, nil)
 
 				authservice.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
-					Return(authentication.RegisterCustomerResponse{}, errAuthCli)
+					Return(authentication.RegisterCustomerOutput{}, errAuthCli)
 
 				repo.EXPECT().PurgeCustomer(gomock.Any(), gomock.Any()).Return(customers.ErrCustomerNotFound)
 			},
@@ -136,7 +136,7 @@ func TestService_RegisterCustomer(t *testing.T) {
 					Return(customers.Customer{}, nil)
 
 				authservice.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
-					Return(authentication.RegisterCustomerResponse{}, errAuthCli)
+					Return(authentication.RegisterCustomerOutput{}, errAuthCli)
 
 				repo.EXPECT().PurgeCustomer(gomock.Any(), gomock.Any()).Return(errRepo)
 			},
@@ -165,7 +165,7 @@ func TestService_RegisterCustomer(t *testing.T) {
 					Return(customers.Customer{}, nil)
 
 				authservice.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
-					Return(authentication.RegisterCustomerResponse{}, errAuthCli)
+					Return(authentication.RegisterCustomerOutput{}, errAuthCli)
 
 				repo.EXPECT().PurgeCustomer(gomock.Any(), "test@example.com").Return(nil)
 			},
@@ -210,12 +210,12 @@ func TestService_RegisterCustomer(t *testing.T) {
 					}, nil
 				})
 
-				authservice.EXPECT().RegisterCustomer(gomock.Any(), authentication.RegisterCustomerRequest{
+				authservice.EXPECT().RegisterCustomer(gomock.Any(), authentication.RegisterCustomerInput{
 					CustomerID: "fake-id",
 					Email:      "test@example.com",
 					Password:   "ValidPassword123",
 					Name:       "John Doe",
-				}).Return(authentication.RegisterCustomerResponse{
+				}).Return(authentication.RegisterCustomerOutput{
 					ID:        "auth-fake-id",
 					Email:     "test@example.com",
 					Name:      "John Doe",
