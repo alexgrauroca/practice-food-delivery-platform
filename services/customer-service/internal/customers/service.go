@@ -92,8 +92,9 @@ func (s *service) RegisterCustomer(ctx context.Context, input RegisterCustomerIn
 		logger.Error("failed to register customer at auth service", err)
 
 		// Roll back the created customer in case of error when registering the customer at auth service.
-		if err := s.repo.PurgeCustomer(ctx, input.Email); err != nil {
+		if err := s.repo.PurgeCustomer(ctx, input.Email); err != nil && !errors.Is(err, ErrCustomerNotFound) {
 			logger.Error("failed to purge customer", err)
+			return RegisterCustomerOutput{}, err
 		}
 		return RegisterCustomerOutput{}, err
 	}
@@ -214,7 +215,6 @@ func (s *service) UpdateCustomer(ctx context.Context, input UpdateCustomerInput)
 		CustomerID: customer.ID,
 		Name:       customer.Name,
 	}
-
 	if _, err := s.authservice.UpdateCustomer(ctx, authInput); err != nil {
 		s.logger.Error("failed to update customer at auth service", err)
 
