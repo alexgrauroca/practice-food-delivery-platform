@@ -92,10 +92,8 @@ func (s *service) RegisterCustomer(ctx context.Context, input RegisterCustomerIn
 		logger.Error("failed to register customer at auth service", err)
 
 		// Roll back the created customer in case of error when registering the customer at auth service.
-		// Customer not found error is ignored.
-		if err := s.repo.PurgeCustomer(ctx, input.Email); err != nil && !errors.Is(err, ErrCustomerNotFound) {
+		if err := s.repo.PurgeCustomer(ctx, input.Email); err != nil {
 			logger.Error("failed to purge customer", err)
-			return RegisterCustomerOutput{}, err
 		}
 		return RegisterCustomerOutput{}, err
 	}
@@ -196,6 +194,54 @@ type UpdateCustomerOutput struct {
 }
 
 func (s *service) UpdateCustomer(ctx context.Context, input UpdateCustomerInput) (UpdateCustomerOutput, error) {
-	//TODO implement me
-	panic("implement me")
+	oldCustomer, err := s.GetCustomer(ctx, GetCustomerInput{CustomerID: input.CustomerID})
+	if err != nil {
+		return UpdateCustomerOutput{}, err
+	}
+
+	customer, err := s.repo.UpdateCustomer(ctx, UpdateCustomerParams(input))
+	if err != nil {
+		if errors.Is(err, ErrCustomerNotFound) {
+			s.logger.Warn("customer not found", log.Field{Key: "customerID", Value: input.CustomerID})
+			return UpdateCustomerOutput{}, ErrCustomerNotFound
+		}
+
+		s.logger.Error("failed to update customer", err)
+		return UpdateCustomerOutput{}, err
+	}
+
+	authInput := authentication.UpdateCustomerInput{
+		CustomerID: customer.ID,
+		Name:       customer.Name,
+	}
+
+	if _, err := s.authservice.UpdateCustomer(ctx, authInput); err != nil {
+		s.logger.Error("failed to update customer at auth service", err)
+
+		// Roll back the updated customer in case of error when updating the customer at auth service.
+		_, err2 := s.repo.UpdateCustomer(ctx, UpdateCustomerParams{
+			CustomerID:  customer.ID,
+			Name:        oldCustomer.Name,
+			Address:     oldCustomer.Address,
+			City:        oldCustomer.City,
+			PostalCode:  oldCustomer.PostalCode,
+			CountryCode: oldCustomer.CountryCode,
+		})
+		if err2 != nil {
+			s.logger.Error("failed to update customer", err2)
+		}
+		return UpdateCustomerOutput{}, err
+	}
+
+	return UpdateCustomerOutput{
+		ID:          customer.ID,
+		Email:       customer.Email,
+		Name:        customer.Name,
+		Address:     customer.Address,
+		City:        customer.City,
+		PostalCode:  customer.PostalCode,
+		CountryCode: customer.CountryCode,
+		CreatedAt:   customer.CreatedAt,
+		UpdatedAt:   customer.UpdatedAt,
+	}, nil
 }
