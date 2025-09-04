@@ -19,19 +19,23 @@ type Service interface {
 }
 
 type service struct {
-	logger  log.Logger
-	repo    Repository
-	authcli authentication.Client
-	authctx authentication.ContextReader
+	logger      log.Logger
+	repo        Repository
+	authservice authentication.Service
+	authctx     authentication.ContextReader
 }
 
 // NewService creates a new instance of Service with the provided logger and repository dependencies.
-func NewService(logger log.Logger, repo Repository, authcli authentication.Client, authctx authentication.ContextReader) Service {
+func NewService(
+	logger log.Logger,
+	repo Repository, authservice authentication.Service,
+	authctx authentication.ContextReader,
+) Service {
 	return &service{
-		logger:  logger,
-		repo:    repo,
-		authcli: authcli,
-		authctx: authctx,
+		logger:      logger,
+		repo:        repo,
+		authservice: authservice,
+		authctx:     authctx,
 	}
 }
 
@@ -78,13 +82,13 @@ func (s *service) RegisterCustomer(ctx context.Context, input RegisterCustomerIn
 		return RegisterCustomerOutput{}, err
 	}
 
-	authReq := authentication.RegisterCustomerRequest{
+	authInput := authentication.RegisterCustomerInput{
 		CustomerID: customer.ID,
 		Email:      input.Email,
 		Password:   input.Password,
 		Name:       input.Name,
 	}
-	if _, err := s.authcli.RegisterCustomer(ctx, authReq); err != nil {
+	if _, err := s.authservice.RegisterCustomer(ctx, authInput); err != nil {
 		logger.Error("failed to register customer at auth service", err)
 
 		// Roll back the created customer in case of error when registering the customer at auth service.
