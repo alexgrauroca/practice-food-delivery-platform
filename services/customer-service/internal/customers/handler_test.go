@@ -348,6 +348,31 @@ func TestHandler_GetCustomer(t *testing.T) {
 			wantStatus: http.StatusNotFound,
 		},
 		{
+			name: "when unexpected error when getting the customer, " +
+				"then it should return a 500 with the internal error",
+			token: "valid-token",
+			pathParams: map[string]string{
+				"customerID": "fakeID",
+			},
+			mocksSetup: func(service *customersmocks.MockService, authService *authmocks.MockService) {
+				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
+					Return(authentication.ValidateAccessTokenOutput{
+						Claims: &authentication.Claims{
+							Role: string(authentication.RoleCustomer),
+						},
+					}, nil)
+
+				service.EXPECT().GetCustomer(gomock.Any(), gomock.Any()).
+					Return(customers.GetCustomerOutput{}, errUnexpected)
+			},
+			wantJSON: `{
+				"code": "INTERNAL_ERROR",
+				"message": "an unexpected error occurred",
+				"details": []
+			}`,
+			wantStatus: http.StatusInternalServerError,
+		},
+		{
 			name:  "when a valid customerID is provided, then it should return a 200 with the customer details",
 			token: "valid-token",
 			pathParams: map[string]string{
@@ -394,6 +419,332 @@ func TestHandler_GetCustomer(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			getCustomerPath := fmt.Sprintf("/v1.0/customers/%s", tt.pathParams["customerID"])
 			runCustomerHandlerTestCase(t, logger, http.MethodGet, getCustomerPath, tt, tt.token)
+		})
+	}
+}
+
+func TestHandler_UpdateCustomer(t *testing.T) {
+	logger := setupTestEnv()
+	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	yesterday := time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC)
+
+	tests := []customerHandlerTestCase{
+		{
+			name:  "when any token is provided, then it should return a 401 with the unauthorized error",
+			token: "",
+			pathParams: map[string]string{
+				"customerID": "fakeID",
+			},
+			jsonPayload: `{}`,
+			wantJSON: `{
+				"code": "UNAUTHORIZED",
+				"message": "Authentication is required to access this resource",
+				"details": []
+			}`,
+			wantStatus: http.StatusUnauthorized,
+		},
+		{
+			name:  "when invalid token is provided, then it should return a 401 with the unauthorized error",
+			token: "invalid-token",
+			pathParams: map[string]string{
+				"customerID": "fakeID",
+			},
+			jsonPayload: `{}`,
+			mocksSetup: func(_ *customersmocks.MockService, authService *authmocks.MockService) {
+				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
+					Return(authentication.ValidateAccessTokenOutput{}, authentication.ErrInvalidToken)
+			},
+			wantJSON: `{
+				"code": "UNAUTHORIZED",
+				"message": "Authentication is required to access this resource",
+				"details": []
+			}`,
+			wantStatus: http.StatusUnauthorized,
+		},
+		{
+			name:  "when authenticated user is not a customer, then it should return a 403 with the forbidden error",
+			token: "none-customer-token",
+			pathParams: map[string]string{
+				"customerID": "fakeID",
+			},
+			jsonPayload: `{}`,
+			mocksSetup: func(_ *customersmocks.MockService, authService *authmocks.MockService) {
+				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
+					Return(authentication.ValidateAccessTokenOutput{
+						Claims: &authentication.Claims{
+							Role: "none-customer-role",
+						},
+					}, nil)
+			},
+			wantJSON: `{
+				"code": "FORBIDDEN",
+				"message": "You do not have permission to access this resource",
+				"details": []
+			}`,
+			wantStatus: http.StatusForbidden,
+		},
+		{
+			name:        "when invalid payload is provided, then it should return a 400 with invalid request error",
+			jsonPayload: `{"name": 1.2, "address": true}`,
+			mocksSetup: func(_ *customersmocks.MockService, authService *authmocks.MockService) {
+				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
+					Return(authentication.ValidateAccessTokenOutput{
+						Claims: &authentication.Claims{
+							Role: string(authentication.RoleCustomer),
+						},
+					}, nil)
+			},
+			wantJSON: `{
+				"code": "INVALID_REQUEST",
+				"message": "invalid request",
+				"details": []
+			}`,
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name: "when required fields are not provided payload, " +
+				"then it should return a 400 with the required validation errors",
+			jsonPayload: `{}`,
+			mocksSetup: func(_ *customersmocks.MockService, authService *authmocks.MockService) {
+				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
+					Return(authentication.ValidateAccessTokenOutput{
+						Claims: &authentication.Claims{
+							Role: string(authentication.RoleCustomer),
+						},
+					}, nil)
+			},
+			wantJSON: `{
+				"code": "VALIDATION_ERROR",
+				"message": "validation failed",
+				"details": [
+					"name is required",
+					"address is required",
+					"city is required",
+					"postal_code is required",
+					"country_code is required"
+				]
+			}`,
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name: "when fields length are shorten than minimum required, " +
+				"then it should return a 400 with the short length validation errors",
+			jsonPayload: `{
+				"name": "New John Doe",
+				"address": "New 123 Main St",
+				"city": "Los Angeles",
+				"postal_code": "1",
+				"country_code": "U"
+			}`,
+			mocksSetup: func(_ *customersmocks.MockService, authService *authmocks.MockService) {
+				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
+					Return(authentication.ValidateAccessTokenOutput{
+						Claims: &authentication.Claims{
+							Role: string(authentication.RoleCustomer),
+						},
+					}, nil)
+			},
+			wantJSON: `{
+				"code": "VALIDATION_ERROR",
+				"message": "validation failed",
+				"details": [
+					"postal_code must be at least 5 characters long",
+					"country_code must be at least 2 characters long"
+				]
+			}`,
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name: "when fields length are longer than maximum required, " +
+				"then it should return a 400 with the long length validation errors",
+			jsonPayload: fmt.Sprintf(`{
+					"name": "%s",
+					"address": "%s",
+					"city": "%s",
+					"postal_code": "%s",
+					"country_code": "USA"
+				}`,
+				strings.Repeat("a", 101),
+				strings.Repeat("a", 101),
+				strings.Repeat("a", 101),
+				strings.Repeat("a", 33),
+			),
+			mocksSetup: func(_ *customersmocks.MockService, authService *authmocks.MockService) {
+				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
+					Return(authentication.ValidateAccessTokenOutput{
+						Claims: &authentication.Claims{
+							Role: string(authentication.RoleCustomer),
+						},
+					}, nil)
+			},
+			wantJSON: `{
+				"code": "VALIDATION_ERROR",
+				"message": "validation failed",
+				"details": [
+					"name must not exceed 100 characters long",
+					"address must not exceed 100 characters long",
+					"city must not exceed 100 characters long",
+					"postal_code must not exceed 32 characters long",
+					"country_code must not exceed 2 characters long"
+				]
+			}`,
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name: "when authenticated customer is not the same as the one requested, " +
+				"then it should return a 403 with the forbidden error",
+			token: "none-customer-token",
+			pathParams: map[string]string{
+				"customerID": "fakeID",
+			},
+			jsonPayload: `{
+				"name": "New John Doe",
+				"address": "New 123 Main St",
+				"city": "Los Angeles",
+				"postal_code": "09001",
+				"country_code": "SP"
+			}`,
+			mocksSetup: func(service *customersmocks.MockService, authService *authmocks.MockService) {
+				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
+					Return(authentication.ValidateAccessTokenOutput{
+						Claims: &authentication.Claims{
+							Role: string(authentication.RoleCustomer),
+						},
+					}, nil)
+
+				service.EXPECT().UpdateCustomer(gomock.Any(), gomock.Any()).
+					Return(customers.UpdateCustomerOutput{}, customers.ErrCustomerIDMismatch)
+			},
+			wantJSON: `{
+				"code": "FORBIDDEN",
+				"message": "You do not have permission to access this resource",
+				"details": []
+			}`,
+			wantStatus: http.StatusForbidden,
+		},
+		{
+			name:  "when the customer is not found, then it should return a 404 with the not found error",
+			token: "valid-token",
+			pathParams: map[string]string{
+				"customerID": "unexistingID",
+			},
+			jsonPayload: `{
+				"name": "New John Doe",
+				"address": "New 123 Main St",
+				"city": "Los Angeles",
+				"postal_code": "09001",
+				"country_code": "SP"
+			}`,
+			mocksSetup: func(service *customersmocks.MockService, authService *authmocks.MockService) {
+				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
+					Return(authentication.ValidateAccessTokenOutput{
+						Claims: &authentication.Claims{
+							Role: string(authentication.RoleCustomer),
+						},
+					}, nil)
+
+				service.EXPECT().UpdateCustomer(gomock.Any(), gomock.Any()).
+					Return(customers.UpdateCustomerOutput{}, customers.ErrCustomerNotFound)
+			},
+			wantJSON: `{
+				"code": "NOT_FOUND",
+				"message": "resource not found",
+				"details": []
+			}`,
+			wantStatus: http.StatusNotFound,
+		},
+		{
+			name: "when unexpected error when updating the customer, " +
+				"then it should return a 500 with the internal error",
+			token: "valid-token",
+			pathParams: map[string]string{
+				"customerID": "fakeID",
+			},
+			jsonPayload: `{
+				"name": "New John Doe",
+				"address": "New 123 Main St",
+				"city": "Los Angeles",
+				"postal_code": "09001",
+				"country_code": "SP"
+			}`,
+			mocksSetup: func(service *customersmocks.MockService, authService *authmocks.MockService) {
+				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
+					Return(authentication.ValidateAccessTokenOutput{
+						Claims: &authentication.Claims{
+							Role: string(authentication.RoleCustomer),
+						},
+					}, nil)
+
+				service.EXPECT().UpdateCustomer(gomock.Any(), gomock.Any()).
+					Return(customers.UpdateCustomerOutput{}, errUnexpected)
+			},
+			wantJSON: `{
+				"code": "INTERNAL_ERROR",
+				"message": "an unexpected error occurred",
+				"details": []
+			}`,
+			wantStatus: http.StatusInternalServerError,
+		},
+		{
+			name:  "when the customer can be updated, then it should return a 200 with the customer details updated",
+			token: "valid-token",
+			pathParams: map[string]string{
+				"customerID": "fakeID",
+			},
+			jsonPayload: `{
+				"name": "New John Doe",
+				"address": "New 123 Main St",
+				"city": "Los Angeles",
+				"postal_code": "09001",
+				"country_code": "SP"
+			}`,
+			mocksSetup: func(service *customersmocks.MockService, authService *authmocks.MockService) {
+				authService.EXPECT().ValidateAccessToken(gomock.Any(), authentication.ValidateAccessTokenInput{
+					AccessToken: "valid-token",
+				}).Return(authentication.ValidateAccessTokenOutput{
+					Claims: &authentication.Claims{
+						Role: string(authentication.RoleCustomer),
+					},
+				}, nil)
+
+				service.EXPECT().UpdateCustomer(gomock.Any(), customers.UpdateCustomerInput{
+					ID:          "fakeID",
+					Name:        "New John Doe",
+					Address:     "New 123 Main St",
+					City:        "Los Angeles",
+					PostalCode:  "09001",
+					CountryCode: "SP",
+				}).Return(customers.UpdateCustomerOutput{
+					ID:          "fakeID",
+					Name:        "New John Doe",
+					Email:       "test@example.com",
+					Address:     "New 123 Main St",
+					City:        "Los Angeles",
+					PostalCode:  "09001",
+					CountryCode: "SP",
+					CreatedAt:   yesterday,
+					UpdatedAt:   now,
+				}, nil)
+			},
+			wantJSON: `{
+				"id": "fakeID",
+				"name": "New John Doe",
+			    "email": "test@example.com",
+			    "address": "New 123 Main St",
+			    "city": "Los Angeles",
+			    "postal_code": "09001",
+			    "country_code": "SP",
+				"created_at": "2024-12-31T00:00:00Z",
+				"updated_at": "2025-01-01T00:00:00Z"
+			}`,
+			wantStatus: http.StatusOK,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			updateCustomerPath := fmt.Sprintf("/v1.0/customers/%s", tt.pathParams["customerID"])
+			runCustomerHandlerTestCase(t, logger, http.MethodPut, updateCustomerPath, tt, tt.token)
 		})
 	}
 }
@@ -453,6 +804,7 @@ func runCustomerHandlerTestCase(
 		req = httptest.NewRequest(http.MethodGet, baseURL.String(), nil)
 
 	case http.MethodPost:
+	case http.MethodPut:
 		req = httptest.NewRequest(httpMethod, route, strings.NewReader(tt.jsonPayload))
 		req.Header.Set("Content-Type", "application/json")
 
