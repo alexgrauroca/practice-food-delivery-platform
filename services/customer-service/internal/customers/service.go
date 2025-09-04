@@ -140,14 +140,8 @@ func (s *service) GetCustomer(ctx context.Context, input GetCustomerInput) (GetC
 		return GetCustomerOutput{}, ErrCustomerIDMismatch
 	}
 
-	customer, err := s.repo.GetCustomer(ctx, input.CustomerID)
+	customer, err := s.loadCustomerByID(ctx, input.CustomerID)
 	if err != nil {
-		if errors.Is(err, ErrCustomerNotFound) {
-			s.logger.Warn("customer not found", log.Field{Key: "customerID", Value: input.CustomerID})
-			return GetCustomerOutput{}, ErrCustomerNotFound
-		}
-
-		s.logger.Error("failed to get customer", err)
 		return GetCustomerOutput{}, err
 	}
 
@@ -162,6 +156,20 @@ func (s *service) GetCustomer(ctx context.Context, input GetCustomerInput) (GetC
 		CreatedAt:   customer.CreatedAt,
 		UpdatedAt:   customer.UpdatedAt,
 	}, nil
+}
+
+func (s *service) loadCustomerByID(ctx context.Context, customerID string) (Customer, error) {
+	customer, err := s.repo.GetCustomer(ctx, customerID)
+	if err != nil {
+		if errors.Is(err, ErrCustomerNotFound) {
+			s.logger.Warn("customer not found", log.Field{Key: "customerID"})
+			return Customer{}, ErrCustomerNotFound
+		}
+
+		s.logger.Error("failed to get customer", err)
+		return Customer{}, err
+	}
+	return customer, nil
 }
 
 // UpdateCustomerInput represents the input parameters required for updating a customer's details.
@@ -189,7 +197,15 @@ type UpdateCustomerOutput struct {
 }
 
 func (s *service) UpdateCustomer(ctx context.Context, input UpdateCustomerInput) (UpdateCustomerOutput, error) {
-	oldCustomer, err := s.GetCustomer(ctx, GetCustomerInput{CustomerID: input.CustomerID})
+	err := s.authctx.RequireSubjectMatch(ctx, input.CustomerID)
+	if err != nil {
+		if errors.Is(err, authentication.ErrInvalidToken) {
+			return UpdateCustomerOutput{}, err
+		}
+		return UpdateCustomerOutput{}, ErrCustomerIDMismatch
+	}
+
+	oldCustomer, err := s.loadCustomerByID(ctx, input.CustomerID)
 	if err != nil {
 		return UpdateCustomerOutput{}, err
 	}
