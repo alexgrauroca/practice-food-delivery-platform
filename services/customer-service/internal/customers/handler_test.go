@@ -20,8 +20,8 @@ import (
 	authmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/authentication/mocks"
 	customersmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/customers/mocks"
 
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/customers"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/log"
 )
 
 type customerHandlerTestCase struct {

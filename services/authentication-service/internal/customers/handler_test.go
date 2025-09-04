@@ -16,9 +16,9 @@ import (
 
 	customersmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers/mocks"
 
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/jwt"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/log"
 )
 
 type customerHandlerTestCase struct {

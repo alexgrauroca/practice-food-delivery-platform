@@ -7,7 +7,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/log"
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
 )
 
 // Claims represent the authentication claims

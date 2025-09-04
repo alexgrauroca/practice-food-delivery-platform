@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/jwt"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/log"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/password"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh"
 )

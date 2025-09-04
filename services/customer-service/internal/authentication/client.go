@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/authclient"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/log"
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
 )
 
 // Client defines the interface for interacting with the authentication service.

@@ -7,7 +7,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/log"
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
 )
 
 // DefaultTokenType represents the default type of token used for authorization, typically set to "Bearer".

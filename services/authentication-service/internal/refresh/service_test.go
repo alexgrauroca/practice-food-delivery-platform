@@ -11,18 +11,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
-	"go.uber.org/zap"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/clock"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/log"
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh"
 	refreshmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh/mocks"
 )
 
-var (
-	logger  = zap.NewNop()
-	errRepo = errors.New("repository error")
-)
+var errRepo = errors.New("repository error")
 
 type refreshServiceTestCase[I, W any] struct {
 	name       string

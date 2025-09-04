@@ -13,9 +13,9 @@ import (
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/clock"
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/infraestructure/mongodb"
 
+	customlog "github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/authentication"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/customers"
-	customlog "github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/log"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/middleware"
 )
 
