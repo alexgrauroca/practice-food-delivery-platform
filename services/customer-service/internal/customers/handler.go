@@ -162,6 +162,7 @@ func (h *Handler) RegisterCustomer(c *gin.Context) {
 	c.JSON(http.StatusCreated, resp)
 }
 
+// UpdateCustomerRequest represents the request payload for updating an existing customer's information.
 type UpdateCustomerRequest struct {
 	Name        string `json:"name" binding:"required,max=100"`
 	Address     string `json:"address" binding:"required,max=100"`
@@ -170,6 +171,7 @@ type UpdateCustomerRequest struct {
 	CountryCode string `json:"country_code" binding:"required,min=2,max=2"`
 }
 
+// UpdateCustomerResponse represents the response returned after successfully updating a customer's information.
 type UpdateCustomerResponse struct {
 	ID          string    `json:"id"`
 	Email       string    `json:"email"`
@@ -182,6 +184,7 @@ type UpdateCustomerResponse struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
+// UpdateCustomer handles updating an existing customer's information.
 func (h *Handler) UpdateCustomer(c *gin.Context) {
 	ctx := c.Request.Context()
 	logger := h.logger.WithContext(ctx)
