@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
@@ -82,6 +83,16 @@ func InsertTestDocument(t *testing.T, coll *mongo.Collection, doc any) {
 	if err := bson.Unmarshal(data, &bdoc); err != nil {
 		t.Fatalf("Failed to unmarshal test refresh token: %v", err)
 	}
+
+	// Check if there's an _id field with a string value and convert it to ObjectID
+	if idStr, ok := bdoc["_id"].(string); ok {
+		id, err := primitive.ObjectIDFromHex(idStr)
+		if err != nil {
+			t.Fatalf("Failed to convert string ID to ObjectID: %v", err)
+		}
+		bdoc["_id"] = id
+	}
+
 	if _, err := coll.InsertOne(ctx, bdoc); err != nil {
 		t.Fatalf("Failed to insert test refresh token: %v", err)
 	}
