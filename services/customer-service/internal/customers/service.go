@@ -132,17 +132,11 @@ type GetCustomerOutput struct {
 }
 
 func (s *service) GetCustomer(ctx context.Context, input GetCustomerInput) (GetCustomerOutput, error) {
-	authCustomerID, ok := s.authctx.GetSubject(ctx)
-	if !ok {
-		s.logger.Warn("authentication context not found")
-		return GetCustomerOutput{}, authentication.ErrInvalidToken
-	}
-	if authCustomerID != input.CustomerID {
-		s.logger.Warn(
-			"customer CustomerID mismatch with the token",
-			log.Field{Key: "customerID", Value: input.CustomerID},
-			log.Field{Key: "authCustomerID", Value: authCustomerID},
-		)
+	err := s.authctx.RequireSubjectMatch(ctx, input.CustomerID)
+	if err != nil {
+		if errors.Is(err, authentication.ErrInvalidToken) {
+			return GetCustomerOutput{}, err
+		}
 		return GetCustomerOutput{}, ErrCustomerIDMismatch
 	}
 

@@ -264,15 +264,14 @@ func TestService_GetCustomer(t *testing.T) {
 
 	tests := []customersServiceTestCase[customers.GetCustomerInput, customers.GetCustomerOutput]{
 		{
-			name: "when there is an unexpected error when getting the auth subject, " +
-				"then it should return an invalid token error",
+			name:  "when the token is invalid, then it should return an invalid token error",
 			input: customers.GetCustomerInput{},
 			mocksSetup: func(
 				_ *customersmocks.MockRepository,
 				_ *authmocks.MockService,
 				authctx *authmocks.MockContextReader,
 			) {
-				authctx.EXPECT().GetSubject(gomock.Any()).Return("", false)
+				authctx.EXPECT().RequireSubjectMatch(gomock.Any(), gomock.Any()).Return(authentication.ErrInvalidToken)
 			},
 			want:    customers.GetCustomerOutput{},
 			wantErr: authentication.ErrInvalidToken,
@@ -286,7 +285,8 @@ func TestService_GetCustomer(t *testing.T) {
 				_ *authmocks.MockService,
 				authctx *authmocks.MockContextReader,
 			) {
-				authctx.EXPECT().GetSubject(gomock.Any()).Return("another-fake-id", true)
+				authctx.EXPECT().RequireSubjectMatch(gomock.Any(), gomock.Any()).
+					Return(authentication.ErrSubjectMismatch)
 			},
 			want:    customers.GetCustomerOutput{},
 			wantErr: customers.ErrCustomerIDMismatch,
@@ -299,7 +299,7 @@ func TestService_GetCustomer(t *testing.T) {
 				_ *authmocks.MockService,
 				authctx *authmocks.MockContextReader,
 			) {
-				authctx.EXPECT().GetSubject(gomock.Any()).Return("fake-id", true)
+				authctx.EXPECT().RequireSubjectMatch(gomock.Any(), gomock.Any()).Return(nil)
 
 				repo.EXPECT().GetCustomer(gomock.Any(), gomock.Any()).Return(customers.Customer{}, errRepo)
 			},
@@ -314,7 +314,7 @@ func TestService_GetCustomer(t *testing.T) {
 				_ *authmocks.MockService,
 				authctx *authmocks.MockContextReader,
 			) {
-				authctx.EXPECT().GetSubject(gomock.Any()).Return("fake-id", true)
+				authctx.EXPECT().RequireSubjectMatch(gomock.Any(), gomock.Any()).Return(nil)
 
 				repo.EXPECT().GetCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, customers.ErrCustomerNotFound)
@@ -330,7 +330,7 @@ func TestService_GetCustomer(t *testing.T) {
 				_ *authmocks.MockService,
 				authctx *authmocks.MockContextReader,
 			) {
-				authctx.EXPECT().GetSubject(gomock.Any()).Return("fake-id", true)
+				authctx.EXPECT().RequireSubjectMatch(gomock.Any(), "fake-id").Return(nil)
 
 				repo.EXPECT().GetCustomer(gomock.Any(), "fake-id").
 					Return(customers.Customer{
@@ -390,15 +390,14 @@ func TestService_UpdateCustomer(t *testing.T) {
 
 	tests := []customersServiceTestCase[customers.UpdateCustomerInput, customers.UpdateCustomerOutput]{
 		{
-			name: "when there is an unexpected error when getting the auth subject, " +
-				"then it should return an invalid token error",
+			name:  "when the token is invalid, then it should return an invalid token error",
 			input: customers.UpdateCustomerInput{},
 			mocksSetup: func(
 				_ *customersmocks.MockRepository,
 				_ *authmocks.MockService,
 				authctx *authmocks.MockContextReader,
 			) {
-				authctx.EXPECT().GetSubject(gomock.Any()).Return("", false)
+				authctx.EXPECT().RequireSubjectMatch(gomock.Any(), gomock.Any()).Return(authentication.ErrInvalidToken)
 			},
 			want:    customers.UpdateCustomerOutput{},
 			wantErr: authentication.ErrInvalidToken,
@@ -412,7 +411,8 @@ func TestService_UpdateCustomer(t *testing.T) {
 				_ *authmocks.MockService,
 				authctx *authmocks.MockContextReader,
 			) {
-				authctx.EXPECT().GetSubject(gomock.Any()).Return("another-fake-id", true)
+				authctx.EXPECT().RequireSubjectMatch(gomock.Any(), gomock.Any()).
+					Return(authentication.ErrSubjectMismatch)
 			},
 			want:    customers.UpdateCustomerOutput{},
 			wantErr: customers.ErrCustomerIDMismatch,
@@ -425,7 +425,7 @@ func TestService_UpdateCustomer(t *testing.T) {
 				_ *authmocks.MockService,
 				authctx *authmocks.MockContextReader,
 			) {
-				authctx.EXPECT().GetSubject(gomock.Any()).Return("fake-id", true)
+				authctx.EXPECT().RequireSubjectMatch(gomock.Any(), gomock.Any()).Return(nil)
 
 				repo.EXPECT().GetCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, customers.ErrCustomerNotFound)
@@ -441,7 +441,7 @@ func TestService_UpdateCustomer(t *testing.T) {
 				_ *authmocks.MockService,
 				authctx *authmocks.MockContextReader,
 			) {
-				authctx.EXPECT().GetSubject(gomock.Any()).Return("fake-id", true)
+				authctx.EXPECT().RequireSubjectMatch(gomock.Any(), gomock.Any()).Return(nil)
 
 				repo.EXPECT().GetCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, errUnexpected)
@@ -457,7 +457,7 @@ func TestService_UpdateCustomer(t *testing.T) {
 				_ *authmocks.MockService,
 				authctx *authmocks.MockContextReader,
 			) {
-				authctx.EXPECT().GetSubject(gomock.Any()).Return("fake-id", true)
+				authctx.EXPECT().RequireSubjectMatch(gomock.Any(), gomock.Any()).Return(nil)
 
 				repo.EXPECT().GetCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{ID: "fake-id"}, nil)
@@ -476,7 +476,7 @@ func TestService_UpdateCustomer(t *testing.T) {
 				_ *authmocks.MockService,
 				authctx *authmocks.MockContextReader,
 			) {
-				authctx.EXPECT().GetSubject(gomock.Any()).Return("fake-id", true)
+				authctx.EXPECT().RequireSubjectMatch(gomock.Any(), gomock.Any()).Return(nil)
 
 				repo.EXPECT().GetCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{ID: "fake-id"}, nil)
@@ -503,7 +503,7 @@ func TestService_UpdateCustomer(t *testing.T) {
 				authservice *authmocks.MockService,
 				authctx *authmocks.MockContextReader,
 			) {
-				authctx.EXPECT().GetSubject(gomock.Any()).Return("fake-id", true)
+				authctx.EXPECT().RequireSubjectMatch(gomock.Any(), gomock.Any()).Return(nil)
 
 				repo.EXPECT().GetCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{ID: "fake-id"}, nil)
@@ -537,7 +537,7 @@ func TestService_UpdateCustomer(t *testing.T) {
 				authservice *authmocks.MockService,
 				authctx *authmocks.MockContextReader,
 			) {
-				authctx.EXPECT().GetSubject(gomock.Any()).Return("fake-id", true)
+				authctx.EXPECT().RequireSubjectMatch(gomock.Any(), gomock.Any()).Return(nil)
 
 				repo.EXPECT().GetCustomer(gomock.Any(), "fake-id").
 					Return(customers.Customer{
@@ -614,7 +614,7 @@ func TestService_UpdateCustomer(t *testing.T) {
 				authservice *authmocks.MockService,
 				authctx *authmocks.MockContextReader,
 			) {
-				authctx.EXPECT().GetSubject(gomock.Any()).Return("fake-id", true)
+				authctx.EXPECT().RequireSubjectMatch(gomock.Any(), "fake-id").Return(nil)
 
 				repo.EXPECT().GetCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{ID: "fake-id"}, nil)

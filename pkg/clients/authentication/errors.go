@@ -14,6 +14,8 @@ var (
 	ErrAuthHeaderMissing = errors.New("authorization header is missing")
 	// ErrInvalidAuthHeader represents an error when the Authorization header format does not match "Bearer <token>"
 	ErrInvalidAuthHeader = errors.New("invalid authorization header format")
+	// ErrSubjectMismatch represents an error when the subject in the token does not match the subject in the request
+	ErrSubjectMismatch = errors.New("subject mismatch")
 )
 
 // HTTP errors
