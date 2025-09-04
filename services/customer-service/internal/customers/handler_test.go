@@ -484,7 +484,11 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 			wantStatus: http.StatusForbidden,
 		},
 		{
-			name:        "when invalid payload is provided, then it should return a 400 with invalid request error",
+			name: "when invalid payload is provided, then it should return a 400 with invalid request error",
+			token: "valid-token",
+			pathParams: map[string]string{
+				"customerID": "fakeID",
+			},
 			jsonPayload: `{"name": 1.2, "address": true}`,
 			mocksSetup: func(_ *customersmocks.MockService, authService *authmocks.MockService) {
 				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
@@ -504,6 +508,10 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 		{
 			name: "when required fields are not provided payload, " +
 				"then it should return a 400 with the required validation errors",
+			token: "valid-token",
+			pathParams: map[string]string{
+				"customerID": "fakeID",
+			},
 			jsonPayload: `{}`,
 			mocksSetup: func(_ *customersmocks.MockService, authService *authmocks.MockService) {
 				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
@@ -529,6 +537,10 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 		{
 			name: "when fields length are shorten than minimum required, " +
 				"then it should return a 400 with the short length validation errors",
+			token: "valid-token",
+			pathParams: map[string]string{
+				"customerID": "fakeID",
+			},
 			jsonPayload: `{
 				"name": "New John Doe",
 				"address": "New 123 Main St",
@@ -557,6 +569,10 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 		{
 			name: "when fields length are longer than maximum required, " +
 				"then it should return a 400 with the long length validation errors",
+			token: "valid-token",
+			pathParams: map[string]string{
+				"customerID": "fakeID",
+			},
 			jsonPayload: fmt.Sprintf(`{
 					"name": "%s",
 					"address": "%s",

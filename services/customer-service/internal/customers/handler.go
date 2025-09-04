@@ -57,6 +57,7 @@ func NewHandler(logger log.Logger, service Service, authMiddleware authenticatio
 func (h *Handler) RegisterRoutes(router *gin.Engine) {
 	router.POST("/v1.0/customers", h.RegisterCustomer)
 	router.GET("/v1.0/customers/:customerID", h.authMiddleware.RequireCustomer(), h.GetCustomer)
+	router.PUT("/v1.0/customers/:customerID", h.authMiddleware.RequireCustomer(), h.UpdateCustomer)
 }
 
 // GetCustomerResponse represents the response returned after successfully retrieving a customer.
@@ -80,11 +81,6 @@ func (h *Handler) GetCustomer(c *gin.Context) {
 	logger.Info("GetCustomer handler called")
 
 	customerID := c.Param("customerID")
-	if customerID == "" {
-		logger.Warn("Customer ID is required")
-		c.JSON(http.StatusBadRequest, newErrorResponse(CodeInvalidRequest, MsgInvalidRequest))
-		return
-	}
 
 	output, err := h.service.GetCustomer(ctx, GetCustomerInput{CustomerID: customerID})
 	if err != nil {
@@ -164,6 +160,74 @@ func (h *Handler) RegisterCustomer(c *gin.Context) {
 	resp := RegisterCustomerResponse(output)
 	logger.Info("Customer registered successfully", log.Field{Key: "customer", Value: resp})
 	c.JSON(http.StatusCreated, resp)
+}
+
+type UpdateCustomerRequest struct {
+	Name        string `json:"name" binding:"required,max=100"`
+	Address     string `json:"address" binding:"required,max=100"`
+	City        string `json:"city" binding:"required,max=100"`
+	PostalCode  string `json:"postal_code" binding:"required,min=5,max=32"`
+	CountryCode string `json:"country_code" binding:"required,min=2,max=2"`
+}
+
+type UpdateCustomerResponse struct {
+	ID          string    `json:"id"`
+	Email       string    `json:"email"`
+	Name        string    `json:"name"`
+	Address     string    `json:"address"`
+	City        string    `json:"city"`
+	PostalCode  string    `json:"postal_code"`
+	CountryCode string    `json:"country_code"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+func (h *Handler) UpdateCustomer(c *gin.Context) {
+	ctx := c.Request.Context()
+	logger := h.logger.WithContext(ctx)
+
+	logger.Info("UpdateCustomer handler called")
+
+	customerID := c.Param("customerID")
+
+	var req UpdateCustomerRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Warn("Failed to bind request", log.Field{Key: "error", Value: err.Error()})
+		errResp := getErrorResponseFromValidationErr(err)
+		c.JSON(http.StatusBadRequest, errResp)
+		return
+	}
+
+	input := UpdateCustomerInput{
+		ID:          customerID,
+		Name:        req.Name,
+		Address:     req.Address,
+		City:        req.City,
+		PostalCode:  req.PostalCode,
+		CountryCode: req.CountryCode,
+	}
+
+	output, err := h.service.UpdateCustomer(ctx, input)
+	if err != nil {
+		if errors.Is(err, ErrCustomerNotFound) {
+			logger.Warn("Customer not found", log.Field{Key: "customerID", Value: customerID})
+			c.JSON(http.StatusNotFound, newErrorResponse(CodeNotFound, MsgNotFound))
+			return
+		}
+		if errors.Is(err, ErrCustomerIDMismatch) {
+			logger.Warn("Customer ID mismatch with the token", log.Field{Key: "customerID", Value: customerID})
+			errResp := newErrorResponse(authentication.CodeForbiddenError, authentication.MessageForbiddenError)
+			c.JSON(http.StatusForbidden, errResp)
+			return
+		}
+		logger.Error("Failed to update customer", err)
+		c.JSON(http.StatusInternalServerError, newErrorResponse(CodeInternalError, MsgInternalError))
+		return
+	}
+
+	resp := UpdateCustomerResponse(output)
+	logger.Info("Customer updated successfully", log.Field{Key: "customer", Value: resp})
+	c.JSON(http.StatusOK, resp)
 }
 
 // ErrorResponse represents a standardized structure for API error responses containing code, message, and optional details.
