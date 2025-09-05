@@ -164,6 +164,7 @@ func (r *repository) GetCustomer(ctx context.Context, customerID string) (Custom
 	return customer, nil
 }
 
+// UpdateCustomerParams represents the data required for updating an existing customer's information.
 type UpdateCustomerParams struct {
 	CustomerID  string
 	Name        string
