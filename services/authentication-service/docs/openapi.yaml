@@ -12,12 +12,14 @@ tags:
   $ref: './tags/tags.yaml'
 
 paths:
-  /v1.0/customers/register:
-    $ref: './paths/customers/register.yaml'
   /v1.0/customers/login:
     $ref: './paths/customers/login.yaml'
   /v1.0/customers/refresh:
     $ref: './paths/customers/refresh.yaml'
+  /v1.0/auth/customers:
+    $ref: './paths/customers/customers.yaml'
+  /v1.0/auth/customers/{customerID}:
+    $ref: './paths/customers/customer.yaml'
 
 components:
   securitySchemes:

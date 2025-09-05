@@ -1,0 +1,7 @@
+summary: Validation error
+value:
+  code: VALIDATION_ERROR
+  message: validation failed
+  details:
+    - name is required
+    - name must not exceed 100 characters long

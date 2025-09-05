@@ -4,6 +4,7 @@ post:
   operationId: refreshCustomer
   tags:
     - Customers
+  security: []
   requestBody:
     required: true
     content:

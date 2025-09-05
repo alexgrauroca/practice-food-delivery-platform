@@ -1,0 +1,8 @@
+description: Forbidden
+content:
+  application/json:
+    schema:
+      $ref: './../schemas/responses/ErrorResponse.yaml'
+    examples:
+      internalError:
+        $ref: './../examples/Forbidden.yaml'
