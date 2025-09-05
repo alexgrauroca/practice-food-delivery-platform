@@ -385,7 +385,9 @@ func TestRepository_UpdateCustomer_UnexpectedFailure(t *testing.T) {
 	// Simulating an unexpected failure by closing the opened connection
 	tdb.Close(t)
 
-	_, err := repo.UpdateCustomer(context.Background(), customers.UpdateCustomerParams{})
+	_, err := repo.UpdateCustomer(context.Background(), customers.UpdateCustomerParams{
+		CustomerID: primitive.NewObjectID().Hex(),
+	})
 	assert.Error(t, err, "Expected an error due to unexpected failure")
 	assert.NotErrorIs(t, err, customers.ErrCustomerNotFound)
 }
