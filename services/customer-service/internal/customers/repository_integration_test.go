@@ -285,6 +285,111 @@ func TestRepository_GetCustomer_UnexpectedFailure(t *testing.T) {
 	assert.NotErrorIs(t, err, customers.ErrCustomerNotFound)
 }
 
+func TestRepository_UpdateCustomer(t *testing.T) {
+	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	yesterday := time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC)
+	logger, _ := log.NewTest()
+	customerID := primitive.NewObjectIDFromTimestamp(now).Hex()
+
+	// Params is just string as id. We don't need want, so it will be any type
+	tests := []customersRepositoryTestCase[customers.UpdateCustomerParams, customers.Customer]{
+		{
+			name:    "when the customer id is not a valid object id, then it should return a customer not found error",
+			params:  customers.UpdateCustomerParams{CustomerID: "invalid-object-id"},
+			wantErr: customers.ErrCustomerNotFound,
+		},
+		{
+			name: "when the customer does not exist, then it should return a customer not found error",
+			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
+				mongodb.InsertTestDocument(t, coll, customers.Customer{
+					Email:     "test@example.com",
+					Active:    true,
+					CreatedAt: now,
+					UpdatedAt: now,
+				})
+			},
+			params:  customers.UpdateCustomerParams{CustomerID: customerID},
+			wantErr: customers.ErrCustomerNotFound,
+		},
+		{
+			name: "when the customer exist, then it should return the updated customer",
+			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
+				mongodb.InsertTestDocument(t, coll, customers.Customer{
+					ID:          customerID,
+					Email:       "test@example.com",
+					Name:        "John Doe",
+					Active:      true,
+					Address:     "123 Main St",
+					City:        "New York",
+					PostalCode:  "10001",
+					CountryCode: "US",
+					CreatedAt:   yesterday,
+					UpdatedAt:   yesterday,
+				})
+			},
+			params: customers.UpdateCustomerParams{
+				CustomerID:  customerID,
+				Name:        "New John Doe",
+				Address:     "New 123 Main St",
+				City:        "Los Angeles",
+				PostalCode:  "09001",
+				CountryCode: "SP",
+			},
+			want: customers.Customer{
+				ID:          customerID,
+				Email:       "test@example.com",
+				Name:        "New John Doe",
+				Active:      true,
+				Address:     "New 123 Main St",
+				City:        "Los Angeles",
+				PostalCode:  "09001",
+				CountryCode: "SP",
+				CreatedAt:   yesterday,
+				UpdatedAt:   now,
+			},
+			wantErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tdb := mongodb.NewTestDB(t, "customers_test_authentication_service")
+			defer tdb.Close(t)
+
+			coll := setupTestCustomersCollection(t, tdb.DB)
+			if tt.insertDocuments != nil {
+				tt.insertDocuments(t, coll)
+			}
+
+			repo := customers.NewRepository(logger, tdb.DB, clock.FixedClock{FixedTime: now})
+			got, err := repo.UpdateCustomer(context.Background(), tt.params)
+
+			// Error assertion
+			assert.ErrorIs(t, err, tt.wantErr)
+
+			// Validating the got only if there is no error expected
+			if tt.wantErr == nil {
+				assert.Equal(t, tt.want, got)
+			}
+		})
+	}
+}
+
+func TestRepository_UpdateCustomer_UnexpectedFailure(t *testing.T) {
+	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	logger, _ := log.NewTest()
+
+	tdb := mongodb.NewTestDB(t, "customers_test_authentication_service")
+	repo := customers.NewRepository(logger, tdb.DB, clock.FixedClock{FixedTime: now})
+
+	// Simulating an unexpected failure by closing the opened connection
+	tdb.Close(t)
+
+	_, err := repo.UpdateCustomer(context.Background(), customers.UpdateCustomerParams{})
+	assert.Error(t, err, "Expected an error due to unexpected failure")
+	assert.NotErrorIs(t, err, customers.ErrCustomerNotFound)
+}
+
 func setupTestCustomersCollection(t *testing.T, db *mongo.Database) *mongo.Collection {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
