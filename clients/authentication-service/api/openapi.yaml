@@ -124,6 +124,7 @@ paths:
           description: Token mismatch
         "500":
           $ref: "#/components/responses/InternalError"
+      security: []
       summary: Refresh access token
       tags:
       - Customers
