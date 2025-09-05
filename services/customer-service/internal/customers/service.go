@@ -19,19 +19,23 @@ type Service interface {
 }
 
 type service struct {
-	logger  log.Logger
-	repo    Repository
-	authcli authentication.Client
-	authctx authentication.ContextReader
+	logger      log.Logger
+	repo        Repository
+	authservice authentication.Service
+	authctx     authentication.ContextReader
 }
 
 // NewService creates a new instance of Service with the provided logger and repository dependencies.
-func NewService(logger log.Logger, repo Repository, authcli authentication.Client, authctx authentication.ContextReader) Service {
+func NewService(
+	logger log.Logger,
+	repo Repository, authservice authentication.Service,
+	authctx authentication.ContextReader,
+) Service {
 	return &service{
-		logger:  logger,
-		repo:    repo,
-		authcli: authcli,
-		authctx: authctx,
+		logger:      logger,
+		repo:        repo,
+		authservice: authservice,
+		authctx:     authctx,
 	}
 }
 
@@ -78,17 +82,16 @@ func (s *service) RegisterCustomer(ctx context.Context, input RegisterCustomerIn
 		return RegisterCustomerOutput{}, err
 	}
 
-	authReq := authentication.RegisterCustomerRequest{
+	authInput := authentication.RegisterCustomerInput{
 		CustomerID: customer.ID,
 		Email:      input.Email,
 		Password:   input.Password,
 		Name:       input.Name,
 	}
-	if _, err := s.authcli.RegisterCustomer(ctx, authReq); err != nil {
+	if _, err := s.authservice.RegisterCustomer(ctx, authInput); err != nil {
 		logger.Error("failed to register customer at auth service", err)
 
 		// Roll back the created customer in case of error when registering the customer at auth service.
-		// Customer not found error is ignored.
 		if err := s.repo.PurgeCustomer(ctx, input.Email); err != nil && !errors.Is(err, ErrCustomerNotFound) {
 			logger.Error("failed to purge customer", err)
 			return RegisterCustomerOutput{}, err
@@ -129,28 +132,16 @@ type GetCustomerOutput struct {
 }
 
 func (s *service) GetCustomer(ctx context.Context, input GetCustomerInput) (GetCustomerOutput, error) {
-	authCustomerID, ok := s.authctx.GetSubject(ctx)
-	if !ok {
-		s.logger.Warn("authentication context not found")
-		return GetCustomerOutput{}, authentication.ErrInvalidToken
-	}
-	if authCustomerID != input.CustomerID {
-		s.logger.Warn(
-			"customer ID mismatch with the token",
-			log.Field{Key: "customerID", Value: input.CustomerID},
-			log.Field{Key: "authCustomerID", Value: authCustomerID},
-		)
+	err := s.authctx.RequireSubjectMatch(ctx, input.CustomerID)
+	if err != nil {
+		if errors.Is(err, authentication.ErrInvalidToken) {
+			return GetCustomerOutput{}, err
+		}
 		return GetCustomerOutput{}, ErrCustomerIDMismatch
 	}
 
-	customer, err := s.repo.GetCustomer(ctx, input.CustomerID)
+	customer, err := s.loadCustomerByID(ctx, input.CustomerID)
 	if err != nil {
-		if errors.Is(err, ErrCustomerNotFound) {
-			s.logger.Warn("customer not found", log.Field{Key: "customerID", Value: input.CustomerID})
-			return GetCustomerOutput{}, ErrCustomerNotFound
-		}
-
-		s.logger.Error("failed to get customer", err)
 		return GetCustomerOutput{}, err
 	}
 
@@ -167,9 +158,23 @@ func (s *service) GetCustomer(ctx context.Context, input GetCustomerInput) (GetC
 	}, nil
 }
 
+func (s *service) loadCustomerByID(ctx context.Context, customerID string) (Customer, error) {
+	customer, err := s.repo.GetCustomer(ctx, customerID)
+	if err != nil {
+		if errors.Is(err, ErrCustomerNotFound) {
+			s.logger.Warn("customer not found", log.Field{Key: "customerID"})
+			return Customer{}, ErrCustomerNotFound
+		}
+
+		s.logger.Error("failed to get customer", err)
+		return Customer{}, err
+	}
+	return customer, nil
+}
+
 // UpdateCustomerInput represents the input parameters required for updating a customer's details.
 type UpdateCustomerInput struct {
-	ID          string
+	CustomerID  string
 	Name        string
 	Address     string
 	City        string
@@ -192,6 +197,61 @@ type UpdateCustomerOutput struct {
 }
 
 func (s *service) UpdateCustomer(ctx context.Context, input UpdateCustomerInput) (UpdateCustomerOutput, error) {
-	//TODO implement me
-	panic("implement me")
+	err := s.authctx.RequireSubjectMatch(ctx, input.CustomerID)
+	if err != nil {
+		if errors.Is(err, authentication.ErrInvalidToken) {
+			return UpdateCustomerOutput{}, err
+		}
+		return UpdateCustomerOutput{}, ErrCustomerIDMismatch
+	}
+
+	oldCustomer, err := s.loadCustomerByID(ctx, input.CustomerID)
+	if err != nil {
+		return UpdateCustomerOutput{}, err
+	}
+
+	customer, err := s.repo.UpdateCustomer(ctx, UpdateCustomerParams(input))
+	if err != nil {
+		if errors.Is(err, ErrCustomerNotFound) {
+			s.logger.Warn("customer not found", log.Field{Key: "customerID", Value: input.CustomerID})
+			return UpdateCustomerOutput{}, ErrCustomerNotFound
+		}
+
+		s.logger.Error("failed to update customer", err)
+		return UpdateCustomerOutput{}, err
+	}
+
+	authInput := authentication.UpdateCustomerInput{
+		CustomerID: customer.ID,
+		Name:       customer.Name,
+	}
+	if _, err := s.authservice.UpdateCustomer(ctx, authInput); err != nil {
+		s.logger.Error("failed to update customer at auth service", err)
+
+		// Roll back the updated customer in case of error when updating the customer at auth service.
+		_, err2 := s.repo.UpdateCustomer(ctx, UpdateCustomerParams{
+			CustomerID:  customer.ID,
+			Name:        oldCustomer.Name,
+			Address:     oldCustomer.Address,
+			City:        oldCustomer.City,
+			PostalCode:  oldCustomer.PostalCode,
+			CountryCode: oldCustomer.CountryCode,
+		})
+		if err2 != nil {
+			s.logger.Error("failed to update customer", err2)
+		}
+		return UpdateCustomerOutput{}, err
+	}
+
+	return UpdateCustomerOutput{
+		ID:          customer.ID,
+		Email:       customer.Email,
+		Name:        customer.Name,
+		Address:     customer.Address,
+		City:        customer.City,
+		PostalCode:  customer.PostalCode,
+		CountryCode: customer.CountryCode,
+		CreatedAt:   customer.CreatedAt,
+		UpdatedAt:   customer.UpdatedAt,
+	}, nil
 }

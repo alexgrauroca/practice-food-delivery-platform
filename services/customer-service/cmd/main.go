@@ -51,8 +51,8 @@ func main() {
 	db := client.Database("customer_service")
 
 	// Initialize features
-	authcli, authMiddleware, authctx := initAuthenticationFeature(logger)
-	initCustomersFeature(logger, db, router, authcli, authMiddleware, authctx)
+	authService, authMiddleware, authctx := initAuthenticationFeature(logger)
+	initCustomersFeature(logger, db, router, authService, authMiddleware, authctx)
 
 	logger.Info("Starting http server")
 	// Start the server
@@ -62,7 +62,7 @@ func main() {
 }
 
 func initAuthenticationFeature(logger customlog.Logger) (
-	authentication.Client,
+	authentication.Service,
 	authentication.Middleware,
 	authentication.ContextReader,
 ) {
@@ -70,16 +70,16 @@ func initAuthenticationFeature(logger customlog.Logger) (
 	//TODO configure secret by env vars
 	authService := authentication.NewService(logger, authcli, []byte("a-string-secret-at-least-256-bits-long"))
 	authMiddleware := authentication.NewMiddleware(logger, authService)
-	authctx := authentication.NewContextReader()
+	authctx := authentication.NewContextReader(logger)
 
-	return authcli, authMiddleware, authctx
+	return authService, authMiddleware, authctx
 }
 
 func initCustomersFeature(
 	logger customlog.Logger,
 	db *mongo.Database,
 	router *gin.Engine,
-	authcli authentication.Client,
+	authService authentication.Service,
 	authMiddleware authentication.Middleware,
 	authctx authentication.ContextReader,
 ) {
@@ -87,7 +87,7 @@ func initCustomersFeature(
 	repo := customers.NewRepository(logger, db, clock.RealClock{})
 
 	// Initialize the customer's service
-	service := customers.NewService(logger, repo, authcli, authctx)
+	service := customers.NewService(logger, repo, authService, authctx)
 
 	// Initialize the customer's handler and register routes
 	handler := customers.NewHandler(logger, service, authMiddleware)
