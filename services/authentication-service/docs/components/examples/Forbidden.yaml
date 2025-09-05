@@ -1,0 +1,5 @@
+summary: Access forbidden
+value:
+  code: FORBIDDEN
+  message: You do not have permission to access this resource
+  details: [ ]

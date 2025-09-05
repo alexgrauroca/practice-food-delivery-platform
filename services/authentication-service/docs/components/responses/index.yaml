@@ -1,2 +1,8 @@
+Forbidden:
+  $ref: './Forbidden.yaml'
 InternalError:
   $ref: './InternalError.yaml'
+NotFound:
+  $ref: './NotFound.yaml'
+Unauthorized:
+  $ref: './Unauthorized.yaml'

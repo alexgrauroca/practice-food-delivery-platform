@@ -21,58 +21,6 @@ tags:
   - name: Customers
     description: Operations related to customer registration and authentication
 paths:
-  /v1.0/customers/register:
-    post:
-      summary: Register a new customer
-      description: Creates a new customer account with the provided information
-      operationId: registerCustomer
-      tags:
-        - Customers
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RegisterCustomerRequest'
-      responses:
-        '201':
-          description: Customer registered successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RegisterCustomerResponse'
-        '400':
-          description: Invalid input or validation error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                invalidRequest:
-                  $ref: '#/components/examples/InvalidRequest'
-                validationError:
-                  summary: Validation error
-                  value:
-                    code: VALIDATION_ERROR
-                    message: validation failed
-                    details:
-                      - email is required
-                      - password is required
-                      - name is required
-                      - email must be a valid email address
-                      - password must be a valid password with at least 8 characters long
-        '409':
-          description: Customer already exists
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                customerExists:
-                  $ref: '#/components/examples/CustomerExists'
-        '500':
-          $ref: '#/components/responses/InternalError'
   /v1.0/customers/login:
     post:
       summary: Login as a customer
@@ -179,6 +127,107 @@ paths:
                   $ref: '#/components/examples/TokenMismatch'
         '500':
           $ref: '#/components/responses/InternalError'
+  /v1.0/auth/customers:
+    post:
+      summary: Register a new customer
+      description: Creates a new customer account with the provided information
+      operationId: registerCustomer
+      tags:
+        - Customers
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterCustomerRequest'
+      responses:
+        '201':
+          description: Customer registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterCustomerResponse'
+        '400':
+          description: Invalid input or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidRequest:
+                  $ref: '#/components/examples/InvalidRequest'
+                validationError:
+                  summary: Validation error
+                  value:
+                    code: VALIDATION_ERROR
+                    message: validation failed
+                    details:
+                      - email is required
+                      - password is required
+                      - name is required
+                      - email must be a valid email address
+                      - password must be a valid password with at least 8 characters long
+        '409':
+          description: Customer already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                customerExists:
+                  $ref: '#/components/examples/CustomerExists'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /v1.0/auth/customers/{customerID}:
+    put:
+      summary: Update a specific customer data
+      description: Returns the customer data updated. It can only be accessed by the customer itself
+      operationId: updateCustomer
+      tags:
+        - Customers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: customerID
+          in: path
+          required: true
+          description: Customer identifier
+          schema:
+            type: string
+            pattern: ^[0-9a-fA-F]{24}$
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCustomerRequest'
+      responses:
+        '200':
+          description: Customer updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '400':
+          description: Invalid input or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidRequest:
+                  $ref: '#/components/examples/InvalidRequest'
+                validationError:
+                  $ref: '#/components/examples/UpdateCustomerValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
 components:
   securitySchemes:
     BearerAuth:
@@ -193,23 +242,17 @@ components:
         code: INVALID_REQUEST
         message: invalid request
         details: []
-    CustomerExists:
-      summary: Customer already exists
+    InvalidCredentials:
+      summary: Invalid credentials
       value:
-        code: CUSTOMER_ALREADY_EXISTS
-        message: customer already exists
+        code: INVALID_CREDENTIALS
+        message: invalid credentials
         details: []
     InternalError:
       summary: Unexpected error
       value:
         code: INTERNAL_ERROR
         message: An unexpected error occurred
-        details: []
-    InvalidCredentials:
-      summary: Invalid credentials
-      value:
-        code: INVALID_CREDENTIALS
-        message: invalid credentials
         details: []
     InvalidRefreshToken:
       summary: Invalid Refresh Token
@@ -223,7 +266,159 @@ components:
         code: TOKEN_MISMATCH
         message: token mismatch
         details: []
+    CustomerExists:
+      summary: Customer already exists
+      value:
+        code: CUSTOMER_ALREADY_EXISTS
+        message: customer already exists
+        details: []
+    UpdateCustomerValidationError:
+      summary: Validation error
+      value:
+        code: VALIDATION_ERROR
+        message: validation failed
+        details:
+          - name is required
+          - name must not exceed 100 characters long
+    Unauthorized:
+      summary: Authentication required
+      value:
+        code: UNAUTHORIZED
+        message: Authentication is required to access this resource
+        details: []
+    TokenExpired:
+      summary: Token expired
+      value:
+        code: TOKEN_EXPIRED
+        message: Token has expired
+        details: []
+    Forbidden:
+      summary: Access forbidden
+      value:
+        code: FORBIDDEN
+        message: You do not have permission to access this resource
+        details: []
+    NotFound:
+      summary: Resource not found
+      value:
+        code: NOT_FOUND
+        message: Resource not found
+        details: []
   schemas:
+    LoginCustomerRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: Customer's email address
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          description: Customer's password
+          example: strongpassword123
+          writeOnly: true
+    LoginCustomerResponse:
+      type: object
+      required:
+        - access_token
+        - refresh_token
+        - expires_in
+        - token_type
+      properties:
+        access_token:
+          type: string
+          description: JWT access token for API authentication
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+          minLength: 1
+        refresh_token:
+          type: string
+          description: Token used to obtain a new access token when it expires
+          example: dGhpc2lzYXJlZnJlc2h0b2tlbg==
+          minLength: 1
+        expires_in:
+          type: integer
+          description: Access token expiration time in seconds
+          example: 3600
+          minimum: 1
+        token_type:
+          type: string
+          description: Access token type
+          enum:
+            - Bearer
+          example: Bearer
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Error code identifier
+          example: VALIDATION_ERROR
+        message:
+          type: string
+          description: Human-readable error message
+          example: validation failed
+        details:
+          type: array
+          description: Additional error details
+          items:
+            type: string
+          example:
+            - email is required
+            - password is required
+    RefreshCustomerRequest:
+      type: object
+      required:
+        - access_token
+        - refresh_token
+      properties:
+        access_token:
+          type: string
+          description: The expired JWT access token
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+          minLength: 1
+        refresh_token:
+          type: string
+          description: The refresh token to use
+          example: dGhpc2lzYXJlZnJlc2h0b2tlbg==
+          minLength: 1
+    RefreshCustomerResponse:
+      type: object
+      required:
+        - access_token
+        - refresh_token
+        - expires_in
+        - token_type
+      properties:
+        access_token:
+          type: string
+          description: JWT access token for API authentication
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+          minLength: 1
+        refresh_token:
+          type: string
+          description: Token used to obtain a new access token when it expires
+          example: dGhpc2lzYXJlZnJlc2h0b2tlbg==
+          minLength: 1
+        expires_in:
+          type: integer
+          description: Access token expiration time in seconds
+          example: 3600
+          minimum: 1
+        token_type:
+          type: string
+          description: Access token type
+          enum:
+            - Bearer
+          example: Bearer
     RegisterCustomerRequest:
       type: object
       required:
@@ -283,120 +478,52 @@ components:
           format: date-time
           description: Account creation timestamp
           example: '2025-01-01T00:00:00Z'
-    ErrorResponse:
+    UpdateCustomerRequest:
       type: object
       required:
-        - code
-        - message
+        - name
       properties:
-        code:
+        name:
           type: string
-          description: Error code identifier
-          example: VALIDATION_ERROR
-        message:
-          type: string
-          description: Human-readable error message
-          example: validation failed
-        details:
-          type: array
-          description: Additional error details
-          items:
-            type: string
-          example:
-            - email is required
-            - password is required
-    LoginCustomerRequest:
+          minLength: 1
+          maxLength: 100
+          description: Customer's full name
+          example: John Doe
+    Customer:
       type: object
       required:
+        - id
+        - name
         - email
-        - password
+        - created_at
+        - updated_at
       properties:
+        id:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+          description: Unique customer identifier in the auth service
+          example: 507f1f77bcf86cd799439011
         email:
           type: string
           format: email
           description: Customer's email address
           example: user@example.com
-        password:
+        name:
           type: string
-          format: password
-          minLength: 8
-          description: Customer's password
-          example: strongpassword123
-          writeOnly: true
-    LoginCustomerResponse:
-      type: object
-      required:
-        - access_token
-        - refresh_token
-        - expires_in
-        - token_type
-      properties:
-        access_token:
+          description: Customer's full name
+          example: John Doe
+        created_at:
           type: string
-          description: JWT access token for API authentication
-          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-          minLength: 1
-        refresh_token:
+          format: date-time
+          description: Account creation timestamp
+          example: '2025-01-01T00:00:00Z'
+        updated_at:
           type: string
-          description: Token used to obtain a new access token when it expires
-          example: dGhpc2lzYXJlZnJlc2h0b2tlbg==
-          minLength: 1
-        expires_in:
-          type: integer
-          description: Access token expiration time in seconds
-          example: 3600
-          minimum: 1
-        token_type:
-          type: string
-          description: Access token type
-          enum:
-            - Bearer
-          example: Bearer
-    RefreshCustomerRequest:
-      type: object
-      required:
-        - access_token
-        - refresh_token
-      properties:
-        access_token:
-          type: string
-          description: The expired JWT access token
-          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-          minLength: 1
-        refresh_token:
-          type: string
-          description: The refresh token to use
-          example: dGhpc2lzYXJlZnJlc2h0b2tlbg==
-          minLength: 1
-    RefreshCustomerResponse:
-      type: object
-      required:
-        - access_token
-        - refresh_token
-        - expires_in
-        - token_type
-      properties:
-        access_token:
-          type: string
-          description: JWT access token for API authentication
-          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-          minLength: 1
-        refresh_token:
-          type: string
-          description: Token used to obtain a new access token when it expires
-          example: dGhpc2lzYXJlZnJlc2h0b2tlbg==
-          minLength: 1
-        expires_in:
-          type: integer
-          description: Access token expiration time in seconds
-          example: 3600
-          minimum: 1
-        token_type:
-          type: string
-          description: Access token type
-          enum:
-            - Bearer
-          example: Bearer
+          format: date-time
+          description: Account last update timestamp
+          example: '2025-01-01T00:00:00Z'
+    UpdateCustomerResponse:
+      $ref: '#/components/schemas/Customer'
   responses:
     InternalError:
       description: Internal server error
@@ -407,3 +534,32 @@ components:
           examples:
             internalError:
               $ref: '#/components/examples/InternalError'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            unauthorizedError:
+              $ref: '#/components/examples/Unauthorized'
+            tokenExpiredError:
+              $ref: '#/components/examples/TokenExpired'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            internalError:
+              $ref: '#/components/examples/Forbidden'
+    NotFound:
+      description: NotFound
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            internalError:
+              $ref: '#/components/examples/NotFound'

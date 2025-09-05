@@ -1,0 +1,10 @@
+description: Unauthorized
+content:
+  application/json:
+    schema:
+      $ref: './../schemas/responses/ErrorResponse.yaml'
+    examples:
+      unauthorizedError:
+        $ref: './../examples/Unauthorized.yaml'
+      tokenExpiredError:
+        $ref: './../examples/TokenExpired.yaml'
