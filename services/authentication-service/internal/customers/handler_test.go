@@ -214,7 +214,7 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			runCustomerHandlerTestCase(t, logger, "/v1.0/customers/register", tt)
+			runCustomerHandlerTestCase(t, logger, "/v1.0/auth/customers", tt)
 		})
 	}
 }
