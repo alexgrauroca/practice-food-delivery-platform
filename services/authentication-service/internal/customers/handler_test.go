@@ -4,8 +4,10 @@ package customers_test
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -23,6 +25,9 @@ import (
 
 type customerHandlerTestCase struct {
 	name        string
+	token       string
+	pathParams  map[string]string
+	queryParams map[string]string
 	jsonPayload string
 	mocksSetup  func(service *customersmocks.MockService)
 	wantJSON    string
@@ -214,7 +219,7 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			runCustomerHandlerTestCase(t, logger, "/v1.0/auth/customers", tt)
+			runCustomerHandlerTestCase(t, logger, http.MethodPost, "/v1.0/auth/customers", tt, "")
 		})
 	}
 }
@@ -327,7 +332,7 @@ func TestHandler_LoginCustomer(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			runCustomerHandlerTestCase(t, logger, "/v1.0/customers/login", tt)
+			runCustomerHandlerTestCase(t, logger, http.MethodPost, "/v1.0/customers/login", tt, "")
 		})
 	}
 }
@@ -432,7 +437,7 @@ func TestHandler_RefreshCustomer(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			runCustomerHandlerTestCase(t, logger, "/v1.0/customers/refresh", tt)
+			runCustomerHandlerTestCase(t, logger, http.MethodPost, "/v1.0/customers/refresh", tt, "")
 		})
 	}
 }
@@ -449,8 +454,10 @@ func setupTestEnv() log.Logger {
 func runCustomerHandlerTestCase(
 	t *testing.T,
 	logger log.Logger,
+	httpMethod string,
 	route string,
 	tt customerHandlerTestCase,
+	token string,
 ) {
 	// Create a new mock service
 	service := customersmocks.NewMockService(gomock.NewController(t))
@@ -465,9 +472,39 @@ func runCustomerHandlerTestCase(
 	router := gin.New()
 	h.RegisterRoutes(router)
 
-	// Create a new HTTP request with the test case's JSON payload
-	req := httptest.NewRequest(http.MethodPost, route, strings.NewReader(tt.jsonPayload))
-	req.Header.Set("Content-Type", "application/json")
+	// Create a new HTTP request with the test case's params
+	var req *http.Request
+
+	switch httpMethod {
+	case http.MethodGet:
+		baseURL, err := url.Parse(route)
+		if err != nil {
+			t.Fatalf("failed to parse route: %v", err)
+		}
+
+		// Add query parameters
+		if len(tt.queryParams) > 0 {
+			q := baseURL.Query()
+			for k, v := range tt.queryParams {
+				q.Add(k, v)
+			}
+			baseURL.RawQuery = q.Encode()
+		}
+
+		req = httptest.NewRequest(http.MethodGet, baseURL.String(), nil)
+
+	case http.MethodPost, http.MethodPut:
+		req = httptest.NewRequest(httpMethod, route, strings.NewReader(tt.jsonPayload))
+		req.Header.Set("Content-Type", "application/json")
+
+	default:
+		t.Fatalf("unsupported HTTP method: %s", httpMethod)
+	}
+
+	if token != "" {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	}
+
 	w := httptest.NewRecorder()
 
 	// Make the request to the handler
