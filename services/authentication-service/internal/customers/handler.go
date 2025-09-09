@@ -68,6 +68,12 @@ func NewHandler(logger log.Logger, service Service) *Handler {
 
 // RegisterRoutes registers the customer-related HTTP routes.
 func (h *Handler) RegisterRoutes(router *gin.Engine) {
+	auth := router.Group("/v1.0/auth")
+	{
+		auth.POST("/customers", h.RegisterCustomer)
+	}
+
+	// Existing routes remain for backward compatibility
 	router.POST("/v1.0/customers/register", h.RegisterCustomer)
 	router.POST("/v1.0/customers/login", h.LoginCustomer)
 	router.POST("v1.0/customers/refresh", h.RefreshCustomer)

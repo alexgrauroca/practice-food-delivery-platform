@@ -6,7 +6,8 @@ Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**LoginCustomer**](CustomersAPI.md#LoginCustomer) | **Post** /v1.0/customers/login | Login as a customer
 [**RefreshCustomer**](CustomersAPI.md#RefreshCustomer) | **Post** /v1.0/customers/refresh | Refresh access token
-[**RegisterCustomer**](CustomersAPI.md#RegisterCustomer) | **Post** /v1.0/customers/register | Register a new customer
+[**RegisterCustomer**](CustomersAPI.md#RegisterCustomer) | **Post** /v1.0/auth/customers | Register a new customer
+[**UpdateCustomer**](CustomersAPI.md#UpdateCustomer) | **Put** /v1.0/auth/customers/{customerID} | Update a specific customer data
 
 
 
@@ -130,7 +131,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-[BearerAuth](../README.md#BearerAuth)
+No authorization required
 
 ### HTTP request headers
 
@@ -197,6 +198,78 @@ Name | Type | Description  | Notes
 ### Authorization
 
 No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## UpdateCustomer
+
+> Customer UpdateCustomer(ctx, customerID).UpdateCustomerRequest(updateCustomerRequest).Execute()
+
+Update a specific customer data
+
+
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	openapiclient "github.com/alexgrauroca/practice-food-delivery-platform/authclient"
+)
+
+func main() {
+	customerID := "customerID_example" // string | Customer identifier
+	updateCustomerRequest := *openapiclient.NewUpdateCustomerRequest("John Doe") // UpdateCustomerRequest | 
+
+	configuration := openapiclient.NewConfiguration()
+	apiClient := openapiclient.NewAPIClient(configuration)
+	resp, r, err := apiClient.CustomersAPI.UpdateCustomer(context.Background(), customerID).UpdateCustomerRequest(updateCustomerRequest).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error when calling `CustomersAPI.UpdateCustomer``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+	// response from `UpdateCustomer`: Customer
+	fmt.Fprintf(os.Stdout, "Response from `CustomersAPI.UpdateCustomer`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+**ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
+**customerID** | **string** | Customer identifier | 
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiUpdateCustomerRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+
+ **updateCustomerRequest** | [**UpdateCustomerRequest**](UpdateCustomerRequest.md) |  | 
+
+### Return type
+
+[**Customer**](Customer.md)
+
+### Authorization
+
+[BearerAuth](../README.md#BearerAuth)
 
 ### HTTP request headers
 

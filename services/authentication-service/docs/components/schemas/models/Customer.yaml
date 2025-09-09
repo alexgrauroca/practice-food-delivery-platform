@@ -1,0 +1,32 @@
+type: object
+required:
+  - id
+  - name
+  - email
+  - created_at
+  - updated_at
+properties:
+  id:
+    type: string
+    pattern: '^[0-9a-fA-F]{24}$'
+    description: Unique customer identifier in the auth service
+    example: 507f1f77bcf86cd799439011
+  email:
+    type: string
+    format: email
+    description: Customer's email address
+    example: user@example.com
+  name:
+    type: string
+    description: Customer's full name
+    example: John Doe
+  created_at:
+    type: string
+    format: date-time
+    description: Account creation timestamp
+    example: 2025-01-01T00:00:00Z
+  updated_at:
+    type: string
+    format: date-time
+    description: Account last update timestamp
+    example: 2025-01-01T00:00:00Z

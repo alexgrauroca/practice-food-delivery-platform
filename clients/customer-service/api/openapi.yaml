@@ -431,14 +431,14 @@ components:
     Customer:
       example:
         country_code: US
-        createdAt: 2024-01-01T12:00:00Z
         address: 123 Main St
+        updated_at: 2024-01-01T12:00:00Z
         city: New York
         name: John Doe
+        created_at: 2024-01-01T12:00:00Z
         id: 507f1f77bcf86cd799439011
         postal_code: "10001"
         email: john.doe@example.com
-        updatedAt: 2024-01-01T12:00:00Z
       properties:
         id:
           description: Unique customer identifier
@@ -478,12 +478,12 @@ components:
           maxLength: 2
           minLength: 2
           type: string
-        createdAt:
+        created_at:
           description: The timestamp when the customer was created
           example: 2024-01-01T12:00:00Z
           format: date-time
           type: string
-        updatedAt:
+        updated_at:
           description: The timestamp when the customer was last updated
           example: 2024-01-01T12:00:00Z
           format: date-time
@@ -492,12 +492,12 @@ components:
       - address
       - city
       - country_code
-      - createdAt
+      - created_at
       - email
       - id
       - name
       - postal_code
-      - updatedAt
+      - updated_at
       type: object
     UpdateCustomerRequest:
       example:
