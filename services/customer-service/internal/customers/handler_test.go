@@ -16,8 +16,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/clients/authentication"
-	authmocks "github.com/alexgrauroca/practice-food-delivery-platform/pkg/clients/authentication/mocks"
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth"
+	authmocks "github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth/mocks"
 	customersmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/customers/mocks"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
@@ -268,7 +268,7 @@ func TestHandler_GetCustomer(t *testing.T) {
 			},
 			mocksSetup: func(_ *customersmocks.MockService, authService *authmocks.MockService) {
 				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
-					Return(authentication.ValidateAccessTokenOutput{}, authentication.ErrInvalidToken)
+					Return(auth.ValidateAccessTokenOutput{}, auth.ErrInvalidToken)
 			},
 			wantJSON: `{
 				"code": "UNAUTHORIZED",
@@ -285,8 +285,8 @@ func TestHandler_GetCustomer(t *testing.T) {
 			},
 			mocksSetup: func(_ *customersmocks.MockService, authService *authmocks.MockService) {
 				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
-					Return(authentication.ValidateAccessTokenOutput{
-						Claims: &authentication.Claims{
+					Return(auth.ValidateAccessTokenOutput{
+						Claims: &auth.Claims{
 							Role: "none-customer-role",
 						},
 					}, nil)
@@ -307,9 +307,9 @@ func TestHandler_GetCustomer(t *testing.T) {
 			},
 			mocksSetup: func(service *customersmocks.MockService, authService *authmocks.MockService) {
 				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
-					Return(authentication.ValidateAccessTokenOutput{
-						Claims: &authentication.Claims{
-							Role: string(authentication.RoleCustomer),
+					Return(auth.ValidateAccessTokenOutput{
+						Claims: &auth.Claims{
+							Role: string(auth.RoleCustomer),
 						},
 					}, nil)
 
@@ -331,9 +331,9 @@ func TestHandler_GetCustomer(t *testing.T) {
 			},
 			mocksSetup: func(service *customersmocks.MockService, authService *authmocks.MockService) {
 				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
-					Return(authentication.ValidateAccessTokenOutput{
-						Claims: &authentication.Claims{
-							Role: string(authentication.RoleCustomer),
+					Return(auth.ValidateAccessTokenOutput{
+						Claims: &auth.Claims{
+							Role: string(auth.RoleCustomer),
 						},
 					}, nil)
 
@@ -356,9 +356,9 @@ func TestHandler_GetCustomer(t *testing.T) {
 			},
 			mocksSetup: func(service *customersmocks.MockService, authService *authmocks.MockService) {
 				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
-					Return(authentication.ValidateAccessTokenOutput{
-						Claims: &authentication.Claims{
-							Role: string(authentication.RoleCustomer),
+					Return(auth.ValidateAccessTokenOutput{
+						Claims: &auth.Claims{
+							Role: string(auth.RoleCustomer),
 						},
 					}, nil)
 
@@ -379,11 +379,11 @@ func TestHandler_GetCustomer(t *testing.T) {
 				"customerID": "fakeID",
 			},
 			mocksSetup: func(service *customersmocks.MockService, authService *authmocks.MockService) {
-				authService.EXPECT().ValidateAccessToken(gomock.Any(), authentication.ValidateAccessTokenInput{
+				authService.EXPECT().ValidateAccessToken(gomock.Any(), auth.ValidateAccessTokenInput{
 					AccessToken: "valid-token",
-				}).Return(authentication.ValidateAccessTokenOutput{
-					Claims: &authentication.Claims{
-						Role: string(authentication.RoleCustomer),
+				}).Return(auth.ValidateAccessTokenOutput{
+					Claims: &auth.Claims{
+						Role: string(auth.RoleCustomer),
 					},
 				}, nil)
 
@@ -452,7 +452,7 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 			jsonPayload: `{}`,
 			mocksSetup: func(_ *customersmocks.MockService, authService *authmocks.MockService) {
 				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
-					Return(authentication.ValidateAccessTokenOutput{}, authentication.ErrInvalidToken)
+					Return(auth.ValidateAccessTokenOutput{}, auth.ErrInvalidToken)
 			},
 			wantJSON: `{
 				"code": "UNAUTHORIZED",
@@ -470,8 +470,8 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 			jsonPayload: `{}`,
 			mocksSetup: func(_ *customersmocks.MockService, authService *authmocks.MockService) {
 				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
-					Return(authentication.ValidateAccessTokenOutput{
-						Claims: &authentication.Claims{
+					Return(auth.ValidateAccessTokenOutput{
+						Claims: &auth.Claims{
 							Role: "none-customer-role",
 						},
 					}, nil)
@@ -492,9 +492,9 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 			jsonPayload: `{"name": 1.2, "address": true}`,
 			mocksSetup: func(_ *customersmocks.MockService, authService *authmocks.MockService) {
 				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
-					Return(authentication.ValidateAccessTokenOutput{
-						Claims: &authentication.Claims{
-							Role: string(authentication.RoleCustomer),
+					Return(auth.ValidateAccessTokenOutput{
+						Claims: &auth.Claims{
+							Role: string(auth.RoleCustomer),
 						},
 					}, nil)
 			},
@@ -515,9 +515,9 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 			jsonPayload: `{}`,
 			mocksSetup: func(_ *customersmocks.MockService, authService *authmocks.MockService) {
 				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
-					Return(authentication.ValidateAccessTokenOutput{
-						Claims: &authentication.Claims{
-							Role: string(authentication.RoleCustomer),
+					Return(auth.ValidateAccessTokenOutput{
+						Claims: &auth.Claims{
+							Role: string(auth.RoleCustomer),
 						},
 					}, nil)
 			},
@@ -550,9 +550,9 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 			}`,
 			mocksSetup: func(_ *customersmocks.MockService, authService *authmocks.MockService) {
 				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
-					Return(authentication.ValidateAccessTokenOutput{
-						Claims: &authentication.Claims{
-							Role: string(authentication.RoleCustomer),
+					Return(auth.ValidateAccessTokenOutput{
+						Claims: &auth.Claims{
+							Role: string(auth.RoleCustomer),
 						},
 					}, nil)
 			},
@@ -587,9 +587,9 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 			),
 			mocksSetup: func(_ *customersmocks.MockService, authService *authmocks.MockService) {
 				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
-					Return(authentication.ValidateAccessTokenOutput{
-						Claims: &authentication.Claims{
-							Role: string(authentication.RoleCustomer),
+					Return(auth.ValidateAccessTokenOutput{
+						Claims: &auth.Claims{
+							Role: string(auth.RoleCustomer),
 						},
 					}, nil)
 			},
@@ -622,9 +622,9 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 			}`,
 			mocksSetup: func(service *customersmocks.MockService, authService *authmocks.MockService) {
 				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
-					Return(authentication.ValidateAccessTokenOutput{
-						Claims: &authentication.Claims{
-							Role: string(authentication.RoleCustomer),
+					Return(auth.ValidateAccessTokenOutput{
+						Claims: &auth.Claims{
+							Role: string(auth.RoleCustomer),
 						},
 					}, nil)
 
@@ -653,9 +653,9 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 			}`,
 			mocksSetup: func(service *customersmocks.MockService, authService *authmocks.MockService) {
 				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
-					Return(authentication.ValidateAccessTokenOutput{
-						Claims: &authentication.Claims{
-							Role: string(authentication.RoleCustomer),
+					Return(auth.ValidateAccessTokenOutput{
+						Claims: &auth.Claims{
+							Role: string(auth.RoleCustomer),
 						},
 					}, nil)
 
@@ -685,9 +685,9 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 			}`,
 			mocksSetup: func(service *customersmocks.MockService, authService *authmocks.MockService) {
 				authService.EXPECT().ValidateAccessToken(gomock.Any(), gomock.Any()).
-					Return(authentication.ValidateAccessTokenOutput{
-						Claims: &authentication.Claims{
-							Role: string(authentication.RoleCustomer),
+					Return(auth.ValidateAccessTokenOutput{
+						Claims: &auth.Claims{
+							Role: string(auth.RoleCustomer),
 						},
 					}, nil)
 
@@ -715,11 +715,11 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 				"country_code": "SP"
 			}`,
 			mocksSetup: func(service *customersmocks.MockService, authService *authmocks.MockService) {
-				authService.EXPECT().ValidateAccessToken(gomock.Any(), authentication.ValidateAccessTokenInput{
+				authService.EXPECT().ValidateAccessToken(gomock.Any(), auth.ValidateAccessTokenInput{
 					AccessToken: "valid-token",
-				}).Return(authentication.ValidateAccessTokenOutput{
-					Claims: &authentication.Claims{
-						Role: string(authentication.RoleCustomer),
+				}).Return(auth.ValidateAccessTokenOutput{
+					Claims: &auth.Claims{
+						Role: string(auth.RoleCustomer),
 					},
 				}, nil)
 
@@ -789,7 +789,7 @@ func runCustomerHandlerTestCase(
 	}
 
 	// Initialize the authentication middleware
-	authMiddleware := authentication.NewMiddleware(logger, authService)
+	authMiddleware := auth.NewMiddleware(logger, authService)
 
 	// Initialize the handler
 	h := customers.NewHandler(logger, service, authMiddleware)

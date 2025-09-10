@@ -1,4 +1,4 @@
-package authentication
+package auth
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 
 // ContextReader defines operations for reading authentication data from context
 //
-//go:generate mockgen -destination=./mocks/context_mock.go -package=authentication_mocks github.com/alexgrauroca/practice-food-delivery-platform/pkg/clients/authentication ContextReader
+//go:generate mockgen -destination=./mocks/context_mock.go -package=auth_mocks github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth ContextReader
 type ContextReader interface {
 	GetSubject(ctx context.Context) (string, bool)
 	RequireSubjectMatch(ctx context.Context, expectedSubject string) error

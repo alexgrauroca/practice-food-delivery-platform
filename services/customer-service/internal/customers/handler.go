@@ -9,7 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/iancoleman/strcase"
 
-	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/clients/authentication"
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth"
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
 )
 
@@ -41,11 +41,11 @@ const (
 type Handler struct {
 	logger         log.Logger
 	service        Service
-	authMiddleware authentication.Middleware
+	authMiddleware auth.Middleware
 }
 
 // NewHandler creates a new instance of Handler.
-func NewHandler(logger log.Logger, service Service, authMiddleware authentication.Middleware) *Handler {
+func NewHandler(logger log.Logger, service Service, authMiddleware auth.Middleware) *Handler {
 	return &Handler{
 		logger:         logger,
 		service:        service,
@@ -91,7 +91,7 @@ func (h *Handler) GetCustomer(c *gin.Context) {
 		}
 		if errors.Is(err, ErrCustomerIDMismatch) {
 			logger.Warn("Customer CustomerID mismatch with the token", log.Field{Key: "customerID", Value: customerID})
-			errResp := newErrorResponse(authentication.CodeForbiddenError, authentication.MessageForbiddenError)
+			errResp := newErrorResponse(auth.CodeForbiddenError, auth.MessageForbiddenError)
 			c.JSON(http.StatusForbidden, errResp)
 			return
 		}
@@ -219,7 +219,7 @@ func (h *Handler) UpdateCustomer(c *gin.Context) {
 		}
 		if errors.Is(err, ErrCustomerIDMismatch) {
 			logger.Warn("Customer CustomerID mismatch with the token", log.Field{Key: "customerID", Value: customerID})
-			errResp := newErrorResponse(authentication.CodeForbiddenError, authentication.MessageForbiddenError)
+			errResp := newErrorResponse(auth.CodeForbiddenError, auth.MessageForbiddenError)
 			c.JSON(http.StatusForbidden, errResp)
 			return
 		}
