@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth"
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/clients/authentication"
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
 )
@@ -19,23 +20,24 @@ type Service interface {
 }
 
 type service struct {
-	logger      log.Logger
-	repo        Repository
-	authservice authentication.Service
-	authctx     authentication.ContextReader
+	logger  log.Logger
+	repo    Repository
+	authcli authentication.Client
+	authctx auth.ContextReader
 }
 
 // NewService creates a new instance of Service with the provided logger and repository dependencies.
 func NewService(
 	logger log.Logger,
-	repo Repository, authservice authentication.Service,
-	authctx authentication.ContextReader,
+	repo Repository,
+	authcli authentication.Client,
+	authctx auth.ContextReader,
 ) Service {
 	return &service{
-		logger:      logger,
-		repo:        repo,
-		authservice: authservice,
-		authctx:     authctx,
+		logger:  logger,
+		repo:    repo,
+		authcli: authcli,
+		authctx: authctx,
 	}
 }
 
@@ -82,13 +84,13 @@ func (s *service) RegisterCustomer(ctx context.Context, input RegisterCustomerIn
 		return RegisterCustomerOutput{}, err
 	}
 
-	authInput := authentication.RegisterCustomerInput{
+	req := authentication.RegisterCustomerRequest{
 		CustomerID: customer.ID,
 		Email:      input.Email,
 		Password:   input.Password,
 		Name:       input.Name,
 	}
-	if _, err := s.authservice.RegisterCustomer(ctx, authInput); err != nil {
+	if _, err := s.authcli.RegisterCustomer(ctx, req); err != nil {
 		logger.Error("failed to register customer at auth service", err)
 
 		// Roll back the created customer in case of error when registering the customer at auth service.
@@ -134,7 +136,7 @@ type GetCustomerOutput struct {
 func (s *service) GetCustomer(ctx context.Context, input GetCustomerInput) (GetCustomerOutput, error) {
 	err := s.authctx.RequireSubjectMatch(ctx, input.CustomerID)
 	if err != nil {
-		if errors.Is(err, authentication.ErrInvalidToken) {
+		if errors.Is(err, auth.ErrInvalidToken) {
 			return GetCustomerOutput{}, err
 		}
 		return GetCustomerOutput{}, ErrCustomerIDMismatch
@@ -199,7 +201,7 @@ type UpdateCustomerOutput struct {
 func (s *service) UpdateCustomer(ctx context.Context, input UpdateCustomerInput) (UpdateCustomerOutput, error) {
 	err := s.authctx.RequireSubjectMatch(ctx, input.CustomerID)
 	if err != nil {
-		if errors.Is(err, authentication.ErrInvalidToken) {
+		if errors.Is(err, auth.ErrInvalidToken) {
 			return UpdateCustomerOutput{}, err
 		}
 		return UpdateCustomerOutput{}, ErrCustomerIDMismatch
@@ -221,11 +223,11 @@ func (s *service) UpdateCustomer(ctx context.Context, input UpdateCustomerInput)
 		return UpdateCustomerOutput{}, err
 	}
 
-	authInput := authentication.UpdateCustomerInput{
+	req := authentication.UpdateCustomerRequest{
 		CustomerID: customer.ID,
 		Name:       customer.Name,
 	}
-	if _, err := s.authservice.UpdateCustomer(ctx, authInput); err != nil {
+	if _, err := s.authcli.UpdateCustomer(ctx, req); err != nil {
 		s.logger.Error("failed to update customer at auth service", err)
 
 		// Roll back the updated customer in case of error when updating the customer at auth service.

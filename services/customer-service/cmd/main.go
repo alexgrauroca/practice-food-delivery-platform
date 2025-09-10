@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth"
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/clock"
 	customhttp "github.com/alexgrauroca/practice-food-delivery-platform/pkg/http"
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/infraestructure/mongodb"
@@ -51,8 +52,8 @@ func main() {
 	db := client.Database("customer_service")
 
 	// Initialize features
-	authService, authMiddleware, authctx := initAuthenticationFeature(logger)
-	initCustomersFeature(logger, db, router, authService, authMiddleware, authctx)
+	authcli, authMiddleware, authctx := initAuthenticationFeature(logger)
+	initCustomersFeature(logger, db, router, authcli, authMiddleware, authctx)
 
 	logger.Info("Starting http server")
 	// Start the server
@@ -62,26 +63,26 @@ func main() {
 }
 
 func initAuthenticationFeature(logger customlog.Logger) (
-	authentication.Service,
-	authentication.Middleware,
-	authentication.ContextReader,
+	authentication.Client,
+	auth.Middleware,
+	auth.ContextReader,
 ) {
 	authcli := authentication.NewClient(logger, authentication.Config{Debug: false})
 	//TODO configure secret by env vars
-	authService := authentication.NewService(logger, authcli, []byte("a-string-secret-at-least-256-bits-long"))
-	authMiddleware := authentication.NewMiddleware(logger, authService)
-	authctx := authentication.NewContextReader(logger)
+	authService := auth.NewService(logger, []byte("a-string-secret-at-least-256-bits-long"))
+	authMiddleware := auth.NewMiddleware(logger, authService)
+	authctx := auth.NewContextReader(logger)
 
-	return authService, authMiddleware, authctx
+	return authcli, authMiddleware, authctx
 }
 
 func initCustomersFeature(
 	logger customlog.Logger,
 	db *mongo.Database,
 	router *gin.Engine,
-	authService authentication.Service,
-	authMiddleware authentication.Middleware,
-	authctx authentication.ContextReader,
+	authService authentication.Client,
+	authMiddleware auth.Middleware,
+	authctx auth.ContextReader,
 ) {
 	// Initialize the customer's repository
 	repo := customers.NewRepository(logger, db, clock.RealClock{})

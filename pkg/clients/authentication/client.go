@@ -16,29 +16,12 @@ import (
 //go:generate mockgen -destination=./mocks/authclient_mock.go -package=authentication_mocks github.com/alexgrauroca/practice-food-delivery-platform/pkg/clients/authentication Client
 type Client interface {
 	RegisterCustomer(ctx context.Context, req RegisterCustomerRequest) (RegisterCustomerResponse, error)
+	UpdateCustomer(ctx context.Context, req UpdateCustomerRequest) (UpdateCustomerResponse, error)
 }
 
 // Config holds the configuration options for the authentication client.
 type Config struct {
 	Debug bool
-}
-
-// RegisterCustomerRequest represents the data required to register a new customer
-// in the authentication service.
-type RegisterCustomerRequest struct {
-	CustomerID string
-	Email      string
-	Password   string
-	Name       string
-}
-
-// RegisterCustomerResponse contains the data returned after successfully
-// registering a customer in the authentication service.
-type RegisterCustomerResponse struct {
-	ID        string
-	Email     string
-	Name      string
-	CreatedAt time.Time
 }
 
 type client struct {
@@ -61,6 +44,24 @@ func NewClient(logger log.Logger, config Config) Client {
 		conf:   conf,
 		apicli: apiclient,
 	}
+}
+
+// RegisterCustomerRequest represents the data required to register a new customer
+// in the authentication service.
+type RegisterCustomerRequest struct {
+	CustomerID string
+	Email      string
+	Password   string
+	Name       string
+}
+
+// RegisterCustomerResponse contains the data returned after successfully
+// registering a customer in the authentication service.
+type RegisterCustomerResponse struct {
+	ID        string
+	Email     string
+	Name      string
+	CreatedAt time.Time
 }
 
 func (c *client) RegisterCustomer(ctx context.Context, req RegisterCustomerRequest) (RegisterCustomerResponse, error) {
@@ -89,4 +90,21 @@ func (c *client) RegisterCustomer(ctx context.Context, req RegisterCustomerReque
 		Name:      resp.Name,
 		CreatedAt: resp.CreatedAt,
 	}, nil
+}
+
+type UpdateCustomerRequest struct {
+	CustomerID string
+	Name       string
+}
+
+type UpdateCustomerResponse struct {
+	ID        string
+	Email     string
+	Name      string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+func (c *client) UpdateCustomer(ctx context.Context, req UpdateCustomerRequest) (UpdateCustomerResponse, error) {
+	panic("implement me")
 }

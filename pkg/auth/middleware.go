@@ -22,7 +22,7 @@ const (
 // Middleware defines the interface for authentication-related middleware functions used
 // to secure and validate requests.
 //
-//go:generate mockgen -destination=./mocks/middleware_mock.go -package=authentication_mocks github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth Middleware
+//go:generate mockgen -destination=./mocks/middleware_mock.go -package=auth_mocks github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth Middleware
 type Middleware interface {
 	RequireCustomer() gin.HandlerFunc
 }
