@@ -207,7 +207,7 @@ func (h *Handler) RefreshCustomer(c *gin.Context) {
 			c.JSON(http.StatusUnauthorized, newErrorResponse(CodeInvalidRefreshToken, MsgInvalidRefreshToken))
 			return
 		} else if errors.Is(err, ErrTokenMismatch) {
-			logger.Warn("Token mismatch")
+			logger.Warn("AccessToken mismatch")
 			c.JSON(http.StatusForbidden, newErrorResponse(CodeTokenMismatch, MsgTokenMismatch))
 			return
 		}

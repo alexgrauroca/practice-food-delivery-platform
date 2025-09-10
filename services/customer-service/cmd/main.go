@@ -69,7 +69,7 @@ func initAuthenticationFeature(logger customlog.Logger) (
 ) {
 	authcli := authentication.NewClient(logger, authentication.Config{Debug: false})
 	//TODO configure secret by env vars
-	authService := auth.NewService(logger, []byte("a-string-secret-at-least-256-bits-long"))
+	authService := auth.NewService(logger, []byte("a-string-secret-at-least-256-bits-long"), clock.RealClock{})
 	authMiddleware := auth.NewMiddleware(logger, authService)
 	authctx := auth.NewContextReader(logger)
 

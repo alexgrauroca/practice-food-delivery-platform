@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth"
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/jwt"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/password"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh"
 )
@@ -32,11 +32,11 @@ type service struct {
 	logger         log.Logger
 	repo           Repository
 	refreshService refresh.Service
-	jwtService     jwt.Service
+	jwtService     auth.Service
 }
 
 // NewService creates a new instance of Service with the provided logger and repository dependencies.
-func NewService(logger log.Logger, repo Repository, refreshService refresh.Service, jwtService jwt.Service) Service {
+func NewService(logger log.Logger, repo Repository, refreshService refresh.Service, jwtService auth.Service) Service {
 	return &service{
 		logger:         logger,
 		repo:           repo,
@@ -162,15 +162,17 @@ func (s *service) RefreshCustomer(ctx context.Context, input RefreshCustomerInpu
 		return RefreshCustomerOutput{}, err
 	}
 
-	claims, err := s.jwtService.GetClaims(input.AccessToken)
+	claimsOutput, err := s.jwtService.GetClaims(ctx, auth.GetClaimsInput{AccessToken: input.AccessToken})
 	if err != nil {
-		if errors.Is(err, jwt.ErrInvalidToken) {
+		if errors.Is(err, auth.ErrInvalidToken) {
 			logger.Warn("access token is invalid")
 			return RefreshCustomerOutput{}, ErrTokenMismatch
 		}
 		logger.Error("failed to get claims from access token", err)
 		return RefreshCustomerOutput{}, err
 	}
+
+	claims := claimsOutput.Claims
 	if claims.Subject != refreshToken.UserID || claims.Role != refreshToken.Role {
 		logger.Warn("token mismatch")
 		return RefreshCustomerOutput{}, ErrTokenMismatch
@@ -203,7 +205,8 @@ type TokenPair struct {
 func (s *service) generateTokenPair(ctx context.Context, customer Customer) (TokenPair, error) {
 	logger := s.logger.WithContext(ctx)
 
-	accessToken, err := s.jwtService.GenerateToken(customer.CustomerID, jwt.Config{
+	generateOutput, err := s.jwtService.GenerateToken(ctx, auth.GenerateTokenInput{
+		ID:         customer.CustomerID,
 		Expiration: DefaultTokenExpiration,
 		Role:       DefaultTokenRole,
 	})
@@ -222,9 +225,9 @@ func (s *service) generateTokenPair(ctx context.Context, customer Customer) (Tok
 	}
 
 	return TokenPair{
-		AccessToken:  accessToken,
+		AccessToken:  generateOutput.AccessToken,
 		RefreshToken: refreshToken.Token,
-		TokenType:    jwt.DefaultTokenType,
+		TokenType:    auth.DefaultTokenType,
 		ExpiresIn:    DefaultTokenExpiration,
 	}, nil
 }

@@ -30,7 +30,7 @@ const (
 	// CodeTokenExpiredError represents the error code indicating that the authentication token has expired
 	CodeTokenExpiredError = "TOKEN_EXPIRED"
 	// MessageTokenExpiredError represents the error message indicating that the authentication token has expired
-	MessageTokenExpiredError = "Token has expired"
+	MessageTokenExpiredError = "AccessToken has expired"
 
 	// CodeForbiddenError represents the error code indicating that the user does not have sufficient permissions
 	CodeForbiddenError = "FORBIDDEN"
