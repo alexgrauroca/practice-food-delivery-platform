@@ -1,6 +1,5 @@
 // Package authentication provides functionality for customer authentication and registration
-// through integration with the authentication service. It handles customer registration,
-// login, and token management operations.
+// through integration with the authentication service.
 package authentication
 
 import (
