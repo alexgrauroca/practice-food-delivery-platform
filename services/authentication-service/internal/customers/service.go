@@ -32,16 +32,16 @@ type service struct {
 	logger         log.Logger
 	repo           Repository
 	refreshService refresh.Service
-	jwtService     auth.Service
+	authService    auth.Service
 }
 
 // NewService creates a new instance of Service with the provided logger and repository dependencies.
-func NewService(logger log.Logger, repo Repository, refreshService refresh.Service, jwtService auth.Service) Service {
+func NewService(logger log.Logger, repo Repository, refreshService refresh.Service, authService auth.Service) Service {
 	return &service{
 		logger:         logger,
 		repo:           repo,
 		refreshService: refreshService,
-		jwtService:     jwtService,
+		authService:    authService,
 	}
 }
 
@@ -162,7 +162,7 @@ func (s *service) RefreshCustomer(ctx context.Context, input RefreshCustomerInpu
 		return RefreshCustomerOutput{}, err
 	}
 
-	claimsOutput, err := s.jwtService.GetClaims(ctx, auth.GetClaimsInput{AccessToken: input.AccessToken})
+	claimsOutput, err := s.authService.GetClaims(ctx, auth.GetClaimsInput{AccessToken: input.AccessToken})
 	if err != nil {
 		if errors.Is(err, auth.ErrInvalidToken) {
 			logger.Warn("access token is invalid")
@@ -205,7 +205,7 @@ type TokenPair struct {
 func (s *service) generateTokenPair(ctx context.Context, customer Customer) (TokenPair, error) {
 	logger := s.logger.WithContext(ctx)
 
-	generateOutput, err := s.jwtService.GenerateToken(ctx, auth.GenerateTokenInput{
+	generateOutput, err := s.authService.GenerateToken(ctx, auth.GenerateTokenInput{
 		ID:         customer.CustomerID,
 		Expiration: DefaultTokenExpiration,
 		Role:       DefaultTokenRole,
