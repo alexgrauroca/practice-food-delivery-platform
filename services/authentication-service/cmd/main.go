@@ -13,8 +13,8 @@ import (
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/clock"
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/infraestructure/mongodb"
 	customlog "github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
+
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/jwt"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/middleware"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh"
 )
