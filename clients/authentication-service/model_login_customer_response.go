@@ -23,7 +23,7 @@ var _ MappedNullable = &LoginCustomerResponse{}
 type LoginCustomerResponse struct {
 	// JWT access token for API authentication
 	AccessToken string `json:"access_token"`
-	// AccessToken used to obtain a new access token when it expires
+	// Token used to obtain a new access token when it expires
 	RefreshToken string `json:"refresh_token"`
 	// Access token expiration time in seconds
 	ExpiresIn int32 `json:"expires_in"`
