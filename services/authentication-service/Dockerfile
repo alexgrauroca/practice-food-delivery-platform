@@ -5,6 +5,10 @@ FROM golang:1.25-alpine AS builder
 WORKDIR /app/pkg
 COPY ./pkg/ ./
 
+# Copy clients
+WORKDIR /app/clients/authentication-service
+COPY ./clients/authentication-service/ ./
+
 # Copy and build the service
 WORKDIR /app/services/authentication-service
 COPY ./services/authentication-service/go.mod ./services/authentication-service/go.sum ./
