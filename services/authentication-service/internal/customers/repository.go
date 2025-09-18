@@ -43,6 +43,7 @@ type Customer struct {
 type Repository interface {
 	CreateCustomer(ctx context.Context, params CreateCustomerParams) (Customer, error)
 	FindByEmail(ctx context.Context, email string) (Customer, error)
+	UpdateCustomer(ctx context.Context, params UpdateCustomerParams) (Customer, error)
 }
 
 type repository struct {
@@ -119,4 +120,14 @@ func (r *repository) FindByEmail(ctx context.Context, email string) (Customer, e
 		return Customer{}, err
 	}
 	return customer, nil
+}
+
+type UpdateCustomerParams struct {
+	CustomerID string
+	Name       string
+}
+
+func (r *repository) UpdateCustomer(ctx context.Context, params UpdateCustomerParams) (Customer, error) {
+	//TODO implement me
+	panic("implement me")
 }

@@ -34,15 +34,23 @@ type service struct {
 	repo           Repository
 	refreshService refresh.Service
 	authService    auth.Service
+	authctx        auth.ContextReader
 }
 
 // NewService creates a new instance of Service with the provided logger and repository dependencies.
-func NewService(logger log.Logger, repo Repository, refreshService refresh.Service, authService auth.Service) Service {
+func NewService(
+	logger log.Logger,
+	repo Repository,
+	refreshService refresh.Service,
+	authService auth.Service,
+	authctx auth.ContextReader,
+) Service {
 	return &service{
 		logger:         logger,
 		repo:           repo,
 		refreshService: refreshService,
 		authService:    authService,
+		authctx:        authctx,
 	}
 }
 
