@@ -16,4 +16,7 @@ var (
 	ErrInvalidRefreshToken = errors.New("invalid refresh token")
 	// ErrTokenMismatch indicates a mismatch between the provided access token and the refresh token.
 	ErrTokenMismatch = errors.New("token mismatch")
+	// ErrCustomerIDMismatch indicates that the requested customer CustomerID does not match the authenticated customer's identity,
+	// which is typically used when validating access permissions for customer-specific operations.
+	ErrCustomerIDMismatch = errors.New("customer CustomerID does not match authenticated customer")
 )
