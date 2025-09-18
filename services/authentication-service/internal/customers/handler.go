@@ -9,6 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/iancoleman/strcase"
 
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth"
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
 )
 
@@ -27,6 +28,8 @@ const (
 	CodeInvalidRefreshToken = "INVALID_REFRESH_TOKEN"
 	// CodeTokenMismatch represents an error code indicating a mismatch between the provided token and the expected value.
 	CodeTokenMismatch = "TOKEN_MISMATCH"
+	// CodeNotFound represents the error code indicating that the requested resource could not be found in the system.
+	CodeNotFound = "NOT_FOUND"
 
 	// MsgValidationError represents the error message for validation failures during input validation checks.
 	MsgValidationError = "validation failed"
@@ -42,6 +45,8 @@ const (
 	MsgInvalidRefreshToken = "invalid or expired refresh token"
 	// MsgTokenMismatch represents the error message for a token mismatch scenario.
 	MsgTokenMismatch = "token mismatch"
+	// MsgNotFound represents the error message indicating that the requested resource could not be found.
+	MsgNotFound = "resource not found"
 )
 
 // TokenPairResponse represents the structure for holding both access and refresh tokens along with metadata.
@@ -54,23 +59,26 @@ type TokenPairResponse struct {
 
 // Handler manages HTTP requests for auth-customer-related operations.
 type Handler struct {
-	logger  log.Logger
-	service Service
+	logger         log.Logger
+	service        Service
+	authMiddleware auth.Middleware
 }
 
 // NewHandler creates a new instance of Handler.
-func NewHandler(logger log.Logger, service Service) *Handler {
+func NewHandler(logger log.Logger, service Service, authMiddleware auth.Middleware) *Handler {
 	return &Handler{
-		logger:  logger,
-		service: service,
+		logger:         logger,
+		service:        service,
+		authMiddleware: authMiddleware,
 	}
 }
 
 // RegisterRoutes registers the customer-related HTTP routes.
 func (h *Handler) RegisterRoutes(router *gin.Engine) {
-	auth := router.Group("/v1.0/auth")
+	authRouter := router.Group("/v1.0/auth")
 	{
-		auth.POST("/customers", h.RegisterCustomer)
+		authRouter.POST("/customers", h.RegisterCustomer)
+		authRouter.PUT("/customers/:customerID", h.authMiddleware.RequireCustomer(), h.UpdateCustomer)
 	}
 
 	// Existing routes remain for backward compatibility
@@ -222,6 +230,65 @@ func (h *Handler) RefreshCustomer(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
+// UpdateCustomerRequest represents the request payload for updating an existing customer's information.
+type UpdateCustomerRequest struct {
+	Name string `json:"name" binding:"required,max=100"`
+}
+
+// UpdateCustomerResponse represents the response returned after successfully updating a customer's information.
+type UpdateCustomerResponse struct {
+	ID        string    `json:"id"`
+	Name      string    `json:"name"`
+	Email     string    `json:"email"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+// UpdateCustomer handles updating an existing customer's information.
+func (h *Handler) UpdateCustomer(c *gin.Context) {
+	ctx := c.Request.Context()
+	logger := h.logger.WithContext(ctx)
+
+	logger.Info("UpdateCustomer handler called")
+
+	customerID := c.Param("customerID")
+
+	var req UpdateCustomerRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Warn("Failed to bind request", log.Field{Key: "error", Value: err.Error()})
+		errResp := getErrorResponseFromValidationErr(err)
+		c.JSON(http.StatusBadRequest, errResp)
+		return
+	}
+
+	input := UpdateCustomerInput{
+		CustomerID: customerID,
+		Name:       req.Name,
+	}
+
+	output, err := h.service.UpdateCustomer(ctx, input)
+	if err != nil {
+		if errors.Is(err, ErrCustomerNotFound) {
+			logger.Warn("Customer not found", log.Field{Key: "customerID", Value: customerID})
+			c.JSON(http.StatusNotFound, newErrorResponse(CodeNotFound, MsgNotFound))
+			return
+		}
+		if errors.Is(err, ErrCustomerIDMismatch) {
+			logger.Warn("Customer CustomerID mismatch with the token", log.Field{Key: "customerID", Value: customerID})
+			errResp := newErrorResponse(auth.CodeForbiddenError, auth.MessageForbiddenError)
+			c.JSON(http.StatusForbidden, errResp)
+			return
+		}
+		logger.Error("Failed to update customer", err)
+		c.JSON(http.StatusInternalServerError, newErrorResponse(CodeInternalError, MsgInternalError))
+		return
+	}
+
+	resp := UpdateCustomerResponse(output)
+	logger.Info("Customer updated successfully", log.Field{Key: "customer", Value: resp})
+	c.JSON(http.StatusOK, resp)
+}
+
 // ErrorResponse represents a standardized structure for API error responses containing code, message, and optional details.
 type ErrorResponse struct {
 	Code    string   `json:"code"`
@@ -266,8 +333,10 @@ func getValidationErrorDetail(fe validator.FieldError) string {
 		if field == "password" {
 			return field + " must be a valid password with at least 8 characters long"
 		}
-		return field + " must be at least " + fe.Param() + " characters long" //notest
-	default: //notest
+		return field + " must be at least " + fe.Param() + " characters long"
+	case "max":
+		return field + " must not exceed " + fe.Param() + " characters long"
+	default:
 		return field + " is invalid"
 	}
 }

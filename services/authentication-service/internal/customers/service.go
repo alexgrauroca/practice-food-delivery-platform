@@ -26,6 +26,7 @@ type Service interface {
 	RegisterCustomer(ctx context.Context, input RegisterCustomerInput) (RegisterCustomerOutput, error)
 	LoginCustomer(ctx context.Context, input LoginCustomerInput) (LoginCustomerOutput, error)
 	RefreshCustomer(ctx context.Context, input RefreshCustomerInput) (RefreshCustomerOutput, error)
+	UpdateCustomer(ctx context.Context, input UpdateCustomerInput) (UpdateCustomerOutput, error)
 }
 
 type service struct {
@@ -192,6 +193,24 @@ func (s *service) RefreshCustomer(ctx context.Context, input RefreshCustomerInpu
 	}
 
 	return RefreshCustomerOutput{TokenPair: tokenPair}, nil
+}
+
+type UpdateCustomerInput struct {
+	CustomerID string
+	Name       string
+}
+
+type UpdateCustomerOutput struct {
+	ID        string
+	Name      string
+	Email     string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+func (s *service) UpdateCustomer(ctx context.Context, input UpdateCustomerInput) (UpdateCustomerOutput, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 // TokenPair represents a pair of tokens typically used for authentication and session management.

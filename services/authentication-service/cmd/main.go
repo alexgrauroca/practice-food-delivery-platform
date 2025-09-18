@@ -53,8 +53,8 @@ func main() {
 
 	// Initialize features
 	refreshService := initRefreshFeature(logger, db)
-	authService := initAuthFeature(logger)
-	initCustomersFeature(logger, db, router, refreshService, authService)
+	authService, authMiddleware, authctx := initAuthFeature(logger)
+	initCustomersFeature(logger, db, router, refreshService, authService, authMiddleware, authctx)
 
 	logger.Info("Starting http server")
 	// Start the server
@@ -71,10 +71,18 @@ func initRefreshFeature(logger customlog.Logger, db *mongo.Database) refresh.Ser
 	return refresh.NewService(logger, repo, clock.RealClock{})
 }
 
-func initAuthFeature(logger customlog.Logger) auth.Service {
+func initAuthFeature(logger customlog.Logger) (
+	auth.Service,
+	auth.Middleware,
+	auth.ContextReader,
+) {
 	/// Initialize the jwt service
 	//TODO configure secret by env vars
-	return auth.NewService(logger, []byte("a-string-secret-at-least-256-bits-long"), clock.RealClock{})
+	authService := auth.NewService(logger, []byte("a-string-secret-at-least-256-bits-long"), clock.RealClock{})
+	authMiddleware := auth.NewMiddleware(logger, authService)
+	authContextReader := auth.NewContextReader(logger)
+
+	return authService, authMiddleware, authContextReader
 }
 
 func initCustomersFeature(
@@ -83,7 +91,10 @@ func initCustomersFeature(
 	router *gin.Engine,
 	refreshService refresh.Service,
 	authService auth.Service,
+	authMiddleware auth.Middleware,
+	_ auth.ContextReader,
 ) {
+	// TODO: provide the context reader to the service
 	// Initialize the customer's repository
 	repo := customers.NewRepository(logger, db, clock.RealClock{})
 
@@ -91,6 +102,6 @@ func initCustomersFeature(
 	service := customers.NewService(logger, repo, refreshService, authService)
 
 	// Initialize the customer's handler and register routes
-	handler := customers.NewHandler(logger, service)
+	handler := customers.NewHandler(logger, service, authMiddleware)
 	handler.RegisterRoutes(router)
 }
