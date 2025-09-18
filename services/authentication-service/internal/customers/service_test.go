@@ -801,6 +801,7 @@ func TestService_UpdateCustomer(t *testing.T) {
 					ID:        "fake-id",
 					Email:     "test@example.com",
 					Name:      "New John Doe",
+					Password:  "A hashed password",
 					Active:    true,
 					CreatedAt: yesterday,
 					UpdatedAt: now,

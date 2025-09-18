@@ -203,11 +203,13 @@ func (s *service) RefreshCustomer(ctx context.Context, input RefreshCustomerInpu
 	return RefreshCustomerOutput{TokenPair: tokenPair}, nil
 }
 
+// UpdateCustomerInput contains the necessary information to update a customer's details.
 type UpdateCustomerInput struct {
 	CustomerID string
 	Name       string
 }
 
+// UpdateCustomerOutput represents the response data after successfully updating a customer.
 type UpdateCustomerOutput struct {
 	ID        string
 	Name      string
@@ -217,8 +219,32 @@ type UpdateCustomerOutput struct {
 }
 
 func (s *service) UpdateCustomer(ctx context.Context, input UpdateCustomerInput) (UpdateCustomerOutput, error) {
-	//TODO implement me
-	panic("implement me")
+	err := s.authctx.RequireSubjectMatch(ctx, input.CustomerID)
+	if err != nil {
+		if errors.Is(err, auth.ErrInvalidToken) {
+			return UpdateCustomerOutput{}, err
+		}
+		return UpdateCustomerOutput{}, ErrCustomerIDMismatch
+	}
+
+	customer, err := s.repo.UpdateCustomer(ctx, UpdateCustomerParams(input))
+	if err != nil {
+		if errors.Is(err, ErrCustomerNotFound) {
+			s.logger.Warn("customer not found", log.Field{Key: "customerID", Value: input.CustomerID})
+			return UpdateCustomerOutput{}, ErrCustomerNotFound
+		}
+
+		s.logger.Error("failed to update customer", err)
+		return UpdateCustomerOutput{}, err
+	}
+
+	return UpdateCustomerOutput{
+		ID:        customer.ID,
+		Name:      customer.Name,
+		Email:     customer.Email,
+		CreatedAt: customer.CreatedAt,
+		UpdatedAt: customer.UpdatedAt,
+	}, nil
 }
 
 // TokenPair represents a pair of tokens typically used for authentication and session management.
