@@ -610,7 +610,7 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 			name: "when unexpected error when updating the customer, " +
 				"then it should return a 500 with the internal error",
 			token:       "valid-token",
-			pathParams:  map[string]string{"customerID": "unexistingID"},
+			pathParams:  map[string]string{"customerID": "fakeID"},
 			jsonPayload: `{"name": "New John Doe"}`,
 			mocksSetup: func(service *customersmocks.MockService, authService *authmocks.MockService) {
 				authService.EXPECT().GetClaims(gomock.Any(), gomock.Any()).
@@ -633,7 +633,7 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 		{
 			name:        "when the customer can be updated, then it should return a 200 with the customer details updated",
 			token:       "valid-token",
-			pathParams:  map[string]string{"customerID": "unexistingID"},
+			pathParams:  map[string]string{"customerID": "fakeID"},
 			jsonPayload: `{"name": "New John Doe"}`,
 			mocksSetup: func(service *customersmocks.MockService, authService *authmocks.MockService) {
 				authService.EXPECT().GetClaims(gomock.Any(), auth.GetClaimsInput{
@@ -668,7 +668,7 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			updateCustomerPath := fmt.Sprintf("/v1.0/customers/%s", tt.pathParams["customerID"])
+			updateCustomerPath := fmt.Sprintf("/v1.0/auth/customers/%s", tt.pathParams["customerID"])
 			runCustomerHandlerTestCase(t, logger, http.MethodPut, updateCustomerPath, tt, tt.token)
 		})
 	}
@@ -700,10 +700,10 @@ func runCustomerHandlerTestCase(
 
 	// Initialize the authentication middleware
 	// TODO assign the middleware the new handler
-	_ = auth.NewMiddleware(logger, authService)
+	authMiddleware := auth.NewMiddleware(logger, authService)
 
 	// Initialize the handler
-	h := customers.NewHandler(logger, service)
+	h := customers.NewHandler(logger, service, authMiddleware)
 
 	// Initialize the Gin router and register the routes
 	router := gin.New()
