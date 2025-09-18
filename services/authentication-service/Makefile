@@ -26,6 +26,7 @@ install-openapi-generator:
 generate-mocks: install-mockgen
 	@echo "Generating mocks for authentication service..."
 	@go generate ./...
+	@cd ../../pkg && make generate-mocks
 
 install-mockgen:
 	@bash ../../scripts/install-mockgen.sh

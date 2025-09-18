@@ -43,7 +43,7 @@ func NewMiddleware(logger log.Logger, service Service) Middleware {
 
 func (m *middleware) RequireCustomer() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		claims, err := m.validateToken(c)
+		claims, err := m.getClaims(c)
 		if err != nil {
 			m.handleAuthError(c, err)
 			return
@@ -64,19 +64,18 @@ func (m *middleware) RequireCustomer() gin.HandlerFunc {
 	}
 }
 
-func (m *middleware) validateToken(c *gin.Context) (*Claims, error) {
+func (m *middleware) getClaims(c *gin.Context) (*Claims, error) {
 	token, err := extractBearerToken(c)
 	if err != nil {
 		return nil, err
 	}
 
-	output, err := m.service.ValidateAccessToken(c.Request.Context(), ValidateAccessTokenInput{AccessToken: token})
+	output, err := m.service.GetClaims(c.Request.Context(), GetClaimsInput{AccessToken: token})
 	if err != nil {
 		return nil, err
 	}
 
 	return output.Claims, nil
-
 }
 
 func (m *middleware) handleAuthError(c *gin.Context, err error) {

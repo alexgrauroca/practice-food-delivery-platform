@@ -12,12 +12,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth"
+	authmocks "github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth/mocks"
 	customersmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers/mocks"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/jwt"
-	jwtmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/jwt/mocks"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/password"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh"
 	refreshmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh/mocks"
@@ -31,9 +31,9 @@ var (
 type customersServiceTestCase[I, W any] struct {
 	name       string
 	input      I
+	want       W
 	mocksSetup func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
-		jwtService *jwtmocks.MockService)
-	want    W
+		jwtService *authmocks.MockService)
 	wantErr error
 }
 
@@ -50,7 +50,7 @@ func TestService_RegisterCustomer(t *testing.T) {
 				Name:     "John Doe",
 			},
 			mocksSetup: func(repo *customersmocks.MockRepository, _ *refreshmocks.MockService,
-				_ *jwtmocks.MockService) {
+				_ *authmocks.MockService) {
 				repo.EXPECT().CreateCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, customers.ErrCustomerAlreadyExists)
 			},
@@ -65,7 +65,7 @@ func TestService_RegisterCustomer(t *testing.T) {
 				Name:     "John Doe",
 			},
 			mocksSetup: func(repo *customersmocks.MockRepository, _ *refreshmocks.MockService,
-				_ *jwtmocks.MockService) {
+				_ *authmocks.MockService) {
 				repo.EXPECT().CreateCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, errRepo)
 			},
@@ -80,7 +80,7 @@ func TestService_RegisterCustomer(t *testing.T) {
 				Name:     "John Doe",
 			},
 			mocksSetup: func(repo *customersmocks.MockRepository, _ *refreshmocks.MockService,
-				_ *jwtmocks.MockService) {
+				_ *authmocks.MockService) {
 				repo.EXPECT().CreateCustomer(gomock.Any(), gomock.Any()).
 					DoAndReturn(func(_ context.Context, params customers.CreateCustomerParams) (customers.Customer, error) {
 						// Assert that the password is hashed
@@ -115,7 +115,7 @@ func TestService_RegisterCustomer(t *testing.T) {
 
 			repo := customersmocks.NewMockRepository(ctrl)
 			refreshService := refreshmocks.NewMockService(ctrl)
-			jwtService := jwtmocks.NewMockService(ctrl)
+			jwtService := authmocks.NewMockService(ctrl)
 			if tt.mocksSetup != nil {
 				tt.mocksSetup(repo, refreshService, jwtService)
 			}
@@ -142,7 +142,7 @@ func TestService_LoginCustomer(t *testing.T) {
 				Password: "ValidPassword123",
 			},
 			mocksSetup: func(repo *customersmocks.MockRepository, _ *refreshmocks.MockService,
-				_ *jwtmocks.MockService) {
+				_ *authmocks.MockService) {
 				repo.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, customers.ErrCustomerNotFound)
 			},
@@ -157,7 +157,7 @@ func TestService_LoginCustomer(t *testing.T) {
 				Password: "InvalidPassword123",
 			},
 			mocksSetup: func(repo *customersmocks.MockRepository, _ *refreshmocks.MockService,
-				_ *jwtmocks.MockService) {
+				_ *authmocks.MockService) {
 				hashedPassword, err := password.Hash("ValidPassword123")
 				require.NoError(t, err)
 
@@ -182,7 +182,7 @@ func TestService_LoginCustomer(t *testing.T) {
 				Password: "ValidPassword123",
 			},
 			mocksSetup: func(repo *customersmocks.MockRepository, _ *refreshmocks.MockService,
-				_ *jwtmocks.MockService) {
+				_ *authmocks.MockService) {
 				repo.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{}, errRepo)
 			},
@@ -196,7 +196,7 @@ func TestService_LoginCustomer(t *testing.T) {
 				Password: "ValidPassword123",
 			},
 			mocksSetup: func(repo *customersmocks.MockRepository, _ *refreshmocks.MockService,
-				jwtService *jwtmocks.MockService) {
+				jwtService *authmocks.MockService) {
 				hashedPassword, err := password.Hash("ValidPassword123")
 				require.NoError(t, err)
 
@@ -212,7 +212,7 @@ func TestService_LoginCustomer(t *testing.T) {
 					}, nil)
 
 				jwtService.EXPECT().GenerateToken(gomock.Any(), gomock.Any()).
-					Return("", errToken)
+					Return(auth.GenerateTokenOutput{}, errToken)
 			},
 			want:    customers.LoginCustomerOutput{},
 			wantErr: errToken,
@@ -224,7 +224,7 @@ func TestService_LoginCustomer(t *testing.T) {
 				Password: "ValidPassword123",
 			},
 			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
-				jwtService *jwtmocks.MockService) {
+				jwtService *authmocks.MockService) {
 				hashedPassword, err := password.Hash("ValidPassword123")
 				require.NoError(t, err)
 
@@ -240,7 +240,7 @@ func TestService_LoginCustomer(t *testing.T) {
 					}, nil)
 
 				jwtService.EXPECT().GenerateToken(gomock.Any(), gomock.Any()).
-					Return("fake-token", nil)
+					Return(auth.GenerateTokenOutput{AccessToken: "fake-token"}, nil)
 
 				refreshService.EXPECT().Generate(gomock.Any(), gomock.Any()).
 					Return(refresh.GenerateTokenOutput{}, errToken)
@@ -255,7 +255,7 @@ func TestService_LoginCustomer(t *testing.T) {
 				Password: "ValidPassword123",
 			},
 			mocksSetup: func(repo *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
-				jwtService *jwtmocks.MockService) {
+				jwtService *authmocks.MockService) {
 				hashedPassword, err := password.Hash("ValidPassword123")
 				require.NoError(t, err)
 
@@ -272,7 +272,7 @@ func TestService_LoginCustomer(t *testing.T) {
 					}, nil)
 
 				jwtService.EXPECT().GenerateToken(gomock.Any(), gomock.Any()).
-					Return("fake-token", nil)
+					Return(auth.GenerateTokenOutput{AccessToken: "fake-token"}, nil)
 
 				refreshService.EXPECT().Generate(gomock.Any(), refresh.GenerateTokenInput{
 					UserID: "fake-id",
@@ -297,7 +297,7 @@ func TestService_LoginCustomer(t *testing.T) {
 
 			repo := customersmocks.NewMockRepository(ctrl)
 			refreshService := refreshmocks.NewMockService(ctrl)
-			jwtService := jwtmocks.NewMockService(ctrl)
+			jwtService := authmocks.NewMockService(ctrl)
 			if tt.mocksSetup != nil {
 				tt.mocksSetup(repo, refreshService, jwtService)
 			}
@@ -322,7 +322,7 @@ func TestService_RefreshCustomer(t *testing.T) {
 				AccessToken:  "ValidAccessToken",
 			},
 			mocksSetup: func(_ *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
-				_ *jwtmocks.MockService) {
+				_ *authmocks.MockService) {
 
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
 					Return(refresh.FindActiveTokenOutput{}, refresh.ErrRefreshTokenNotFound)
@@ -338,7 +338,7 @@ func TestService_RefreshCustomer(t *testing.T) {
 				AccessToken:  "ValidAccessToken",
 			},
 			mocksSetup: func(_ *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
-				_ *jwtmocks.MockService) {
+				_ *authmocks.MockService) {
 
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
 					Return(refresh.FindActiveTokenOutput{}, errToken)
@@ -353,12 +353,13 @@ func TestService_RefreshCustomer(t *testing.T) {
 				AccessToken:  "InvalidAccessToken",
 			},
 			mocksSetup: func(_ *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
-				jwtService *jwtmocks.MockService) {
+				jwtService *authmocks.MockService) {
 
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
 					Return(refresh.FindActiveTokenOutput{}, nil)
 
-				jwtService.EXPECT().GetClaims(gomock.Any()).Return(jwt.Claims{}, jwt.ErrInvalidToken)
+				jwtService.EXPECT().GetClaims(gomock.Any(), gomock.Any()).
+					Return(auth.GetClaimsOutput{}, auth.ErrInvalidToken)
 			},
 			want:    customers.RefreshCustomerOutput{},
 			wantErr: customers.ErrTokenMismatch,
@@ -371,12 +372,12 @@ func TestService_RefreshCustomer(t *testing.T) {
 				AccessToken:  "InvalidAccessToken",
 			},
 			mocksSetup: func(_ *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
-				jwtService *jwtmocks.MockService) {
+				jwtService *authmocks.MockService) {
 
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
 					Return(refresh.FindActiveTokenOutput{}, nil)
 
-				jwtService.EXPECT().GetClaims(gomock.Any()).Return(jwt.Claims{}, errToken)
+				jwtService.EXPECT().GetClaims(gomock.Any(), gomock.Any()).Return(auth.GetClaimsOutput{}, errToken)
 			},
 			want:    customers.RefreshCustomerOutput{},
 			wantErr: errToken,
@@ -389,7 +390,7 @@ func TestService_RefreshCustomer(t *testing.T) {
 				AccessToken:  "ValidAccessToken",
 			},
 			mocksSetup: func(_ *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
-				jwtService *jwtmocks.MockService) {
+				jwtService *authmocks.MockService) {
 
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
 					Return(refresh.FindActiveTokenOutput{UserID: "fake-user-id-1"}, nil)
@@ -397,9 +398,10 @@ func TestService_RefreshCustomer(t *testing.T) {
 				//TODO As subject comes from the internal JWT library,
 				//I don't want to expose it here. As a quick mitigation I'm doing it in that way,
 				//but in long term I would like to do it in a better way.
-				claims := jwt.Claims{}
+				claims := auth.Claims{}
 				claims.Subject = "fake-user-id-2"
-				jwtService.EXPECT().GetClaims(gomock.Any()).Return(claims, nil)
+				jwtService.EXPECT().GetClaims(gomock.Any(), gomock.Any()).
+					Return(auth.GetClaimsOutput{Claims: &claims}, nil)
 			},
 			want:    customers.RefreshCustomerOutput{},
 			wantErr: customers.ErrTokenMismatch,
@@ -412,7 +414,7 @@ func TestService_RefreshCustomer(t *testing.T) {
 				AccessToken:  "ValidAccessToken",
 			},
 			mocksSetup: func(_ *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
-				jwtService *jwtmocks.MockService) {
+				jwtService *authmocks.MockService) {
 
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
 					Return(refresh.FindActiveTokenOutput{
@@ -420,9 +422,10 @@ func TestService_RefreshCustomer(t *testing.T) {
 						Role:   "role-1",
 					}, nil)
 
-				claims := jwt.Claims{Role: "role-2"}
+				claims := auth.Claims{Role: "role-2"}
 				claims.Subject = "fake-user-id-1"
-				jwtService.EXPECT().GetClaims(gomock.Any()).Return(claims, nil)
+				jwtService.EXPECT().GetClaims(gomock.Any(), gomock.Any()).
+					Return(auth.GetClaimsOutput{Claims: &claims}, nil)
 			},
 			want:    customers.RefreshCustomerOutput{},
 			wantErr: customers.ErrTokenMismatch,
@@ -434,7 +437,7 @@ func TestService_RefreshCustomer(t *testing.T) {
 				AccessToken:  "ValidAccessToken",
 			},
 			mocksSetup: func(_ *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
-				jwtService *jwtmocks.MockService) {
+				jwtService *authmocks.MockService) {
 
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
 					Return(refresh.FindActiveTokenOutput{
@@ -442,12 +445,14 @@ func TestService_RefreshCustomer(t *testing.T) {
 						Role:   "fake-role",
 					}, nil)
 
-				claims := jwt.Claims{Role: "fake-role"}
+				claims := auth.Claims{Role: "fake-role"}
 				claims.Subject = "fake-user-id"
-				jwtService.EXPECT().GetClaims(gomock.Any()).Return(claims, nil)
+				jwtService.EXPECT().GetClaims(gomock.Any(), gomock.Any()).
+					Return(auth.GetClaimsOutput{Claims: &claims}, nil)
 
 				jwtService.EXPECT().GenerateToken(gomock.Any(), gomock.Any()).
-					Return("", errToken)
+					Return(auth.GenerateTokenOutput{}, errToken)
+
 			},
 			want:    customers.RefreshCustomerOutput{},
 			wantErr: errToken,
@@ -459,7 +464,7 @@ func TestService_RefreshCustomer(t *testing.T) {
 				AccessToken:  "ValidAccessToken",
 			},
 			mocksSetup: func(_ *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
-				jwtService *jwtmocks.MockService) {
+				jwtService *authmocks.MockService) {
 
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
 					Return(refresh.FindActiveTokenOutput{
@@ -467,12 +472,13 @@ func TestService_RefreshCustomer(t *testing.T) {
 						Role:   "fake-role",
 					}, nil)
 
-				claims := jwt.Claims{Role: "fake-role"}
+				claims := auth.Claims{Role: "fake-role"}
 				claims.Subject = "fake-user-id"
-				jwtService.EXPECT().GetClaims(gomock.Any()).Return(claims, nil)
+				jwtService.EXPECT().GetClaims(gomock.Any(), gomock.Any()).
+					Return(auth.GetClaimsOutput{Claims: &claims}, nil)
 
 				jwtService.EXPECT().GenerateToken(gomock.Any(), gomock.Any()).
-					Return("fake-token", nil)
+					Return(auth.GenerateTokenOutput{AccessToken: "fake-token"}, nil)
 
 				refreshService.EXPECT().Generate(gomock.Any(), gomock.Any()).
 					Return(refresh.GenerateTokenOutput{}, errToken)
@@ -487,7 +493,7 @@ func TestService_RefreshCustomer(t *testing.T) {
 				AccessToken:  "ValidAccessToken",
 			},
 			mocksSetup: func(_ *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
-				jwtService *jwtmocks.MockService) {
+				jwtService *authmocks.MockService) {
 
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
 					Return(refresh.FindActiveTokenOutput{
@@ -495,12 +501,13 @@ func TestService_RefreshCustomer(t *testing.T) {
 						Role:   "fake-role",
 					}, nil)
 
-				claims := jwt.Claims{Role: "fake-role"}
+				claims := auth.Claims{Role: "fake-role"}
 				claims.Subject = "fake-user-id"
-				jwtService.EXPECT().GetClaims(gomock.Any()).Return(claims, nil)
+				jwtService.EXPECT().GetClaims(gomock.Any(), gomock.Any()).
+					Return(auth.GetClaimsOutput{Claims: &claims}, nil)
 
 				jwtService.EXPECT().GenerateToken(gomock.Any(), gomock.Any()).
-					Return("fake-token", nil)
+					Return(auth.GenerateTokenOutput{AccessToken: "fake-token"}, nil)
 
 				refreshService.EXPECT().Generate(gomock.Any(), gomock.Any()).
 					Return(refresh.GenerateTokenOutput{Token: "fake-refresh-token"}, nil)
@@ -517,7 +524,7 @@ func TestService_RefreshCustomer(t *testing.T) {
 				AccessToken:  "ValidAccessToken",
 			},
 			mocksSetup: func(_ *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
-				jwtService *jwtmocks.MockService) {
+				jwtService *authmocks.MockService) {
 
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), refresh.FindActiveTokenInput{
 					Token: "ValidRefreshToken",
@@ -526,14 +533,16 @@ func TestService_RefreshCustomer(t *testing.T) {
 					Role:   "customer",
 				}, nil)
 
-				claims := jwt.Claims{Role: "customer"}
+				claims := auth.Claims{Role: "customer"}
 				claims.Subject = "fake-user-id"
-				jwtService.EXPECT().GetClaims("ValidAccessToken").Return(claims, nil)
+				jwtService.EXPECT().GetClaims(gomock.Any(), auth.GetClaimsInput{AccessToken: "ValidAccessToken"}).
+					Return(auth.GetClaimsOutput{Claims: &claims}, nil)
 
-				jwtService.EXPECT().GenerateToken("fake-user-id", jwt.Config{
+				jwtService.EXPECT().GenerateToken(gomock.Any(), auth.GenerateTokenInput{
+					ID:         "fake-user-id",
 					Expiration: 3600,
 					Role:       "customer",
-				}).Return("fake-token", nil)
+				}).Return(auth.GenerateTokenOutput{AccessToken: "fake-token"}, nil)
 
 				refreshService.EXPECT().Generate(gomock.Any(), refresh.GenerateTokenInput{
 					UserID: "fake-user-id",
@@ -560,7 +569,7 @@ func TestService_RefreshCustomer(t *testing.T) {
 				AccessToken:  "ValidAccessToken",
 			},
 			mocksSetup: func(_ *customersmocks.MockRepository, refreshService *refreshmocks.MockService,
-				jwtService *jwtmocks.MockService) {
+				jwtService *authmocks.MockService) {
 
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), refresh.FindActiveTokenInput{
 					Token: "ValidRefreshToken",
@@ -569,14 +578,16 @@ func TestService_RefreshCustomer(t *testing.T) {
 					Role:   "customer",
 				}, nil)
 
-				claims := jwt.Claims{Role: "customer"}
+				claims := auth.Claims{Role: "customer"}
 				claims.Subject = "fake-user-id"
-				jwtService.EXPECT().GetClaims("ValidAccessToken").Return(claims, nil)
+				jwtService.EXPECT().GetClaims(gomock.Any(), auth.GetClaimsInput{AccessToken: "ValidAccessToken"}).
+					Return(auth.GetClaimsOutput{Claims: &claims}, nil)
 
-				jwtService.EXPECT().GenerateToken("fake-user-id", jwt.Config{
+				jwtService.EXPECT().GenerateToken(gomock.Any(), auth.GenerateTokenInput{
+					ID:         "fake-user-id",
 					Expiration: 3600,
 					Role:       "customer",
-				}).Return("fake-token", nil)
+				}).Return(auth.GenerateTokenOutput{AccessToken: "fake-token"}, nil)
 
 				refreshService.EXPECT().Generate(gomock.Any(), refresh.GenerateTokenInput{
 					UserID: "fake-user-id",
@@ -605,7 +616,7 @@ func TestService_RefreshCustomer(t *testing.T) {
 
 			repo := customersmocks.NewMockRepository(ctrl)
 			refreshService := refreshmocks.NewMockService(ctrl)
-			jwtService := jwtmocks.NewMockService(ctrl)
+			jwtService := authmocks.NewMockService(ctrl)
 			if tt.mocksSetup != nil {
 				tt.mocksSetup(repo, refreshService, jwtService)
 			}

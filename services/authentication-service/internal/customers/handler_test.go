@@ -14,11 +14,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth"
 	customersmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers/mocks"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/jwt"
 )
 
 type customerHandlerTestCase struct {
@@ -307,11 +307,11 @@ func TestHandler_LoginCustomer(t *testing.T) {
 					Email:    "test@example.com",
 					Password: "ValidPassword123",
 				}).Return(customers.LoginCustomerOutput{
-					customers.TokenPair{
+					TokenPair: customers.TokenPair{
 						AccessToken:  "fake-token",
 						RefreshToken: "fake-refresh-token",
 						ExpiresIn:    customers.DefaultTokenExpiration,
-						TokenType:    jwt.DefaultTokenType,
+						TokenType:    auth.DefaultTokenType,
 					},
 				}, nil)
 			},
@@ -416,7 +416,7 @@ func TestHandler_RefreshCustomer(t *testing.T) {
 						AccessToken:  "fake-token",
 						RefreshToken: "fake-refresh-token",
 						ExpiresIn:    customers.DefaultTokenExpiration,
-						TokenType:    jwt.DefaultTokenType,
+						TokenType:    auth.DefaultTokenType,
 					},
 				}, nil)
 			},

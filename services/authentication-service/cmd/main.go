@@ -10,11 +10,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth"
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/clock"
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/infraestructure/mongodb"
 	customlog "github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
+
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/jwt"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/middleware"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh"
 )
@@ -52,8 +53,8 @@ func main() {
 
 	// Initialize features
 	refreshService := initRefreshFeature(logger, db)
-	jwtService := initJWTFeature(logger)
-	initCustomersFeature(logger, db, router, refreshService, jwtService)
+	authService := initAuthFeature(logger)
+	initCustomersFeature(logger, db, router, refreshService, authService)
 
 	logger.Info("Starting http server")
 	// Start the server
@@ -70,20 +71,24 @@ func initRefreshFeature(logger customlog.Logger, db *mongo.Database) refresh.Ser
 	return refresh.NewService(logger, repo, clock.RealClock{})
 }
 
-func initJWTFeature(logger customlog.Logger) jwt.Service {
+func initAuthFeature(logger customlog.Logger) auth.Service {
 	/// Initialize the jwt service
 	//TODO configure secret by env vars
-	return jwt.NewService(logger, []byte("a-string-secret-at-least-256-bits-long"))
+	return auth.NewService(logger, []byte("a-string-secret-at-least-256-bits-long"), clock.RealClock{})
 }
 
-func initCustomersFeature(logger customlog.Logger, db *mongo.Database, router *gin.Engine,
+func initCustomersFeature(
+	logger customlog.Logger,
+	db *mongo.Database,
+	router *gin.Engine,
 	refreshService refresh.Service,
-	jwtService jwt.Service) {
+	authService auth.Service,
+) {
 	// Initialize the customer's repository
 	repo := customers.NewRepository(logger, db, clock.RealClock{})
 
 	// Initialize the customer's service
-	service := customers.NewService(logger, repo, refreshService, jwtService)
+	service := customers.NewService(logger, repo, refreshService, authService)
 
 	// Initialize the customer's handler and register routes
 	handler := customers.NewHandler(logger, service)
