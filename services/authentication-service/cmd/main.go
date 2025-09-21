@@ -92,14 +92,14 @@ func initCustomersFeature(
 	refreshService refresh.Service,
 	authService auth.Service,
 	authMiddleware auth.Middleware,
-	_ auth.ContextReader,
+	authctx auth.ContextReader,
 ) {
 	// TODO: provide the context reader to the service
 	// Initialize the customer's repository
 	repo := customers.NewRepository(logger, db, clock.RealClock{})
 
 	// Initialize the customer's service
-	service := customers.NewService(logger, repo, refreshService, authService)
+	service := customers.NewService(logger, repo, refreshService, authService, authctx)
 
 	// Initialize the customer's handler and register routes
 	handler := customers.NewHandler(logger, service, authMiddleware)
