@@ -11,4 +11,6 @@ var (
 	RefreshEndpoint = api.BaseURL + "/v1.0/customers/refresh"
 	// GetCustomerEndpoint defines the API endpoint URL for retrieving customer data under version 1.0 of the API.
 	GetCustomerEndpoint = api.BaseURL + "/v1.0/customers/:customerID"
+	// UpdateCustomerEndpoint defines the API endpoint URL for updating customer data under version 1.0 of the API.
+	UpdateCustomerEndpoint = api.BaseURL + "/v1.0/customers/:customerID"
 )

@@ -20,6 +20,19 @@ type TestCustomer struct {
 	Auth        authentication.Token
 }
 
+// customerData captures the common customer fields returned by multiple endpoints.
+type customerData struct {
+	ID          string `json:"id"`
+	Email       string `json:"email"`
+	Name        string `json:"name"`
+	Address     string `json:"address"`
+	City        string `json:"city"`
+	PostalCode  string `json:"postal_code"`
+	CountryCode string `json:"country_code"`
+	CreatedAt   string `json:"created_at"`
+	UpdatedAt   string `json:"updated_at"`
+}
+
 // RegisterRequest represents the payload required to register a new customer, containing personal details and credentials.
 type RegisterRequest struct {
 	Email       string `json:"email"`
@@ -39,18 +52,32 @@ type RegisterResponse struct {
 	CreatedAt string `json:"created_at"`
 }
 
+// GetCustomerRequest represents the request to retrieve customer details, containing the customer ID as a path parameter.
 type GetCustomerRequest struct {
 	ID string `path:"customerID"`
 }
 
-type GetCustomerResponse struct {
-	ID          string `json:"id"`
-	Email       string `json:"email"`
+// GetCustomerResponse represents the response data structure containing a customer's full profile information.
+type GetCustomerResponse = customerData
+
+// UpdateCustomerParams holds the parameters for updating a customer's profile information.
+type UpdateCustomerParams struct {
+	Name        string
+	Address     string
+	City        string
+	PostalCode  string
+	CountryCode string
+}
+
+// UpdateCustomerRequest represents the request payload for updating customer profile information.
+type UpdateCustomerRequest struct {
+	ID          string `path:"customerID"`
 	Name        string `json:"name"`
 	Address     string `json:"address"`
 	City        string `json:"city"`
 	PostalCode  string `json:"postal_code"`
 	CountryCode string `json:"country_code"`
-	CreatedAt   string `json:"created_at"`
-	UpdatedAt   string `json:"updated_at"`
 }
+
+// UpdateCustomerResponse represents the response data structure containing a customer's full profile information.
+type UpdateCustomerResponse = customerData

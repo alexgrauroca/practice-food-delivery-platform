@@ -1,3 +1,4 @@
+// Package customer provides functionality for managing customer operations in the e2e test suite.
 package customer
 
 import (
@@ -79,4 +80,33 @@ func (c *TestCustomer) Get() (*GetCustomerResponse, error) {
 	config := &api.RequestConfig{BearerToken: &c.Auth.AccessToken}
 
 	return api.DoGet[GetCustomerRequest, GetCustomerResponse](GetCustomerEndpoint, req, config)
+}
+
+// Update updates the customer's profile information with the given parameters and returns the updated profile or an
+// error.
+func (c *TestCustomer) Update(params UpdateCustomerParams) (*UpdateCustomerResponse, error) {
+	req := UpdateCustomerRequest{
+		ID:          c.ID,
+		Name:        params.Name,
+		Address:     params.Address,
+		City:        params.City,
+		PostalCode:  params.PostalCode,
+		CountryCode: params.CountryCode,
+	}
+	config := &api.RequestConfig{BearerToken: &c.Auth.AccessToken}
+
+	res, err := api.DoPut[UpdateCustomerRequest, UpdateCustomerResponse](UpdateCustomerEndpoint, req, config)
+	if err == nil {
+		if res == nil {
+			err = ErrUnexpectedResponse
+		} else {
+			c.Name = res.Name
+			c.Address = res.Address
+			c.City = res.City
+			c.PostalCode = res.PostalCode
+			c.CountryCode = res.CountryCode
+		}
+	}
+
+	return res, err
 }

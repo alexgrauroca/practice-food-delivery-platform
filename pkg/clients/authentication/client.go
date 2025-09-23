@@ -92,11 +92,15 @@ func (c *client) RegisterCustomer(ctx context.Context, req RegisterCustomerReque
 	}, nil
 }
 
+// UpdateCustomerRequest represents the data required to update an existing customer's
+// information in the authentication service.
 type UpdateCustomerRequest struct {
 	CustomerID string
 	Name       string
 }
 
+// UpdateCustomerResponse contains the updated customer data returned after successfully
+// modifying a customer's information in the authentication service.
 type UpdateCustomerResponse struct {
 	ID        string
 	Email     string
@@ -106,5 +110,27 @@ type UpdateCustomerResponse struct {
 }
 
 func (c *client) UpdateCustomer(ctx context.Context, req UpdateCustomerRequest) (UpdateCustomerResponse, error) {
-	panic("implement me")
+	authreq := authclient.UpdateCustomerRequest{
+		Name: req.Name,
+	}
+	resp, r, err := c.apicli.CustomersAPI.UpdateCustomer(ctx, req.CustomerID).UpdateCustomerRequest(authreq).Execute()
+	if err != nil {
+		c.logger.Warn(
+			"Failed to update customer",
+			log.Field{Key: "error", Value: err.Error()},
+			log.Field{Key: "response", Value: r},
+		)
+		return UpdateCustomerResponse{}, err
+	}
+	c.logger.Info(
+		"Customer updated successfully at authentication service",
+		log.Field{Key: "customerID", Value: resp.Id},
+	)
+	return UpdateCustomerResponse{
+		ID:        resp.Id,
+		Email:     resp.Email,
+		Name:      resp.Name,
+		CreatedAt: resp.CreatedAt,
+		UpdatedAt: resp.UpdatedAt,
+	}, nil
 }

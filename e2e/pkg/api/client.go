@@ -24,26 +24,55 @@ const (
 // decoding the response into the generic type T.
 // It returns a pointer to the decoded response of type T or an error if the request or decoding fails.
 func DoPost[P, R any](endpoint string, params P, config *RequestConfig) (*R, error) {
+	return doRequest[P, R](http.MethodPost, endpoint, params, config)
+}
+
+// DoGet sends a GET request to the specified endpoint with the given parameters,
+// decoding the response into the generic type T.
+// It returns a pointer to the decoded response of type T or an error if the request or decoding fails.
+func DoGet[P, R any](endpoint string, params P, config *RequestConfig) (*R, error) {
+	return doRequest[P, R](http.MethodGet, endpoint, params, config)
+}
+
+// DoPut sends a PUT request to the specified endpoint with the given payload,
+// decoding the response into the generic type R.
+// It returns a pointer to the decoded response of type R or an error if the request or decoding fails.
+func DoPut[P, R any](endpoint string, params P, config *RequestConfig) (*R, error) {
+	return doRequest[P, R](http.MethodPut, endpoint, params, config)
+}
+
+// doRequest is a reusable helper that builds and executes an HTTP request for the given method and endpoint.
+// It handles Authorization, JSON encoding/decoding, response reading, and API error parsing.
+// Any 2xx response status code is considered successful.
+func doRequest[P, R any](method string, endpoint string, params P, config *RequestConfig) (*R, error) {
 	url := buildURL(endpoint, params)
 
-	body, err := json.Marshal(params)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling payload: %w", err)
+	var bodyReader io.Reader
+	// Only marshal a JSON body for non-GET methods.
+	if method != http.MethodGet {
+		body, err := json.Marshal(params)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling payload: %w", err)
+		}
+		bodyReader = bytes.NewReader(body)
 	}
 
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(body))
+	req, err := http.NewRequest(method, url, bodyReader)
 	if err != nil {
 		return nil, fmt.Errorf("error creating request: %w", err)
 	}
 
-	req.Header.Add("Content-Type", contentTypeJSON)
+	// Headers
+	if method != http.MethodGet {
+		req.Header.Add("Content-Type", contentTypeJSON)
+	}
 	if config != nil && config.BearerToken != nil {
 		req.Header.Add("Authorization", "Bearer "+*config.BearerToken)
 	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("error making POST request: %w", err)
+		return nil, fmt.Errorf("error making %s request: %w", method, err)
 	}
 	defer func(Body io.ReadCloser) {
 		_ = Body.Close()
@@ -54,7 +83,8 @@ func DoPost[P, R any](endpoint string, params P, config *RequestConfig) (*R, err
 		return nil, fmt.Errorf("error reading response body: %w", err)
 	}
 
-	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
+	// Consider any 2xx code as a success
+	if resp.StatusCode/100 != 2 {
 		// Try to parse as API errors first
 		if apiError, err := ParseErrorResponse(responseBody); err == nil {
 			return nil, apiError
@@ -73,55 +103,6 @@ func DoPost[P, R any](endpoint string, params P, config *RequestConfig) (*R, err
 	}
 
 	return &result, nil
-
-}
-
-// DoGet sends a GET request to the specified endpoint with the given parameters,
-// decoding the response into the generic type T.
-// It returns a pointer to the decoded response of type T or an error if the request or decoding fails.
-func DoGet[P, R any](endpoint string, params P, config *RequestConfig) (*R, error) {
-	url := buildURL(endpoint, params)
-
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return nil, fmt.Errorf("error creating request: %w", err)
-	}
-
-	if config != nil && config.BearerToken != nil {
-		req.Header.Add("Authorization", "Bearer "+*config.BearerToken)
-	}
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("error making GET request: %w", err)
-	}
-	defer func(Body io.ReadCloser) {
-		_ = Body.Close()
-	}(resp.Body)
-
-	responseBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("error reading response body: %w", err)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		if apiError, err := ParseErrorResponse(responseBody); err == nil {
-			return nil, apiError
-		}
-		return nil, &ErrorResponse{
-			Code:    "UNEXPECTED_ERROR",
-			Message: fmt.Sprintf("unexpected status code: %d", resp.StatusCode),
-			Details: []string{string(responseBody)},
-		}
-	}
-
-	var result R
-	if err := json.Unmarshal(responseBody, &result); err != nil {
-		return nil, fmt.Errorf("error decoding response: %w", err)
-	}
-
-	return &result, nil
-
 }
 
 func buildURL[P any](endpoint string, params P) string {
