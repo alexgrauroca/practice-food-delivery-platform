@@ -65,6 +65,7 @@ type RegisterCustomerResponse struct {
 }
 
 func (c *client) RegisterCustomer(ctx context.Context, req RegisterCustomerRequest) (RegisterCustomerResponse, error) {
+	c.logger.Info("Registering customer", log.Field{Key: "customerID", Value: req.CustomerID})
 	authreq := authclient.RegisterCustomerRequest{
 		CustomerId: req.CustomerID,
 		Email:      req.Email,
@@ -95,8 +96,9 @@ func (c *client) RegisterCustomer(ctx context.Context, req RegisterCustomerReque
 // UpdateCustomerRequest represents the data required to update an existing customer's
 // information in the authentication service.
 type UpdateCustomerRequest struct {
-	CustomerID string
-	Name       string
+	AccessToken string
+	CustomerID  string
+	Name        string
 }
 
 // UpdateCustomerResponse contains the updated customer data returned after successfully
@@ -110,9 +112,12 @@ type UpdateCustomerResponse struct {
 }
 
 func (c *client) UpdateCustomer(ctx context.Context, req UpdateCustomerRequest) (UpdateCustomerResponse, error) {
-	authreq := authclient.UpdateCustomerRequest{
-		Name: req.Name,
+	c.logger.Info("Updating customer", log.Field{Key: "customerID", Value: req.CustomerID})
+	ctx, err := c.setAuthHeader(ctx, req)
+	if err != nil {
+		return UpdateCustomerResponse{}, err
 	}
+	authreq := authclient.UpdateCustomerRequest{Name: req.Name}
 	resp, r, err := c.apicli.CustomersAPI.UpdateCustomer(ctx, req.CustomerID).UpdateCustomerRequest(authreq).Execute()
 	if err != nil {
 		c.logger.Warn(
@@ -133,4 +138,12 @@ func (c *client) UpdateCustomer(ctx context.Context, req UpdateCustomerRequest) 
 		CreatedAt: resp.CreatedAt,
 		UpdatedAt: resp.UpdatedAt,
 	}, nil
+}
+
+func (c *client) setAuthHeader(ctx context.Context, req UpdateCustomerRequest) (context.Context, error) {
+	if req.AccessToken == "" {
+		return nil, ErrAccessTokenRequired
+	}
+	ctx = context.WithValue(ctx, authclient.ContextAccessToken, req.AccessToken)
+	return ctx, nil
 }

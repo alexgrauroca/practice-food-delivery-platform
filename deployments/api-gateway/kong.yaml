@@ -9,6 +9,7 @@ services:
         paths:
           - /v1.0/customers/login
           - /v1.0/customers/refresh
+          - /v1.0/auth/customers
         strip_path: false
     plugins:
       - name: correlation-id

@@ -223,7 +223,13 @@ func (s *service) UpdateCustomer(ctx context.Context, input UpdateCustomerInput)
 		return UpdateCustomerOutput{}, err
 	}
 
+	token, ok := s.authctx.GetToken(ctx)
+	if !ok {
+		return UpdateCustomerOutput{}, authentication.ErrAccessTokenRequired
+	}
+
 	req := authentication.UpdateCustomerRequest{
+		AccessToken: token,
 		CustomerID: customer.ID,
 		Name:       customer.Name,
 	}
