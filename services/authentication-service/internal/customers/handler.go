@@ -6,47 +6,32 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
-	"github.com/iancoleman/strcase"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth"
+	customhttp "github.com/alexgrauroca/practice-food-delivery-platform/pkg/http"
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
 )
 
 const (
-	// CodeValidationError represents the error code for validation failures during input processing or validation checks.
-	CodeValidationError = "VALIDATION_ERROR"
-	// CodeInvalidRequest represents the error code for an invalid or improper request made to the system.
-	CodeInvalidRequest = "INVALID_REQUEST"
 	// CodeCustomerAlreadyExists represents the error code indicating the customer already exists in the system.
 	CodeCustomerAlreadyExists = "CUSTOMER_ALREADY_EXISTS"
-	// CodeInternalError represents the error code for an unspecified internal server error encountered in the system.
-	CodeInternalError = "INTERNAL_ERROR"
-	// CodeInvalidCredentials represents the error code for failed authentication due to invalid login credentials.
-	CodeInvalidCredentials = "INVALID_CREDENTIALS"
-	// CodeInvalidRefreshToken represents the error code for an invalid or expired refresh token used in authentication processes.
-	CodeInvalidRefreshToken = "INVALID_REFRESH_TOKEN"
-	// CodeTokenMismatch represents an error code indicating a mismatch between the provided token and the expected value.
-	CodeTokenMismatch = "TOKEN_MISMATCH"
-	// CodeNotFound represents the error code indicating that the requested resource could not be found in the system.
-	CodeNotFound = "NOT_FOUND"
-
-	// MsgValidationError represents the error message for validation failures during input validation checks.
-	MsgValidationError = "validation failed"
-	// MsgInvalidRequest represents the error message for an invalid or improperly formed request.
-	MsgInvalidRequest = "invalid request"
 	// MsgCustomerAlreadyExists represents the error message indicating that the customer already exists in the system.
 	MsgCustomerAlreadyExists = "customer already exists"
+
+	// CodeInvalidCredentials represents the error code for failed authentication due to invalid login credentials.
+	CodeInvalidCredentials = "INVALID_CREDENTIALS"
 	// MsgInvalidCredentials represents the error message returned when login authentication fails due to invalid credentials.
 	MsgInvalidCredentials = "invalid credentials"
-	// MsgInternalError represents the error message returned when the system fails to log in a customer.
-	MsgInternalError = "an unexpected error occurred"
+
+	// CodeInvalidRefreshToken represents the error code for an invalid or expired refresh token used in authentication processes.
+	CodeInvalidRefreshToken = "INVALID_REFRESH_TOKEN"
 	// MsgInvalidRefreshToken represents an error message indicating an invalid or expired refresh token.
 	MsgInvalidRefreshToken = "invalid or expired refresh token"
+
+	// CodeTokenMismatch represents an error code indicating a mismatch between the provided token and the expected value.
+	CodeTokenMismatch = "TOKEN_MISMATCH"
 	// MsgTokenMismatch represents the error message for a token mismatch scenario.
 	MsgTokenMismatch = "token mismatch"
-	// MsgNotFound represents the error message indicating that the requested resource could not be found.
-	MsgNotFound = "resource not found"
 )
 
 // TokenPairResponse represents the structure for holding both access and refresh tokens along with metadata.
@@ -113,7 +98,7 @@ func (h *Handler) RegisterCustomer(c *gin.Context) {
 	var req RegisterCustomerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Warn("Failed to bind request", log.Field{Key: "error", Value: err.Error()})
-		errResp := getErrorResponseFromValidationErr(err)
+		errResp := customhttp.GetErrorResponseFromValidationErr(err)
 		c.JSON(http.StatusBadRequest, errResp)
 		return
 	}
@@ -124,11 +109,14 @@ func (h *Handler) RegisterCustomer(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, ErrCustomerAlreadyExists) {
 			logger.Warn("Customer already exists", log.Field{Key: "email", Value: req.Email})
-			c.JSON(http.StatusConflict, newErrorResponse(CodeCustomerAlreadyExists, MsgCustomerAlreadyExists))
+			c.JSON(http.StatusConflict, customhttp.NewErrorResponse(CodeCustomerAlreadyExists, MsgCustomerAlreadyExists))
 			return
 		}
 		logger.Error("Failed to register customer", err)
-		c.JSON(http.StatusInternalServerError, newErrorResponse(CodeInternalError, MsgInternalError))
+		c.JSON(http.StatusInternalServerError, customhttp.NewErrorResponse(
+			customhttp.CodeInternalError,
+			customhttp.MsgInternalError,
+		))
 		return
 	}
 
@@ -158,7 +146,7 @@ func (h *Handler) LoginCustomer(c *gin.Context) {
 	var req LoginCustomerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Warn("Failed to bind request", log.Field{Key: "error", Value: err.Error()})
-		errResp := getErrorResponseFromValidationErr(err)
+		errResp := customhttp.GetErrorResponseFromValidationErr(err)
 		c.JSON(http.StatusBadRequest, errResp)
 		return
 	}
@@ -168,11 +156,14 @@ func (h *Handler) LoginCustomer(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, ErrInvalidCredentials) {
 			logger.Warn("Invalid credentials provided", log.Field{Key: "email", Value: req.Email})
-			c.JSON(http.StatusUnauthorized, newErrorResponse(CodeInvalidCredentials, MsgInvalidCredentials))
+			c.JSON(http.StatusUnauthorized, customhttp.NewErrorResponse(CodeInvalidCredentials, MsgInvalidCredentials))
 			return
 		}
 		logger.Error("Failed to login customer", err)
-		c.JSON(http.StatusInternalServerError, newErrorResponse(CodeInternalError, MsgInternalError))
+		c.JSON(http.StatusInternalServerError, customhttp.NewErrorResponse(
+			customhttp.CodeInternalError,
+			customhttp.MsgInternalError,
+		))
 		return
 	}
 
@@ -202,7 +193,7 @@ func (h *Handler) RefreshCustomer(c *gin.Context) {
 	var req RefreshCustomerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Warn("Failed to bind request", log.Field{Key: "error", Value: err.Error()})
-		errResp := getErrorResponseFromValidationErr(err)
+		errResp := customhttp.GetErrorResponseFromValidationErr(err)
 		c.JSON(http.StatusBadRequest, errResp)
 		return
 	}
@@ -212,16 +203,19 @@ func (h *Handler) RefreshCustomer(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, ErrInvalidRefreshToken) {
 			logger.Warn("Invalid refresh token provided")
-			c.JSON(http.StatusUnauthorized, newErrorResponse(CodeInvalidRefreshToken, MsgInvalidRefreshToken))
+			c.JSON(http.StatusUnauthorized, customhttp.NewErrorResponse(CodeInvalidRefreshToken, MsgInvalidRefreshToken))
 			return
 		} else if errors.Is(err, ErrTokenMismatch) {
 			logger.Warn("Token mismatch")
-			c.JSON(http.StatusForbidden, newErrorResponse(CodeTokenMismatch, MsgTokenMismatch))
+			c.JSON(http.StatusForbidden, customhttp.NewErrorResponse(CodeTokenMismatch, MsgTokenMismatch))
 			return
 		}
 
 		logger.Error("Failed to refresh customer", err)
-		c.JSON(http.StatusInternalServerError, newErrorResponse(CodeInternalError, MsgInternalError))
+		c.JSON(http.StatusInternalServerError, customhttp.NewErrorResponse(
+			customhttp.CodeInternalError,
+			customhttp.MsgInternalError,
+		))
 		return
 	}
 
@@ -256,7 +250,7 @@ func (h *Handler) UpdateCustomer(c *gin.Context) {
 	var req UpdateCustomerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Warn("Failed to bind request", log.Field{Key: "error", Value: err.Error()})
-		errResp := getErrorResponseFromValidationErr(err)
+		errResp := customhttp.GetErrorResponseFromValidationErr(err)
 		c.JSON(http.StatusBadRequest, errResp)
 		return
 	}
@@ -270,73 +264,24 @@ func (h *Handler) UpdateCustomer(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, ErrCustomerNotFound) {
 			logger.Warn("Customer not found", log.Field{Key: "customerID", Value: customerID})
-			c.JSON(http.StatusNotFound, newErrorResponse(CodeNotFound, MsgNotFound))
+			c.JSON(http.StatusNotFound, customhttp.NewErrorResponse(customhttp.CodeNotFound, customhttp.MsgNotFound))
 			return
 		}
 		if errors.Is(err, ErrCustomerIDMismatch) {
 			logger.Warn("Customer CustomerID mismatch with the token", log.Field{Key: "customerID", Value: customerID})
-			errResp := newErrorResponse(auth.CodeForbiddenError, auth.MessageForbiddenError)
+			errResp := customhttp.NewErrorResponse(auth.CodeForbiddenError, auth.MessageForbiddenError)
 			c.JSON(http.StatusForbidden, errResp)
 			return
 		}
 		logger.Error("Failed to update customer", err)
-		c.JSON(http.StatusInternalServerError, newErrorResponse(CodeInternalError, MsgInternalError))
+		c.JSON(http.StatusInternalServerError, customhttp.NewErrorResponse(
+			customhttp.CodeInternalError,
+			customhttp.MsgInternalError,
+		))
 		return
 	}
 
 	resp := UpdateCustomerResponse(output)
 	logger.Info("Customer updated successfully", log.Field{Key: "customer", Value: resp})
 	c.JSON(http.StatusOK, resp)
-}
-
-// ErrorResponse represents a standardized structure for API error responses containing code, message, and optional details.
-type ErrorResponse struct {
-	Code    string   `json:"code"`
-	Message string   `json:"message"`
-	Details []string `json:"details"`
-}
-
-func newErrorResponse(code, message string) ErrorResponse {
-	return ErrorResponse{
-		Code:    code,
-		Message: message,
-		Details: make([]string, 0),
-	}
-}
-
-// getErrorResponseFromValidationErr gets the ErrorResponse based on the error type returned from the validation
-func getErrorResponseFromValidationErr(err error) ErrorResponse {
-	var ve validator.ValidationErrors
-	if errors.As(err, &ve) {
-		errResp := newErrorResponse(CodeValidationError, MsgValidationError)
-		details := make([]string, 0)
-
-		for _, fe := range ve {
-			details = append(details, getValidationErrorDetail(fe))
-		}
-		errResp.Details = details
-
-		return errResp
-	}
-	return newErrorResponse(CodeInvalidRequest, MsgInvalidRequest)
-}
-
-// getValidationErrorDetail returns a detailed error message based on the field error
-func getValidationErrorDetail(fe validator.FieldError) string {
-	field := strcase.ToSnake(fe.Field())
-	switch fe.Tag() {
-	case "required":
-		return field + " is required"
-	case "email":
-		return field + " must be a valid email address"
-	case "min":
-		if field == "password" {
-			return field + " must be a valid password with at least 8 characters long"
-		}
-		return field + " must be at least " + fe.Param() + " characters long"
-	case "max":
-		return field + " must not exceed " + fe.Param() + " characters long"
-	default:
-		return field + " is invalid"
-	}
 }

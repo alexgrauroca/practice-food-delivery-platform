@@ -6,18 +6,16 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
-	"net/url"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth"
 	authmocks "github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth/mocks"
+	customhttp "github.com/alexgrauroca/practice-food-delivery-platform/pkg/http"
 	customersmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers/mocks"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
@@ -38,7 +36,7 @@ type customerHandlerTestCase struct {
 var errUnexpected = errors.New("unexpected error")
 
 func TestHandler_RegisterCustomer(t *testing.T) {
-	logger := setupTestEnv()
+	logger := customhttp.SetupTestEnv()
 	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	tests := []customerHandlerTestCase{
@@ -226,7 +224,7 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 }
 
 func TestHandler_LoginCustomer(t *testing.T) {
-	logger := setupTestEnv()
+	logger := customhttp.SetupTestEnv()
 
 	tests := []customerHandlerTestCase{
 		{
@@ -339,7 +337,7 @@ func TestHandler_LoginCustomer(t *testing.T) {
 }
 
 func TestHandler_RefreshCustomer(t *testing.T) {
-	logger := setupTestEnv()
+	logger := customhttp.SetupTestEnv()
 
 	tests := []customerHandlerTestCase{
 		{
@@ -444,7 +442,7 @@ func TestHandler_RefreshCustomer(t *testing.T) {
 }
 
 func TestHandler_UpdateCustomer(t *testing.T) {
-	logger := setupTestEnv()
+	logger := customhttp.SetupTestEnv()
 	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 	yesterday := time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC)
 
@@ -674,14 +672,6 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 	}
 }
 
-// setupTestEnv initializes the test environment with default values common to all tests.
-func setupTestEnv() log.Logger {
-	// Setting up the default values
-	gin.SetMode(gin.TestMode)
-	logger, _ := log.NewTest()
-	return logger
-}
-
 // runCustomerHandlerTestCase executes a test case for the customer handler, which is common for all tests.
 func runCustomerHandlerTestCase(
 	t *testing.T,
@@ -699,53 +689,13 @@ func runCustomerHandlerTestCase(
 	}
 
 	// Initialize the authentication middleware
-	// TODO assign the middleware the new handler
 	authMiddleware := auth.NewMiddleware(logger, authService)
 
 	// Initialize the handler
 	h := customers.NewHandler(logger, service, authMiddleware)
 
-	// Initialize the Gin router and register the routes
-	router := gin.New()
-	h.RegisterRoutes(router)
-
-	// Create a new HTTP request with the test case's params
-	var req *http.Request
-
-	switch httpMethod {
-	case http.MethodGet:
-		baseURL, err := url.Parse(route)
-		if err != nil {
-			t.Fatalf("failed to parse route: %v", err)
-		}
-
-		// Add query parameters
-		if len(tt.queryParams) > 0 {
-			q := baseURL.Query()
-			for k, v := range tt.queryParams {
-				q.Add(k, v)
-			}
-			baseURL.RawQuery = q.Encode()
-		}
-
-		req = httptest.NewRequest(http.MethodGet, baseURL.String(), nil)
-
-	case http.MethodPost, http.MethodPut:
-		req = httptest.NewRequest(httpMethod, route, strings.NewReader(tt.jsonPayload))
-		req.Header.Set("Content-Type", "application/json")
-
-	default:
-		t.Fatalf("unsupported HTTP method: %s", httpMethod)
-	}
-
-	if token != "" {
-		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
-	}
-
-	w := httptest.NewRecorder()
-
-	// Make the request to the handler
-	router.ServeHTTP(w, req)
+	// Make HTTP request
+	w := customhttp.ServeTestHTTPRequest(t, h, httpMethod, route, token, tt.queryParams, tt.jsonPayload)
 
 	assert.Equal(t, tt.wantStatus, w.Code)
 	assert.JSONEq(t, tt.wantJSON, w.Body.String())
