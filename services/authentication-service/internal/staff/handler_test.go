@@ -54,7 +54,7 @@ func TestHandler_RegisterStaff(t *testing.T) {
 				"code": "VALIDATION_ERROR",
 				"message": "validation failed",
 				"details": [
-					"customer_id is required",
+					"staff_id is required",
 					"email is required",
 					"password is required",
 					"name is required"
@@ -65,7 +65,7 @@ func TestHandler_RegisterStaff(t *testing.T) {
 		{
 			name: "when invalid email is provided, then it should return a 400 with the email validation error",
 			jsonPayload: `{
-				"customer_id": "fake-customer-id",
+				"staff_id": "fake-staff-id",
 				"email": "invalid-email",
 				"name": "John Doe", 
 				"password": "ValidPassword123"
@@ -82,7 +82,7 @@ func TestHandler_RegisterStaff(t *testing.T) {
 		{
 			name: "when invalid password is provided, then it should return a 400 with the pwd validation error",
 			jsonPayload: `{
-				"customer_id": "fake-customer-id",
+				"staff_id": "fake-staff-id",
 				"email": "test@example.com",
 				"name": "John Doe", 
 				"password": "short"
@@ -159,8 +159,8 @@ func TestHandler_RegisterStaff(t *testing.T) {
 			wantJSON: `{
 				"id":"fake-id",
 				"email":"test@example.com",
-				"name":"John Doe"
-				"created_at":"2025-01-01T00:00:00Z",
+				"name":"John Doe",
+				"created_at":"2025-01-01T00:00:00Z"
 			}`,
 			wantStatus: http.StatusCreated,
 		},
