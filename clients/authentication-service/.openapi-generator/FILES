@@ -34,5 +34,4 @@ model_register_staff_request.go
 model_register_staff_response.go
 model_update_customer_request.go
 response.go
-test/api_staff_test.go
 utils.go
