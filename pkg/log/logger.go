@@ -27,13 +27,22 @@ type Logger interface {
 	Fatal(msg string, err error)
 }
 
+// Field represents a structured key-value pair attached to a log entry.
+// Key is the field name used in logs; Value holds the associated data and
+// can be any type supported by the underlying logger.
 type Field struct {
 	Key   string
 	Value any
 }
 
+// NewProduction constructs a production-ready Logger backed by zap.
+// It enables caller annotation and skips this wrapper's frame so that
+// the reported caller points to the originating code.
 func NewProduction() (Logger, error) {
-	logger, err := zap.NewProduction()
+	logger, err := zap.NewProduction(
+		zap.AddCaller(),
+		zap.AddCallerSkip(1),
+	)
 	if err != nil {
 		log.Fatalf("can't initialize zap logger: %v", err)
 		return nil, err
@@ -42,6 +51,8 @@ func NewProduction() (Logger, error) {
 	return &zapLogger{logger: logger}, nil
 }
 
+// NewTest returns a no-op Logger intended for tests where log output is
+// suppressed; its methods are safe to call without producing log entries.
 func NewTest() (Logger, error) {
 	return &zapLogger{logger: zap.NewNop()}, nil
 }

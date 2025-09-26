@@ -23,8 +23,8 @@ const (
 	FieldEmail = "email"
 	// FieldActive represents the field name used to indicate the active status of a customer in the database.
 	FieldActive = "active"
-	// FieldID represents the field name used to store the unique CustomerID of a customer in the database.
-	FieldID = "_id"
+	// FieldCustomerID represents the field name used to store the unique CustomerID of a customer in the database.
+	FieldCustomerID = "customer_id"
 	// FieldName represents the field name used to store the customer's name in the database.
 	FieldName = "name"
 	// FieldUpdatedAt represents the field name used to store the timestamp when the customer was last updated.
@@ -139,8 +139,7 @@ func (r *repository) UpdateCustomer(ctx context.Context, params UpdateCustomerPa
 	logger := r.logger.WithContext(ctx)
 	logger.Info("Updating customer", log.Field{Key: "customer_id", Value: params.CustomerID})
 
-	id, err := primitive.ObjectIDFromHex(params.CustomerID)
-	if err != nil {
+	if _, err := primitive.ObjectIDFromHex(params.CustomerID); err != nil {
 		logger.Warn("Invalid customer CustomerID format", log.Field{Key: "customer_id", Value: params.CustomerID})
 		return Customer{}, ErrCustomerNotFound
 	}
@@ -155,7 +154,8 @@ func (r *repository) UpdateCustomer(ctx context.Context, params UpdateCustomerPa
 
 	// Update the customer document in the database and return the updated document
 	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
-	err = r.collection.FindOneAndUpdate(ctx, bson.M{FieldID: id}, update, opts).Decode(&customer)
+	err := r.collection.FindOneAndUpdate(ctx, bson.M{FieldCustomerID: params.CustomerID}, update, opts).
+		Decode(&customer)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			logger.Warn("Customer not found", log.Field{Key: "customer_id", Value: params.CustomerID})

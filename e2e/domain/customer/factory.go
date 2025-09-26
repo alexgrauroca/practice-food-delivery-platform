@@ -5,10 +5,16 @@ import (
 	"fmt"
 	"sync/atomic"
 	"time"
+
+	"github.com/brianvoe/gofakeit/v7"
 )
 
 var counter atomic.Int64
 var uniqueKey string
+
+func init() {
+	_ = gofakeit.Seed(time.Now().UnixNano())
+}
 
 // New creates and returns a new TestCustomer with predefined and dynamically generated fields.
 func New() TestCustomer {
@@ -18,10 +24,10 @@ func New() TestCustomer {
 		Email:       generateEmail(),
 		Password:    "strongpassword123",
 		Name:        generateName(),
-		Address:     "123 Main St.",
-		City:        "Anytown",
-		PostalCode:  "12345",
-		CountryCode: "US",
+		Address:     gofakeit.Street(),
+		City:        gofakeit.City(),
+		PostalCode:  gofakeit.Zip(),
+		CountryCode: gofakeit.CountryAbr(),
 	}
 }
 

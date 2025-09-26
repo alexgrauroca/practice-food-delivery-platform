@@ -223,9 +223,16 @@ func (s *service) UpdateCustomer(ctx context.Context, input UpdateCustomerInput)
 		return UpdateCustomerOutput{}, err
 	}
 
+	token, ok := s.authctx.GetToken(ctx)
+	// At this stage we should always have an access token, this is just a safeguard.
+	if !ok {
+		return UpdateCustomerOutput{}, authentication.ErrAccessTokenRequired
+	}
+
 	req := authentication.UpdateCustomerRequest{
-		CustomerID: customer.ID,
-		Name:       customer.Name,
+		AccessToken: token,
+		CustomerID:  customer.ID,
+		Name:        customer.Name,
 	}
 	if _, err := s.authcli.UpdateCustomer(ctx, req); err != nil {
 		s.logger.Error("failed to update customer at auth service", err)

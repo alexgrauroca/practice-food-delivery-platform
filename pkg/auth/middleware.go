@@ -17,6 +17,7 @@ const (
 	authHeader               = "Authorization"
 	bearerPrefix             = "Bearer "
 	subjectCtxKey contextKey = "token-subject"
+	tokenCtxKey contextKey   = "token"
 )
 
 // Middleware defines the interface for authentication-related middleware functions used
@@ -43,7 +44,7 @@ func NewMiddleware(logger log.Logger, service Service) Middleware {
 
 func (m *middleware) RequireCustomer() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		claims, err := m.getClaims(c)
+		claims, token, err := m.getClaims(c)
 		if err != nil {
 			m.handleAuthError(c, err)
 			return
@@ -57,25 +58,27 @@ func (m *middleware) RequireCustomer() gin.HandlerFunc {
 			return
 		}
 
+		c.Set(string(tokenCtxKey), token)
 		c.Set(string(subjectCtxKey), claims.Subject)
 		ctx := context.WithValue(c.Request.Context(), subjectCtxKey, claims.Subject)
+		ctx = context.WithValue(ctx, tokenCtxKey, token)
 		c.Request = c.Request.WithContext(ctx)
 		c.Next()
 	}
 }
 
-func (m *middleware) getClaims(c *gin.Context) (*Claims, error) {
+func (m *middleware) getClaims(c *gin.Context) (*Claims, string, error) {
 	token, err := extractBearerToken(c)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	output, err := m.service.GetClaims(c.Request.Context(), GetClaimsInput{AccessToken: token})
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
-	return output.Claims, nil
+	return output.Claims, token, nil
 }
 
 func (m *middleware) handleAuthError(c *gin.Context, err error) {

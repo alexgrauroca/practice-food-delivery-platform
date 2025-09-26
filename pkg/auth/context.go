@@ -13,6 +13,7 @@ import (
 type ContextReader interface {
 	GetSubject(ctx context.Context) (string, bool)
 	RequireSubjectMatch(ctx context.Context, expectedSubject string) error
+	GetToken(ctx context.Context) (string, bool)
 }
 
 type contextReader struct {
@@ -54,4 +55,14 @@ func (r *contextReader) RequireSubjectMatch(ctx context.Context, expectedSubject
 		return ErrSubjectMismatch
 	}
 	return nil
+}
+
+func (r *contextReader) GetToken(ctx context.Context) (string, bool) {
+	v := ctx.Value(tokenCtxKey)
+	if v == nil {
+		return "", false
+	}
+	token, ok := v.(string)
+
+	return token, ok
 }
