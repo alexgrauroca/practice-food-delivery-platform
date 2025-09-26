@@ -1,0 +1,26 @@
+type: object
+required:
+  - id
+  - email
+  - name
+  - created_at
+properties:
+  id:
+    type: string
+    pattern: '^[0-9a-fA-F]{24}$'
+    description: Unique staff identifier in the auth service
+    example: 507f1f77bcf86cd799439011
+  email:
+    type: string
+    format: email
+    description: Staff's email address
+    example: user@example.com
+  name:
+    type: string
+    description: Staff's full name
+    example: John Doe
+  created_at:
+    type: string
+    format: date-time
+    description: Account creation timestamp
+    example: 2025-01-01T00:00:00Z

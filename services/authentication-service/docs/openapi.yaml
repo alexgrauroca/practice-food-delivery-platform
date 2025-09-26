@@ -20,6 +20,8 @@ paths:
     $ref: './paths/customers/customers.yaml'
   /v1.0/auth/customers/{customerID}:
     $ref: './paths/customers/customer.yaml'
+  /v1.0/auth/staff:
+    $ref: './paths/staff/staff-users.yaml'
 
 components:
   securitySchemes:

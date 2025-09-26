@@ -12,6 +12,8 @@ InvalidRequest:
   $ref: './InvalidRequest.yaml'
 NotFound:
   $ref: './NotFound.yaml'
+StaffExists:
+  $ref: './StaffExists.yaml'
 TokenExpired:
   $ref: './TokenExpired.yaml'
 TokenMismatch:

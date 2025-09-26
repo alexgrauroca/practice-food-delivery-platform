@@ -3,6 +3,7 @@
 README.md
 api/openapi.yaml
 api_customers.go
+api_staff.go
 client.go
 configuration.go
 docs/Customer.md
@@ -14,6 +15,9 @@ docs/RefreshCustomerRequest.md
 docs/RefreshCustomerResponse.md
 docs/RegisterCustomerRequest.md
 docs/RegisterCustomerResponse.md
+docs/RegisterStaffRequest.md
+docs/RegisterStaffResponse.md
+docs/StaffAPI.md
 docs/UpdateCustomerRequest.md
 git_push.sh
 go.mod
@@ -26,6 +30,9 @@ model_refresh_customer_request.go
 model_refresh_customer_response.go
 model_register_customer_request.go
 model_register_customer_response.go
+model_register_staff_request.go
+model_register_staff_response.go
 model_update_customer_request.go
 response.go
+test/api_staff_test.go
 utils.go
