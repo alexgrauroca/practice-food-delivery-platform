@@ -15,29 +15,21 @@ import (
 const (
 	// CodeCustomerAlreadyExists represents the error code indicating the customer already exists in the system.
 	CodeCustomerAlreadyExists = "CUSTOMER_ALREADY_EXISTS"
-	// CodeInternalError represents the error code for an unspecified internal server error encountered in the system.
-	CodeInternalError = "INTERNAL_ERROR"
 	// CodeInvalidCredentials represents the error code for failed authentication due to invalid login credentials.
 	CodeInvalidCredentials = "INVALID_CREDENTIALS"
 	// CodeInvalidRefreshToken represents the error code for an invalid or expired refresh token used in authentication processes.
 	CodeInvalidRefreshToken = "INVALID_REFRESH_TOKEN"
 	// CodeTokenMismatch represents an error code indicating a mismatch between the provided token and the expected value.
 	CodeTokenMismatch = "TOKEN_MISMATCH"
-	// CodeNotFound represents the error code indicating that the requested resource could not be found in the system.
-	CodeNotFound = "NOT_FOUND"
 
 	// MsgCustomerAlreadyExists represents the error message indicating that the customer already exists in the system.
 	MsgCustomerAlreadyExists = "customer already exists"
 	// MsgInvalidCredentials represents the error message returned when login authentication fails due to invalid credentials.
 	MsgInvalidCredentials = "invalid credentials"
-	// MsgInternalError represents the error message returned when the system fails to log in a customer.
-	MsgInternalError = "an unexpected error occurred"
 	// MsgInvalidRefreshToken represents an error message indicating an invalid or expired refresh token.
 	MsgInvalidRefreshToken = "invalid or expired refresh token"
 	// MsgTokenMismatch represents the error message for a token mismatch scenario.
 	MsgTokenMismatch = "token mismatch"
-	// MsgNotFound represents the error message indicating that the requested resource could not be found.
-	MsgNotFound = "resource not found"
 )
 
 // TokenPairResponse represents the structure for holding both access and refresh tokens along with metadata.
@@ -119,7 +111,10 @@ func (h *Handler) RegisterCustomer(c *gin.Context) {
 			return
 		}
 		logger.Error("Failed to register customer", err)
-		c.JSON(http.StatusInternalServerError, customhttp.NewErrorResponse(CodeInternalError, MsgInternalError))
+		c.JSON(http.StatusInternalServerError, customhttp.NewErrorResponse(
+			customhttp.CodeInternalError,
+			customhttp.MsgInternalError,
+		))
 		return
 	}
 
@@ -163,7 +158,10 @@ func (h *Handler) LoginCustomer(c *gin.Context) {
 			return
 		}
 		logger.Error("Failed to login customer", err)
-		c.JSON(http.StatusInternalServerError, customhttp.NewErrorResponse(CodeInternalError, MsgInternalError))
+		c.JSON(http.StatusInternalServerError, customhttp.NewErrorResponse(
+			customhttp.CodeInternalError,
+			customhttp.MsgInternalError,
+		))
 		return
 	}
 
@@ -212,7 +210,10 @@ func (h *Handler) RefreshCustomer(c *gin.Context) {
 		}
 
 		logger.Error("Failed to refresh customer", err)
-		c.JSON(http.StatusInternalServerError, customhttp.NewErrorResponse(CodeInternalError, MsgInternalError))
+		c.JSON(http.StatusInternalServerError, customhttp.NewErrorResponse(
+			customhttp.CodeInternalError,
+			customhttp.MsgInternalError,
+		))
 		return
 	}
 
@@ -261,7 +262,7 @@ func (h *Handler) UpdateCustomer(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, ErrCustomerNotFound) {
 			logger.Warn("Customer not found", log.Field{Key: "customerID", Value: customerID})
-			c.JSON(http.StatusNotFound, customhttp.NewErrorResponse(CodeNotFound, MsgNotFound))
+			c.JSON(http.StatusNotFound, customhttp.NewErrorResponse(customhttp.CodeNotFound, customhttp.MsgNotFound))
 			return
 		}
 		if errors.Is(err, ErrCustomerIDMismatch) {
@@ -271,7 +272,10 @@ func (h *Handler) UpdateCustomer(c *gin.Context) {
 			return
 		}
 		logger.Error("Failed to update customer", err)
-		c.JSON(http.StatusInternalServerError, customhttp.NewErrorResponse(CodeInternalError, MsgInternalError))
+		c.JSON(http.StatusInternalServerError, customhttp.NewErrorResponse(
+			customhttp.CodeInternalError,
+			customhttp.MsgInternalError,
+		))
 		return
 	}
 

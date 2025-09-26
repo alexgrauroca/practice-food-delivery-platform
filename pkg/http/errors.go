@@ -22,6 +22,11 @@ const (
 	CodeInternalError = "INTERNAL_ERROR"
 	// MsgInternalError represents the error message returned when the system fails to log in a customer.
 	MsgInternalError = "an unexpected error occurred"
+
+	// CodeNotFound represents the error code indicating that the requested resource could not be found in the system.
+	CodeNotFound = "NOT_FOUND"
+	// MsgNotFound represents the error message indicating that the requested resource could not be found.
+	MsgNotFound = "resource not found"
 )
 
 // ErrorResponse represents a standardized structure for API error responses containing code, message, and optional details.

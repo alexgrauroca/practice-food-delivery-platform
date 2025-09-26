@@ -15,17 +15,8 @@ import (
 const (
 	// CodeCustomerAlreadyExists represents the error code indicating the customer already exists in the system.
 	CodeCustomerAlreadyExists = "CUSTOMER_ALREADY_EXISTS"
-	// CodeInternalError represents the error code for an unspecified internal server error encountered in the system.
-	CodeInternalError = "INTERNAL_ERROR"
-	// CodeNotFound represents the error code indicating that the requested resource could not be found in the system.
-	CodeNotFound = "NOT_FOUND"
-
 	// MsgCustomerAlreadyExists represents the error message indicating that the customer already exists in the system.
 	MsgCustomerAlreadyExists = "customer already exists"
-	// MsgInternalError represents the error message returned when the system fails to log in a customer.
-	MsgInternalError = "an unexpected error occurred"
-	// MsgNotFound represents the error message indicating that the requested resource could not be found.
-	MsgNotFound = "resource not found"
 )
 
 // Handler manages HTTP requests for customer-related operations.
@@ -77,7 +68,7 @@ func (h *Handler) GetCustomer(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, ErrCustomerNotFound) {
 			logger.Warn("Customer not found", log.Field{Key: "customerID", Value: customerID})
-			c.JSON(http.StatusNotFound, customhttp.NewErrorResponse(CodeNotFound, MsgNotFound))
+			c.JSON(http.StatusNotFound, customhttp.NewErrorResponse(customhttp.CodeNotFound, customhttp.MsgNotFound))
 			return
 		}
 		if errors.Is(err, ErrCustomerIDMismatch) {
@@ -87,7 +78,10 @@ func (h *Handler) GetCustomer(c *gin.Context) {
 			return
 		}
 		logger.Error("Failed to get customer", err)
-		c.JSON(http.StatusInternalServerError, customhttp.NewErrorResponse(CodeInternalError, MsgInternalError))
+		c.JSON(http.StatusInternalServerError, customhttp.NewErrorResponse(
+			customhttp.CodeInternalError,
+			customhttp.MsgInternalError,
+		))
 		return
 	}
 
@@ -144,7 +138,10 @@ func (h *Handler) RegisterCustomer(c *gin.Context) {
 			return
 		}
 		logger.Error("Failed to register customer", err)
-		c.JSON(http.StatusInternalServerError, customhttp.NewErrorResponse(CodeInternalError, MsgInternalError))
+		c.JSON(http.StatusInternalServerError, customhttp.NewErrorResponse(
+			customhttp.CodeInternalError,
+			customhttp.MsgInternalError,
+		))
 		return
 	}
 
@@ -205,7 +202,7 @@ func (h *Handler) UpdateCustomer(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, ErrCustomerNotFound) {
 			logger.Warn("Customer not found", log.Field{Key: "customerID", Value: customerID})
-			c.JSON(http.StatusNotFound, customhttp.NewErrorResponse(CodeNotFound, MsgNotFound))
+			c.JSON(http.StatusNotFound, customhttp.NewErrorResponse(customhttp.CodeNotFound, customhttp.MsgNotFound))
 			return
 		}
 		if errors.Is(err, ErrCustomerIDMismatch) {
@@ -215,7 +212,10 @@ func (h *Handler) UpdateCustomer(c *gin.Context) {
 			return
 		}
 		logger.Error("Failed to update customer", err)
-		c.JSON(http.StatusInternalServerError, customhttp.NewErrorResponse(CodeInternalError, MsgInternalError))
+		c.JSON(http.StatusInternalServerError, customhttp.NewErrorResponse(
+			customhttp.CodeInternalError,
+			customhttp.MsgInternalError,
+		))
 		return
 	}
 
