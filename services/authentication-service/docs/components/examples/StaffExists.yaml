@@ -1,0 +1,5 @@
+summary: Staff already exists
+value:
+  code: STAFF_ALREADY_EXISTS
+  message: staff already exists
+  details: [ ]

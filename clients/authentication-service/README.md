@@ -86,6 +86,7 @@ Class | Method | HTTP request | Description
 *CustomersAPI* | [**RefreshCustomer**](docs/CustomersAPI.md#refreshcustomer) | **Post** /v1.0/customers/refresh | Refresh access token
 *CustomersAPI* | [**RegisterCustomer**](docs/CustomersAPI.md#registercustomer) | **Post** /v1.0/auth/customers | Register a new customer
 *CustomersAPI* | [**UpdateCustomer**](docs/CustomersAPI.md#updatecustomer) | **Put** /v1.0/auth/customers/{customerID} | Update a specific customer data
+*StaffAPI* | [**RegisterStaff**](docs/StaffAPI.md#registerstaff) | **Post** /v1.0/auth/staff | Register a new staff user
 
 
 ## Documentation For Models
@@ -98,6 +99,8 @@ Class | Method | HTTP request | Description
  - [RefreshCustomerResponse](docs/RefreshCustomerResponse.md)
  - [RegisterCustomerRequest](docs/RegisterCustomerRequest.md)
  - [RegisterCustomerResponse](docs/RegisterCustomerResponse.md)
+ - [RegisterStaffRequest](docs/RegisterStaffRequest.md)
+ - [RegisterStaffResponse](docs/RegisterStaffResponse.md)
  - [UpdateCustomerRequest](docs/UpdateCustomerRequest.md)
 
 

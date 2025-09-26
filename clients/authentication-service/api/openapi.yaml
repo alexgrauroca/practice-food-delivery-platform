@@ -20,6 +20,8 @@ security:
 tags:
 - description: Operations related to customer registration and authentication
   name: Customers
+- description: Operations related to staff registration and authentication
+  name: Staff
 paths:
   /v1.0/customers/login:
     post:
@@ -157,6 +159,7 @@ paths:
                     code: VALIDATION_ERROR
                     message: validation failed
                     details:
+                    - customer_id is required
                     - email is required
                     - password is required
                     - name is required
@@ -233,6 +236,59 @@ paths:
       summary: Update a specific customer data
       tags:
       - Customers
+  /v1.0/auth/staff:
+    post:
+      description: Creates a new staff account with the provided information
+      operationId: registerStaff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterStaffRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegisterStaffResponse"
+          description: Staff registered successfully
+        "400":
+          content:
+            application/json:
+              examples:
+                invalidRequest:
+                  $ref: "#/components/examples/InvalidRequest"
+                validationError:
+                  summary: Validation error
+                  value:
+                    code: VALIDATION_ERROR
+                    message: validation failed
+                    details:
+                    - email is required
+                    - password is required
+                    - name is required
+                    - email must be a valid email address
+                    - password must be a valid password with at least 8 characters
+                      long
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+          description: Invalid input or validation error
+        "409":
+          content:
+            application/json:
+              examples:
+                staffExists:
+                  $ref: "#/components/examples/StaffExists"
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+          description: Staff already exists
+        "500":
+          $ref: "#/components/responses/InternalError"
+      security: []
+      summary: Register a new staff user
+      tags:
+      - Staff
 components:
   examples:
     InvalidRequest:
@@ -302,6 +358,12 @@ components:
       value:
         code: NOT_FOUND
         message: Resource not found
+        details: []
+    StaffExists:
+      summary: Staff already exists
+      value:
+        code: STAFF_ALREADY_EXISTS
+        message: staff already exists
         details: []
   responses:
     InternalError:
@@ -599,6 +661,75 @@ components:
       - id
       - name
       - updated_at
+      type: object
+    RegisterStaffRequest:
+      example:
+        password: strongpassword123
+        staff_id: 507f1f77bcf86cd799439011
+        name: John Doe
+        email: user@example.com
+      properties:
+        staff_id:
+          description: Unique staff identifier
+          example: 507f1f77bcf86cd799439011
+          pattern: "^[0-9a-fA-F]{24}$"
+          type: string
+        email:
+          description: Staff's email address
+          example: user@example.com
+          format: email
+          pattern: "^[\\w\\.-]+@[\\w\\.-]+\\.\\w{2,}$"
+          type: string
+        password:
+          description: Password must be at least 8 characters long
+          example: strongpassword123
+          format: password
+          minLength: 8
+          type: string
+          writeOnly: true
+        name:
+          description: Staff's full name
+          example: John Doe
+          maxLength: 100
+          minLength: 1
+          type: string
+      required:
+      - email
+      - name
+      - password
+      - staff_id
+      type: object
+    RegisterStaffResponse:
+      example:
+        name: John Doe
+        created_at: 2025-01-01T00:00:00Z
+        id: 507f1f77bcf86cd799439011
+        email: user@example.com
+      properties:
+        id:
+          description: Unique staff identifier in the auth service
+          example: 507f1f77bcf86cd799439011
+          pattern: "^[0-9a-fA-F]{24}$"
+          type: string
+        email:
+          description: Staff's email address
+          example: user@example.com
+          format: email
+          type: string
+        name:
+          description: Staff's full name
+          example: John Doe
+          type: string
+        created_at:
+          description: Account creation timestamp
+          example: 2025-01-01T00:00:00Z
+          format: date-time
+          type: string
+      required:
+      - created_at
+      - email
+      - id
+      - name
       type: object
     UpdateCustomerResponse:
       $ref: "#/components/schemas/Customer"

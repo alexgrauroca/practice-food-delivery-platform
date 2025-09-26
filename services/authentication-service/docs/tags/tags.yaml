@@ -1,2 +1,4 @@
 - name: Customers
   description: Operations related to customer registration and authentication
+- name: Staff
+  description: Operations related to staff registration and authentication

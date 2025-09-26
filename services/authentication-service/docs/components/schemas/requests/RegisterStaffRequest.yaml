@@ -1,0 +1,31 @@
+type: object
+required:
+  - staff_id
+  - email
+  - password
+  - name
+properties:
+  staff_id:
+    type: string
+    pattern: '^[0-9a-fA-F]{24}$'
+    description: Unique staff identifier
+    example: 507f1f77bcf86cd799439011
+  email:
+    type: string
+    format: email
+    pattern: '^[\w\.-]+@[\w\.-]+\.\w{2,}$'
+    description: Staff's email address
+    example: user@example.com
+  password:
+    type: string
+    format: password
+    minLength: 8
+    description: Password must be at least 8 characters long
+    example: strongpassword123
+    writeOnly: true
+  name:
+    type: string
+    minLength: 1
+    maxLength: 100
+    description: Staff's full name
+    example: John Doe

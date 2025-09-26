@@ -5,6 +5,8 @@ RefreshCustomerRequest:
   $ref: './requests/RefreshCustomerRequest.yaml'
 RegisterCustomerRequest:
   $ref: './requests/RegisterCustomerRequest.yaml'
+RegisterStaffRequest:
+  $ref: './requests/RegisterStaffRequest.yaml'
 UpdateCustomerRequest:
   $ref: './requests/UpdateCustomerRequest.yaml'
 
@@ -17,5 +19,7 @@ RefreshCustomerResponse:
   $ref: './responses/RefreshCustomerResponse.yaml'
 RegisterCustomerResponse:
   $ref: './responses/RegisterCustomerResponse.yaml'
+RegisterStaffResponse:
+  $ref: './responses/RegisterStaffResponse.yaml'
 UpdateCustomerResponse:
   $ref: './responses/UpdateCustomerResponse.yaml'
