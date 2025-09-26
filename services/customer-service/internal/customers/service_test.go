@@ -513,6 +513,8 @@ func TestService_UpdateCustomer(t *testing.T) {
 				repo.EXPECT().UpdateCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.Customer{ID: "fake-id"}, nil).Times(1)
 
+				authctx.EXPECT().GetToken(gomock.Any()).Return("fake-token", true)
+
 				authservice.EXPECT().UpdateCustomer(gomock.Any(), gomock.Any()).
 					Return(authentication.UpdateCustomerResponse{}, errAuthService)
 
@@ -574,6 +576,8 @@ func TestService_UpdateCustomer(t *testing.T) {
 					CreatedAt:   yesterday,
 					UpdatedAt:   now,
 				}, nil).Times(1)
+
+				authctx.EXPECT().GetToken(gomock.Any()).Return("fake-token", true)
 
 				authservice.EXPECT().UpdateCustomer(gomock.Any(), gomock.Any()).
 					Return(authentication.UpdateCustomerResponse{}, errAuthService)
@@ -641,9 +645,12 @@ func TestService_UpdateCustomer(t *testing.T) {
 					UpdatedAt:   now,
 				}, nil).Times(1)
 
+				authctx.EXPECT().GetToken(gomock.Any()).Return("fake-token", true)
+
 				authservice.EXPECT().UpdateCustomer(gomock.Any(), authentication.UpdateCustomerRequest{
-					CustomerID: "fake-id",
-					Name:       "New John Doe",
+					AccessToken: "fake-token",
+					CustomerID:  "fake-id",
+					Name:        "New John Doe",
 				}).Return(authentication.UpdateCustomerResponse{
 					ID:        "auth-fake-id",
 					Email:     "test@example.com",
