@@ -36,11 +36,11 @@ type Customer struct {
 	ID         string    `bson:"_id,omitempty"`
 	CustomerID string    `bson:"customer_id"`
 	Email      string    `bson:"email"`
+	Active     bool      `bson:"active"`
 	Name       string    `bson:"name"`
 	Password   string    `bson:"password,omitempty"`
 	CreatedAt  time.Time `bson:"created_at"`
 	UpdatedAt  time.Time `bson:"updated_at"`
-	Active     bool      `bson:"active"`
 }
 
 // Repository defines the interface for customer repository operations.

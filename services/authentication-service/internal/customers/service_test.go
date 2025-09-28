@@ -24,9 +24,8 @@ import (
 )
 
 var (
-	errRepo        = errors.New("repository error")
-	errToken       = errors.New("token error")
-	errAuthService = errors.New("authentication service error")
+	errRepo  = errors.New("repository error")
+	errToken = errors.New("token error")
 )
 
 type customersServiceTestCase[I, W any] struct {
@@ -50,9 +49,10 @@ func TestService_RegisterCustomer(t *testing.T) {
 		{
 			name: "when there is an active customer with the same email, then it should return a customer already exists error",
 			input: customers.RegisterCustomerInput{
-				Email:    "test@example.com",
-				Password: "ValidPassword123",
-				Name:     "John Doe",
+				CustomerID: "fake-customer-id",
+				Email:      "test@example.com",
+				Password:   "ValidPassword123",
+				Name:       "John Doe",
 			},
 			mocksSetup: func(
 				repo *customersmocks.MockRepository,
@@ -69,9 +69,10 @@ func TestService_RegisterCustomer(t *testing.T) {
 		{
 			name: "when there is an unexpected error when creating the customer, then it should propagate the error",
 			input: customers.RegisterCustomerInput{
-				Email:    "test@example.com",
-				Password: "ValidPassword123",
-				Name:     "John Doe",
+				CustomerID: "fake-customer-id",
+				Email:      "test@example.com",
+				Password:   "ValidPassword123",
+				Name:       "John Doe",
 			},
 			mocksSetup: func(
 				repo *customersmocks.MockRepository,
@@ -88,9 +89,10 @@ func TestService_RegisterCustomer(t *testing.T) {
 		{
 			name: "when the customer can be created, then it should return the created customer",
 			input: customers.RegisterCustomerInput{
-				Email:    "test@example.com",
-				Password: "ValidPassword123",
-				Name:     "John Doe",
+				CustomerID: "fake-customer-id",
+				Email:      "test@example.com",
+				Password:   "ValidPassword123",
+				Name:       "John Doe",
 			},
 			mocksSetup: func(
 				repo *customersmocks.MockRepository,
@@ -105,13 +107,14 @@ func TestService_RegisterCustomer(t *testing.T) {
 						require.True(t, ok, "Password should be hashed and match the input password")
 
 						return customers.Customer{
-							ID:        "fake-id",
-							Email:     params.Email,
-							Name:      params.Name,
-							Password:  params.Password,
-							CreatedAt: now,
-							UpdatedAt: now,
-							Active:    true,
+							ID:         "fake-id",
+							CustomerID: params.CustomerID,
+							Email:      params.Email,
+							Name:       params.Name,
+							Password:   params.Password,
+							CreatedAt:  now,
+							UpdatedAt:  now,
+							Active:     true,
 						}, nil
 					})
 			},
