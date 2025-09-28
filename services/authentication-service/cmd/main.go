@@ -14,6 +14,7 @@ import (
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/clock"
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/infraestructure/mongodb"
 	customlog "github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/staff"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/middleware"
@@ -55,6 +56,7 @@ func main() {
 	refreshService := initRefreshFeature(logger, db)
 	authService, authMiddleware, authctx := initAuthFeature(logger)
 	initCustomersFeature(logger, db, router, refreshService, authService, authMiddleware, authctx)
+	initStaffFeature(logger, db, router, refreshService, authService, authMiddleware, authctx)
 
 	logger.Info("Starting http server")
 	// Start the server
@@ -94,7 +96,6 @@ func initCustomersFeature(
 	authMiddleware auth.Middleware,
 	authctx auth.ContextReader,
 ) {
-	// TODO: provide the context reader to the service
 	// Initialize the customer's repository
 	repo := customers.NewRepository(logger, db, clock.RealClock{})
 
@@ -103,5 +104,20 @@ func initCustomersFeature(
 
 	// Initialize the customer's handler and register routes
 	handler := customers.NewHandler(logger, service, authMiddleware)
+	handler.RegisterRoutes(router)
+}
+
+func initStaffFeature(
+	logger customlog.Logger,
+	db *mongo.Database,
+	router *gin.Engine,
+	refreshService refresh.Service,
+	authService auth.Service,
+	authMiddleware auth.Middleware,
+	authctx auth.ContextReader,
+) {
+	repo := staff.NewRepository(logger, db, clock.RealClock{})
+	service := staff.NewService(logger, repo, refreshService, authService, authctx)
+	handler := staff.NewHandler(logger, service, authMiddleware)
 	handler.RegisterRoutes(router)
 }

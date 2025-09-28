@@ -33,7 +33,7 @@ func TestRepository_CreateCustomer(t *testing.T) {
 
 	tests := []customersRepositoryTestCase[customers.CreateCustomerParams, customers.Customer]{
 		{
-			name: "when exists an active customer with the same email, it should return a customer already exists error",
+			name: "when exists an active customer with the same email, then it should return a customer already exists error",
 			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
 				mongodb.InsertTestDocument(t, coll, customers.Customer{
 					CustomerID: "fake-customer-id",
@@ -55,7 +55,7 @@ func TestRepository_CreateCustomer(t *testing.T) {
 			wantErr: customers.ErrCustomerAlreadyExists,
 		},
 		{
-			name: "when the customer is created successfully, it should return the created customer",
+			name: "when the customer is created successfully, then it should return the created customer",
 			params: customers.CreateCustomerParams{
 				CustomerID: "fake-customer-id",
 				Email:      "test@example.com",
@@ -125,7 +125,7 @@ func TestRepository_FindByEmail(t *testing.T) {
 
 	tests := []customersRepositoryTestCase[string, customers.Customer]{
 		{
-			name: "when there is not an active customer with the email, it should return a customer not found error",
+			name: "when there is not an active customer with the email, then it should return a customer not found error",
 			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
 				mongodb.InsertTestDocument(t, coll, customers.Customer{
 					Email:     "test@example.com",
@@ -141,7 +141,7 @@ func TestRepository_FindByEmail(t *testing.T) {
 			wantErr: customers.ErrCustomerNotFound,
 		},
 		{
-			name: "when there is an active customer with the email, it should return the customer",
+			name: "when there is an active customer with the email, then it should return the customer",
 			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
 				mongodb.InsertTestDocument(t, coll, customers.Customer{
 					Email:     "test2@example.com",
