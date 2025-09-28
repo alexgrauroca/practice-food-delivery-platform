@@ -32,7 +32,7 @@ func TestRepository_CreateStaff(t *testing.T) {
 
 	tests := []staffRepositoryTestCase[staff.CreateStaffParams, staff.Staff]{
 		{
-			name: "when exists an active staff with the same email, it should return a staff already exists error",
+			name: "when exists an active staff with the same email, then it should return a staff already exists error",
 			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
 				mongodb.InsertTestDocument(t, coll, staff.Staff{
 					StaffID:   "fake-staff-id",
@@ -54,7 +54,7 @@ func TestRepository_CreateStaff(t *testing.T) {
 			wantErr: staff.ErrStaffAlreadyExists,
 		},
 		{
-			name: "when the staff is created successfully, it should return the created staff",
+			name: "when the staff is created successfully, then it should return the created staff",
 			params: staff.CreateStaffParams{
 				StaffID:  "fake-staff-id",
 				Email:    "test@example.com",
@@ -79,7 +79,7 @@ func TestRepository_CreateStaff(t *testing.T) {
 			tdb := mongodb.NewTestDB(t, "staff_test_authentication_service")
 			defer tdb.Close(t)
 
-			coll := setupTestStaffsCollection(t, tdb.DB)
+			coll := setupTestStaffCollection(t, tdb.DB)
 			if tt.insertDocuments != nil {
 				tt.insertDocuments(t, coll)
 			}

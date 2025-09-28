@@ -60,7 +60,6 @@ type repository struct {
 }
 
 // NewRepository creates a new instance of the Repository interface with MongoDB implementation.
-// It requires a logger for operational logging, a database connection, and a clock implementation for timestamp generation.
 func NewRepository(logger log.Logger, db *mongo.Database, clk clock.Clock) Repository {
 	return &repository{
 		logger:     logger,
