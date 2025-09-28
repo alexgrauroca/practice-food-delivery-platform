@@ -37,7 +37,7 @@ type service struct {
 	authctx        auth.ContextReader
 }
 
-// NewService creates a new instance of Service with the provided logger and repository dependencies.
+// NewService creates a new instance of Service with the provided dependencies.
 func NewService(
 	logger log.Logger,
 	repo Repository,
