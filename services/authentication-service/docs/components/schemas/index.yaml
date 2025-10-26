@@ -1,6 +1,6 @@
 # Request schemas
-LoginCustomerRequest:
-  $ref: './requests/LoginCustomerRequest.yaml'
+LoginRequest:
+  $ref: './requests/LoginRequest.yaml'
 RefreshCustomerRequest:
   $ref: './requests/RefreshCustomerRequest.yaml'
 RegisterCustomerRequest:
@@ -11,8 +11,8 @@ RegisterStaffRequest:
 # Response schemas
 ErrorResponse:
   $ref: './responses/ErrorResponse.yaml'
-LoginCustomerResponse:
-  $ref: './responses/LoginCustomerResponse.yaml'
+LoginResponse:
+  $ref: './responses/LoginResponse.yaml'
 RefreshCustomerResponse:
   $ref: './responses/RefreshCustomerResponse.yaml'
 RegisterCustomerResponse:
