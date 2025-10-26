@@ -52,7 +52,6 @@ func TestService_RegisterCustomer(t *testing.T) {
 				CustomerID: "fake-customer-id",
 				Email:      "test@example.com",
 				Password:   "ValidPassword123",
-				Name:       "John Doe",
 			},
 			mocksSetup: func(
 				repo *customersmocks.MockRepository,
@@ -72,7 +71,6 @@ func TestService_RegisterCustomer(t *testing.T) {
 				CustomerID: "fake-customer-id",
 				Email:      "test@example.com",
 				Password:   "ValidPassword123",
-				Name:       "John Doe",
 			},
 			mocksSetup: func(
 				repo *customersmocks.MockRepository,
@@ -92,7 +90,6 @@ func TestService_RegisterCustomer(t *testing.T) {
 				CustomerID: "fake-customer-id",
 				Email:      "test@example.com",
 				Password:   "ValidPassword123",
-				Name:       "John Doe",
 			},
 			mocksSetup: func(
 				repo *customersmocks.MockRepository,
@@ -110,7 +107,6 @@ func TestService_RegisterCustomer(t *testing.T) {
 							ID:         "fake-id",
 							CustomerID: params.CustomerID,
 							Email:      params.Email,
-							Name:       params.Name,
 							Password:   params.Password,
 							CreatedAt:  now,
 							UpdatedAt:  now,
@@ -121,7 +117,6 @@ func TestService_RegisterCustomer(t *testing.T) {
 			want: customers.RegisterCustomerOutput{
 				ID:        "fake-id",
 				Email:     "test@example.com",
-				Name:      "John Doe",
 				CreatedAt: now,
 			},
 			wantErr: nil,
@@ -195,7 +190,6 @@ func TestService_LoginCustomer(t *testing.T) {
 					Return(customers.Customer{
 						ID:        "fake-id",
 						Email:     "test@example.com",
-						Name:      "John Doe",
 						Password:  hashedPassword, // This should be a hashed password
 						CreatedAt: now,
 						UpdatedAt: now,
@@ -242,7 +236,6 @@ func TestService_LoginCustomer(t *testing.T) {
 					Return(customers.Customer{
 						ID:        "fake-id",
 						Email:     "test@example.com",
-						Name:      "John Doe",
 						Password:  hashedPassword, // This should be a hashed password
 						CreatedAt: now,
 						UpdatedAt: now,
@@ -274,7 +267,6 @@ func TestService_LoginCustomer(t *testing.T) {
 					Return(customers.Customer{
 						ID:        "fake-id",
 						Email:     "test@example.com",
-						Name:      "John Doe",
 						Password:  hashedPassword, // This should be a hashed password
 						CreatedAt: now,
 						UpdatedAt: now,
@@ -310,7 +302,6 @@ func TestService_LoginCustomer(t *testing.T) {
 						ID:         "fake-customer-id",
 						CustomerID: "fake-id",
 						Email:      "test@example.com",
-						Name:       "John Doe",
 						Password:   hashedPassword, // This should be a hashed password
 						CreatedAt:  now,
 						UpdatedAt:  now,

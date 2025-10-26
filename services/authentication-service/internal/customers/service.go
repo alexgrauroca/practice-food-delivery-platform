@@ -58,22 +58,19 @@ type RegisterCustomerInput struct {
 	CustomerID string
 	Email      string
 	Password   string
-	Name       string
 }
 
 // RegisterCustomerOutput represents the output data returned after successfully registering a new customer.
 type RegisterCustomerOutput struct {
 	ID        string
 	Email     string
-	Name      string
 	CreatedAt time.Time
 }
 
 func (s *service) RegisterCustomer(ctx context.Context, input RegisterCustomerInput) (RegisterCustomerOutput, error) {
 	logger := s.logger.WithContext(ctx)
 
-	logger.Info("registering customer",
-		log.Field{Key: "email", Value: input.Email}, log.Field{Key: "name", Value: input.Name})
+	logger.Info("registering customer", log.Field{Key: "email", Value: input.Email})
 	hashedPassword, err := password.Hash(input.Password)
 	if err != nil {
 		logger.Error("failed to hash password", err)
@@ -84,7 +81,6 @@ func (s *service) RegisterCustomer(ctx context.Context, input RegisterCustomerIn
 		CustomerID: input.CustomerID,
 		Email:      input.Email,
 		Password:   hashedPassword,
-		Name:       input.Name,
 	}
 
 	customer, err := s.repo.CreateCustomer(ctx, params)
@@ -96,7 +92,6 @@ func (s *service) RegisterCustomer(ctx context.Context, input RegisterCustomerIn
 	output := RegisterCustomerOutput{
 		ID:        customer.ID,
 		Email:     customer.Email,
-		Name:      customer.Name,
 		CreatedAt: customer.CreatedAt,
 	}
 	logger.Info("customer registered successfully", log.Field{Key: "customerID", Value: customer.ID})
