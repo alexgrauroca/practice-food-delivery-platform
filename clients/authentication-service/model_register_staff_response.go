@@ -26,8 +26,6 @@ type RegisterStaffResponse struct {
 	Id string `json:"id" validate:"regexp=^[0-9a-fA-F]{24}$"`
 	// Staff's email address
 	Email string `json:"email"`
-	// Staff's full name
-	Name string `json:"name"`
 	// Account creation timestamp
 	CreatedAt time.Time `json:"created_at"`
 }
@@ -38,11 +36,10 @@ type _RegisterStaffResponse RegisterStaffResponse
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewRegisterStaffResponse(id string, email string, name string, createdAt time.Time) *RegisterStaffResponse {
+func NewRegisterStaffResponse(id string, email string, createdAt time.Time) *RegisterStaffResponse {
 	this := RegisterStaffResponse{}
 	this.Id = id
 	this.Email = email
-	this.Name = name
 	this.CreatedAt = createdAt
 	return &this
 }
@@ -103,30 +100,6 @@ func (o *RegisterStaffResponse) SetEmail(v string) {
 	o.Email = v
 }
 
-// GetName returns the Name field value
-func (o *RegisterStaffResponse) GetName() string {
-	if o == nil {
-		var ret string
-		return ret
-	}
-
-	return o.Name
-}
-
-// GetNameOk returns a tuple with the Name field value
-// and a boolean to check if the value has been set.
-func (o *RegisterStaffResponse) GetNameOk() (*string, bool) {
-	if o == nil {
-		return nil, false
-	}
-	return &o.Name, true
-}
-
-// SetName sets field value
-func (o *RegisterStaffResponse) SetName(v string) {
-	o.Name = v
-}
-
 // GetCreatedAt returns the CreatedAt field value
 func (o *RegisterStaffResponse) GetCreatedAt() time.Time {
 	if o == nil {
@@ -163,7 +136,6 @@ func (o RegisterStaffResponse) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["id"] = o.Id
 	toSerialize["email"] = o.Email
-	toSerialize["name"] = o.Name
 	toSerialize["created_at"] = o.CreatedAt
 	return toSerialize, nil
 }
@@ -175,7 +147,6 @@ func (o *RegisterStaffResponse) UnmarshalJSON(data []byte) (err error) {
 	requiredProperties := []string{
 		"id",
 		"email",
-		"name",
 		"created_at",
 	}
 

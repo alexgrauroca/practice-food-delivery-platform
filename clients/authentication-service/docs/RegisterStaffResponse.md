@@ -6,14 +6,13 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Id** | **string** | Unique staff identifier in the auth service | 
 **Email** | **string** | Staff&#39;s email address | 
-**Name** | **string** | Staff&#39;s full name | 
 **CreatedAt** | **time.Time** | Account creation timestamp | 
 
 ## Methods
 
 ### NewRegisterStaffResponse
 
-`func NewRegisterStaffResponse(id string, email string, name string, createdAt time.Time, ) *RegisterStaffResponse`
+`func NewRegisterStaffResponse(id string, email string, createdAt time.Time, ) *RegisterStaffResponse`
 
 NewRegisterStaffResponse instantiates a new RegisterStaffResponse object
 This constructor will assign default values to properties that have it defined,
@@ -66,26 +65,6 @@ and a boolean to check if the value has been set.
 `func (o *RegisterStaffResponse) SetEmail(v string)`
 
 SetEmail sets Email field to given value.
-
-
-### GetName
-
-`func (o *RegisterStaffResponse) GetName() string`
-
-GetName returns the Name field if non-nil, zero value otherwise.
-
-### GetNameOk
-
-`func (o *RegisterStaffResponse) GetNameOk() (*string, bool)`
-
-GetNameOk returns a tuple with the Name field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetName
-
-`func (o *RegisterStaffResponse) SetName(v string)`
-
-SetName sets Name field to given value.
 
 
 ### GetCreatedAt

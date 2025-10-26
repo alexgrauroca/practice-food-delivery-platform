@@ -27,8 +27,6 @@ type RegisterStaffRequest struct {
 	Email string `json:"email" validate:"regexp=^[\\\\w\\\\.-]+@[\\\\w\\\\.-]+\\\\.\\\\w{2,}$"`
 	// Password must be at least 8 characters long
 	Password string `json:"password"`
-	// Staff's full name
-	Name string `json:"name"`
 }
 
 type _RegisterStaffRequest RegisterStaffRequest
@@ -37,12 +35,11 @@ type _RegisterStaffRequest RegisterStaffRequest
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewRegisterStaffRequest(staffId string, email string, password string, name string) *RegisterStaffRequest {
+func NewRegisterStaffRequest(staffId string, email string, password string) *RegisterStaffRequest {
 	this := RegisterStaffRequest{}
 	this.StaffId = staffId
 	this.Email = email
 	this.Password = password
-	this.Name = name
 	return &this
 }
 
@@ -126,30 +123,6 @@ func (o *RegisterStaffRequest) SetPassword(v string) {
 	o.Password = v
 }
 
-// GetName returns the Name field value
-func (o *RegisterStaffRequest) GetName() string {
-	if o == nil {
-		var ret string
-		return ret
-	}
-
-	return o.Name
-}
-
-// GetNameOk returns a tuple with the Name field value
-// and a boolean to check if the value has been set.
-func (o *RegisterStaffRequest) GetNameOk() (*string, bool) {
-	if o == nil {
-		return nil, false
-	}
-	return &o.Name, true
-}
-
-// SetName sets field value
-func (o *RegisterStaffRequest) SetName(v string) {
-	o.Name = v
-}
-
 func (o RegisterStaffRequest) MarshalJSON() ([]byte, error) {
 	toSerialize,err := o.ToMap()
 	if err != nil {
@@ -163,7 +136,6 @@ func (o RegisterStaffRequest) ToMap() (map[string]interface{}, error) {
 	toSerialize["staff_id"] = o.StaffId
 	toSerialize["email"] = o.Email
 	toSerialize["password"] = o.Password
-	toSerialize["name"] = o.Name
 	return toSerialize, nil
 }
 
@@ -175,7 +147,6 @@ func (o *RegisterStaffRequest) UnmarshalJSON(data []byte) (err error) {
 		"staff_id",
 		"email",
 		"password",
-		"name",
 	}
 
 	allProperties := make(map[string]interface{})

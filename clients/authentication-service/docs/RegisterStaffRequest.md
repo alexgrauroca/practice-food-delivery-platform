@@ -7,13 +7,12 @@ Name | Type | Description | Notes
 **StaffId** | **string** | Unique staff identifier | 
 **Email** | **string** | Staff&#39;s email address | 
 **Password** | **string** | Password must be at least 8 characters long | 
-**Name** | **string** | Staff&#39;s full name | 
 
 ## Methods
 
 ### NewRegisterStaffRequest
 
-`func NewRegisterStaffRequest(staffId string, email string, password string, name string, ) *RegisterStaffRequest`
+`func NewRegisterStaffRequest(staffId string, email string, password string, ) *RegisterStaffRequest`
 
 NewRegisterStaffRequest instantiates a new RegisterStaffRequest object
 This constructor will assign default values to properties that have it defined,
@@ -86,26 +85,6 @@ and a boolean to check if the value has been set.
 `func (o *RegisterStaffRequest) SetPassword(v string)`
 
 SetPassword sets Password field to given value.
-
-
-### GetName
-
-`func (o *RegisterStaffRequest) GetName() string`
-
-GetName returns the Name field if non-nil, zero value otherwise.
-
-### GetNameOk
-
-`func (o *RegisterStaffRequest) GetNameOk() (*string, bool)`
-
-GetNameOk returns a tuple with the Name field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetName
-
-`func (o *RegisterStaffRequest) SetName(v string)`
-
-SetName sets Name field to given value.
 
 
 
