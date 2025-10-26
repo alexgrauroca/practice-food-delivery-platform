@@ -17,7 +17,22 @@ const (
 	CodeStaffAlreadyExists = "STAFF_ALREADY_EXISTS"
 	// MsgStaffAlreadyExists represents the error message indicating that the staff already exists in the system.
 	MsgStaffAlreadyExists = "staff already exists"
+
+	// CodeInvalidCredentials represents the error code for failed authentication due to invalid login credentials.
+	CodeInvalidCredentials = "INVALID_CREDENTIALS"
+	// MsgInvalidCredentials represents the error message returned when login authentication fails due to invalid credentials.
+	MsgInvalidCredentials = "invalid credentials"
 )
+
+// TODO refactor token pair management if possible, as it will be the same for all logins
+
+// TokenPairResponse represents the structure for holding both access and refresh tokens along with metadata.
+type TokenPairResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	ExpiresIn    int    `json:"expires_in"` // the number of seconds until the token expires
+	TokenType    string `json:"token_type"`
+}
 
 // Handler manages HTTP requests for auth-customer-related operations.
 type Handler struct {
@@ -41,6 +56,8 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 	{
 		authRouter.POST("/staff", h.RegisterStaff)
 	}
+
+	router.POST("/v1.0/staff/login", h.LoginStaff)
 }
 
 // RegisterStaffRequest represents the request payload for registering a new staff user.
@@ -92,4 +109,51 @@ func (h *Handler) RegisterStaff(c *gin.Context) {
 	resp := RegisterStaffResponse(output)
 	logger.Info("Staff registered successfully", log.Field{Key: "staff", Value: resp})
 	c.JSON(http.StatusCreated, resp)
+}
+
+// LoginStaffRequest represents the request payload for logging in a staff user.
+type LoginStaffRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required,min=8"`
+}
+
+// LoginStaffResponse represents the response payload for a successful staff user login.
+type LoginStaffResponse struct {
+	TokenPairResponse
+}
+
+// LoginStaff processes the login request for a staff user using credentials provided in JSON format.
+func (h *Handler) LoginStaff(c *gin.Context) {
+	ctx := c.Request.Context()
+	logger := h.logger.WithContext(ctx)
+
+	logger.Info("LoginStaff handler called")
+
+	var req LoginStaffRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Warn("Failed to bind request", log.Field{Key: "error", Value: err.Error()})
+		errResp := customhttp.GetErrorResponseFromValidationErr(err)
+		c.JSON(http.StatusBadRequest, errResp)
+		return
+	}
+
+	input := LoginStaffInput(req)
+	output, err := h.service.LoginStaff(ctx, input)
+	if err != nil {
+		if errors.Is(err, ErrInvalidCredentials) {
+			logger.Warn("Invalid credentials provided", log.Field{Key: "email", Value: req.Email})
+			c.JSON(http.StatusUnauthorized, customhttp.NewErrorResponse(CodeInvalidCredentials, MsgInvalidCredentials))
+			return
+		}
+		logger.Error("Failed to login staff user", err)
+		c.JSON(http.StatusInternalServerError, customhttp.NewErrorResponse(
+			customhttp.CodeInternalError,
+			customhttp.MsgInternalError,
+		))
+		return
+	}
+
+	resp := LoginStaffResponse{TokenPairResponse: TokenPairResponse(output.TokenPair)}
+	logger.Info("Staff logged in successfully")
+	c.JSON(http.StatusOK, resp)
 }

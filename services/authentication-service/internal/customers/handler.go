@@ -65,8 +65,6 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 		authRouter.POST("/customers", h.RegisterCustomer)
 	}
 
-	// Existing routes remain for backward compatibility
-	router.POST("/v1.0/customers/register", h.RegisterCustomer)
 	router.POST("/v1.0/customers/login", h.LoginCustomer)
 	router.POST("v1.0/customers/refresh", h.RefreshCustomer)
 }

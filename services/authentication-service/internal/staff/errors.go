@@ -1,3 +1,4 @@
+// Package staff contains the error types used by the staff service.
 package staff
 
 import "errors"
