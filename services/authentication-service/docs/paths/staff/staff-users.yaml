@@ -35,7 +35,6 @@ post:
                 details:
                   - email is required
                   - password is required
-                  - name is required
                   - email must be a valid email address
                   - password must be a valid password with at least 8 characters long
     '409':

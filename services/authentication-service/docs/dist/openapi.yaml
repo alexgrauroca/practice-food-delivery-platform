@@ -270,7 +270,6 @@ paths:
                     details:
                       - email is required
                       - password is required
-                      - name is required
                       - email must be a valid email address
                       - password must be a valid password with at least 8 characters long
         '409':
@@ -590,7 +589,6 @@ components:
         - staff_id
         - email
         - password
-        - name
       properties:
         staff_id:
           type: string
@@ -610,18 +608,11 @@ components:
           description: Password must be at least 8 characters long
           example: strongpassword123
           writeOnly: true
-        name:
-          type: string
-          minLength: 1
-          maxLength: 100
-          description: Staff's full name
-          example: John Doe
     RegisterStaffResponse:
       type: object
       required:
         - id
         - email
-        - name
         - created_at
       properties:
         id:
@@ -634,10 +625,6 @@ components:
           format: email
           description: Staff's email address
           example: user@example.com
-        name:
-          type: string
-          description: Staff's full name
-          example: John Doe
         created_at:
           type: string
           format: date-time
