@@ -126,19 +126,9 @@ func TestService_RegisterStaff(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+			service, cleanup := serviceSetup(t, logger, tt.mocksSetup)
+			defer cleanup()
 
-			repo := staffmocks.NewMockRepository(ctrl)
-			refreshService := refreshmocks.NewMockService(ctrl)
-			authService := authmocks.NewMockService(ctrl)
-			authctx := authmocks.NewMockContextReader(ctrl)
-
-			if tt.mocksSetup != nil {
-				tt.mocksSetup(repo, refreshService, authService, authctx)
-			}
-
-			service := staff.NewService(logger, repo, refreshService, authService, authctx)
 			got, err := service.RegisterStaff(context.Background(), tt.input)
 
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -300,13 +290,13 @@ func TestService_LoginStaff(t *testing.T) {
 
 				repo.EXPECT().FindByEmail(gomock.Any(), "test@example.com").
 					Return(staff.Staff{
-						ID:         "fake-staff-id",
-						StaffID: "fake-id",
-						Email:      "test@example.com",
-						Password:   hashedPassword, // This should be a hashed password
-						CreatedAt:  now,
-						UpdatedAt:  now,
-						Active:     true,
+						ID:        "fake-staff-id",
+						StaffID:   "fake-id",
+						Email:     "test@example.com",
+						Password:  hashedPassword, // This should be a hashed password
+						CreatedAt: now,
+						UpdatedAt: now,
+						Active:    true,
 					}, nil)
 
 				authService.EXPECT().GenerateToken(gomock.Any(), gomock.Any()).
@@ -330,23 +320,35 @@ func TestService_LoginStaff(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+			service, cleanup := serviceSetup(t, logger, tt.mocksSetup)
+			defer cleanup()
 
-			repo := staffmocks.NewMockRepository(ctrl)
-			refreshService := refreshmocks.NewMockService(ctrl)
-			authService := authmocks.NewMockService(ctrl)
-			authctx := authmocks.NewMockContextReader(ctrl)
-
-			if tt.mocksSetup != nil {
-				tt.mocksSetup(repo, refreshService, authService, authctx)
-			}
-
-			service := staff.NewService(logger, repo, refreshService, authService, authctx)
 			got, err := service.LoginStaff(context.Background(), tt.input)
 
 			assert.ErrorIs(t, err, tt.wantErr)
 			assert.Equal(t, tt.want, got)
 		})
+	}
+}
+
+func serviceSetup(t *testing.T, logger log.Logger, mocksSetup func(repo *staffmocks.MockRepository,
+	refreshService *refreshmocks.MockService,
+	authService *authmocks.MockService,
+	authctx *authmocks.MockContextReader,
+)) (staff.Service, func()) {
+	ctrl := gomock.NewController(t)
+
+	repo := staffmocks.NewMockRepository(ctrl)
+	refreshService := refreshmocks.NewMockService(ctrl)
+	authService := authmocks.NewMockService(ctrl)
+	authctx := authmocks.NewMockContextReader(ctrl)
+
+	if mocksSetup != nil {
+		mocksSetup(repo, refreshService, authService, authctx)
+	}
+
+	service := staff.NewService(logger, repo, refreshService, authService, authctx)
+	return service, func() {
+		ctrl.Finish()
 	}
 }
