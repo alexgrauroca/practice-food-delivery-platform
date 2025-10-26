@@ -51,7 +51,6 @@ type RegisterCustomerRequest struct {
 	CustomerID string
 	Email      string
 	Password   string
-	Name       string
 }
 
 // RegisterCustomerResponse contains the data returned after successfully
@@ -59,7 +58,6 @@ type RegisterCustomerRequest struct {
 type RegisterCustomerResponse struct {
 	ID        string
 	Email     string
-	Name      string
 	CreatedAt time.Time
 }
 
@@ -69,7 +67,6 @@ func (c *client) RegisterCustomer(ctx context.Context, req RegisterCustomerReque
 		CustomerId: req.CustomerID,
 		Email:      req.Email,
 		Password:   req.Password,
-		Name:       req.Name,
 	}
 	resp, r, err := c.apicli.CustomersAPI.RegisterCustomer(ctx).RegisterCustomerRequest(authreq).Execute()
 	if err != nil {
@@ -87,7 +84,6 @@ func (c *client) RegisterCustomer(ctx context.Context, req RegisterCustomerReque
 	return RegisterCustomerResponse{
 		ID:        resp.Id,
 		Email:     resp.Email,
-		Name:      resp.Name,
 		CreatedAt: resp.CreatedAt,
 	}, nil
 }

@@ -27,8 +27,6 @@ type RegisterCustomerRequest struct {
 	Email string `json:"email" validate:"regexp=^[\\\\w\\\\.-]+@[\\\\w\\\\.-]+\\\\.\\\\w{2,}$"`
 	// Password must be at least 8 characters long
 	Password string `json:"password"`
-	// Customer's full name
-	Name string `json:"name"`
 }
 
 type _RegisterCustomerRequest RegisterCustomerRequest
@@ -37,12 +35,11 @@ type _RegisterCustomerRequest RegisterCustomerRequest
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewRegisterCustomerRequest(customerId string, email string, password string, name string) *RegisterCustomerRequest {
+func NewRegisterCustomerRequest(customerId string, email string, password string) *RegisterCustomerRequest {
 	this := RegisterCustomerRequest{}
 	this.CustomerId = customerId
 	this.Email = email
 	this.Password = password
-	this.Name = name
 	return &this
 }
 
@@ -126,30 +123,6 @@ func (o *RegisterCustomerRequest) SetPassword(v string) {
 	o.Password = v
 }
 
-// GetName returns the Name field value
-func (o *RegisterCustomerRequest) GetName() string {
-	if o == nil {
-		var ret string
-		return ret
-	}
-
-	return o.Name
-}
-
-// GetNameOk returns a tuple with the Name field value
-// and a boolean to check if the value has been set.
-func (o *RegisterCustomerRequest) GetNameOk() (*string, bool) {
-	if o == nil {
-		return nil, false
-	}
-	return &o.Name, true
-}
-
-// SetName sets field value
-func (o *RegisterCustomerRequest) SetName(v string) {
-	o.Name = v
-}
-
 func (o RegisterCustomerRequest) MarshalJSON() ([]byte, error) {
 	toSerialize,err := o.ToMap()
 	if err != nil {
@@ -163,7 +136,6 @@ func (o RegisterCustomerRequest) ToMap() (map[string]interface{}, error) {
 	toSerialize["customer_id"] = o.CustomerId
 	toSerialize["email"] = o.Email
 	toSerialize["password"] = o.Password
-	toSerialize["name"] = o.Name
 	return toSerialize, nil
 }
 
@@ -175,7 +147,6 @@ func (o *RegisterCustomerRequest) UnmarshalJSON(data []byte) (err error) {
 		"customer_id",
 		"email",
 		"password",
-		"name",
 	}
 
 	allProperties := make(map[string]interface{})

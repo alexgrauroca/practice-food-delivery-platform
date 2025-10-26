@@ -169,7 +169,6 @@ paths:
                       - customer_id is required
                       - email is required
                       - password is required
-                      - name is required
                       - email must be a valid email address
                       - password must be a valid password with at least 8 characters long
         '409':
@@ -405,7 +404,6 @@ components:
         - customer_id
         - email
         - password
-        - name
       properties:
         customer_id:
           type: string
@@ -425,18 +423,11 @@ components:
           description: Password must be at least 8 characters long
           example: strongpassword123
           writeOnly: true
-        name:
-          type: string
-          minLength: 1
-          maxLength: 100
-          description: Customer's full name
-          example: John Doe
     RegisterCustomerResponse:
       type: object
       required:
         - id
         - email
-        - name
         - created_at
       properties:
         id:
@@ -449,10 +440,6 @@ components:
           format: email
           description: Customer's email address
           example: user@example.com
-        name:
-          type: string
-          description: Customer's full name
-          example: John Doe
         created_at:
           type: string
           format: date-time

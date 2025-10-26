@@ -30,7 +30,6 @@ type Customer struct {
 	CustomerID string    `bson:"customer_id"`
 	Email      string    `bson:"email"`
 	Active     bool      `bson:"active"`
-	Name       string    `bson:"name"`
 	Password   string    `bson:"password,omitempty"`
 	CreatedAt  time.Time `bson:"created_at"`
 	UpdatedAt  time.Time `bson:"updated_at"`
@@ -65,7 +64,6 @@ type CreateCustomerParams struct {
 	CustomerID string
 	Email      string
 	Password   string
-	Name       string
 }
 
 // CreateCustomer creates a new customer record in the database.
@@ -78,7 +76,6 @@ func (r *repository) CreateCustomer(ctx context.Context, params CreateCustomerPa
 	c := Customer{
 		CustomerID: params.CustomerID,
 		Email:      params.Email,
-		Name:       params.Name,
 		Password:   params.Password,
 		CreatedAt:  now,
 		UpdatedAt:  now,

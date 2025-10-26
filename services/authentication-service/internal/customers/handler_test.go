@@ -40,7 +40,7 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 	tests := []customerHandlerTestCase{
 		{
 			name:        "when invalid payload is provided, then it should return a 400 with invalid request error",
-			jsonPayload: `{"name": 1.2, "email": true}`,
+			jsonPayload: `{"password": 1.2, "email": true}`,
 			wantJSON: `{
 				"code": "INVALID_REQUEST",
 				"message": "invalid request",
@@ -57,8 +57,7 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 				"details": [
 					"customer_id is required",
 					"email is required",
-					"password is required",
-					"name is required"
+					"password is required"
 				]
 			}`,
 			wantStatus: http.StatusBadRequest,
@@ -68,7 +67,6 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 			jsonPayload: `{
 				"customer_id": "fake-customer-id",
 				"email": "invalid-email",
-				"name": "John Doe", 
 				"password": "ValidPassword123"
 			}`,
 			wantJSON: `{
@@ -85,7 +83,6 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 			jsonPayload: `{
 				"customer_id": "fake-customer-id",
 				"email": "test@example.com",
-				"name": "John Doe", 
 				"password": "short"
 			}`,
 			wantJSON: `{
@@ -98,59 +95,10 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 			wantStatus: http.StatusBadRequest,
 		},
 		{
-			name: "when no name is provided, then it should return a 400 with the name validation error",
-			jsonPayload: `{
-				"customer_id": "fake-customer-id",
-				"email": "test@example.com",
-				"password": "ValidPassword123"
-			}`,
-			wantJSON: `{
-				"code":"VALIDATION_ERROR",
-				"message":"validation failed",
-				"details":[
-					"name is required"
-				]
-			}`,
-			wantStatus: http.StatusBadRequest,
-		},
-		{
-			name: "when no email is provided, then it should return a 400 with the email validation error",
-			jsonPayload: `{
-				"customer_id": "fake-customer-id",
-				"name": "John Doe", 
-				"password": "ValidPassword123"
-			}`,
-			wantJSON: `{
-				"code":"VALIDATION_ERROR",
-				"message":"validation failed",
-				"details":[
-					"email is required"
-				]
-			}`,
-			wantStatus: http.StatusBadRequest,
-		},
-		{
-			name: "when no password is provided, then it should return a 400 with the email validation error",
-			jsonPayload: `{
-				"customer_id": "fake-customer-id",
-				"email": "test@example.com",
-				"name": "John Doe"
-			}`,
-			wantJSON: `{
-				"code":"VALIDATION_ERROR",
-				"message":"validation failed",
-				"details":[
-					"password is required"
-				]
-			}`,
-			wantStatus: http.StatusBadRequest,
-		},
-		{
 			name: "when the customer already exists, then it should return a 409 with the customer already exists error",
 			jsonPayload: `{
 				"customer_id": "fake-customer-id",
 				"email": "test@example.com",
-				"name": "John Doe", 
 				"password": "ValidPassword123"
 			}`,
 			mocksSetup: func(service *customersmocks.MockService, _ *authmocks.MockService) {
@@ -169,7 +117,6 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 			jsonPayload: `{
 				"customer_id": "fake-customer-id",
 				"email": "test@example.com",
-				"name": "John Doe", 
 				"password": "ValidPassword123"
 			}`,
 			mocksSetup: func(service *customersmocks.MockService, _ *authmocks.MockService) {
@@ -188,7 +135,6 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 			jsonPayload: `{
 				"customer_id": "fake-customer-id",
 				"email": "test@example.com",
-				"name": "John Doe", 
 				"password": "ValidPassword123"
 			}`,
 			mocksSetup: func(service *customersmocks.MockService, _ *authmocks.MockService) {
@@ -196,19 +142,16 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 					CustomerID: "fake-customer-id",
 					Email:      "test@example.com",
 					Password:   "ValidPassword123",
-					Name:       "John Doe",
 				}).Return(customers.RegisterCustomerOutput{
 					ID:        "fake-id",
 					Email:     "test@example.com",
-					Name:      "John Doe",
 					CreatedAt: now,
 				}, nil)
 			},
 			wantJSON: `{
 				"created_at":"2025-01-01T00:00:00Z",
 				"email":"test@example.com",
-				"id":"fake-id",
-				"name":"John Doe"
+				"id":"fake-id"
 			}`,
 			wantStatus: http.StatusCreated,
 		},
