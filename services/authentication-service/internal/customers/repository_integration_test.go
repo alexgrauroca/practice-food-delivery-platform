@@ -37,7 +37,6 @@ func TestRepository_CreateCustomer(t *testing.T) {
 				mongodb.InsertTestDocument(t, coll, customers.Customer{
 					CustomerID: "fake-customer-id",
 					Email:      "test@example.com",
-					Name:       "John Doe",
 					Password:   "fakehashedpassword",
 					Active:     true,
 					CreatedAt:  now,
@@ -48,7 +47,6 @@ func TestRepository_CreateCustomer(t *testing.T) {
 				CustomerID: "fake-customer-id",
 				Email:      "test@example.com",
 				Password:   "ValidPassword123",
-				Name:       "John Doe",
 			},
 			want:    customers.Customer{},
 			wantErr: customers.ErrCustomerAlreadyExists,
@@ -59,12 +57,10 @@ func TestRepository_CreateCustomer(t *testing.T) {
 				CustomerID: "fake-customer-id",
 				Email:      "test@example.com",
 				Password:   "ValidPassword123",
-				Name:       "John Doe",
 			},
 			want: customers.Customer{
 				CustomerID: "fake-customer-id",
 				Email:      "test@example.com",
-				Name:       "John Doe",
 				Active:     true,
 				Password:   "ValidPassword123",
 				CreatedAt:  now,
@@ -128,7 +124,6 @@ func TestRepository_FindByEmail(t *testing.T) {
 			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
 				mongodb.InsertTestDocument(t, coll, customers.Customer{
 					Email:     "test@example.com",
-					Name:      "John Doe",
 					Password:  "fakehashedpassword",
 					Active:    false,
 					CreatedAt: now,
@@ -144,7 +139,6 @@ func TestRepository_FindByEmail(t *testing.T) {
 			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
 				mongodb.InsertTestDocument(t, coll, customers.Customer{
 					Email:     "test2@example.com",
-					Name:      "John Doe",
 					Password:  "fakehashedpassword",
 					Active:    true,
 					CreatedAt: now,
@@ -154,7 +148,6 @@ func TestRepository_FindByEmail(t *testing.T) {
 			params: "test2@example.com",
 			want: customers.Customer{
 				Email:     "test2@example.com",
-				Name:      "John Doe",
 				Active:    true,
 				Password:  "fakehashedpassword",
 				CreatedAt: now,
