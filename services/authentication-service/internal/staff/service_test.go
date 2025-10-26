@@ -286,7 +286,8 @@ func TestService_LoginStaff(t *testing.T) {
 	}
 }
 
-func serviceSetup(t *testing.T, logger log.Logger, mocksSetup func(repo *staffmocks.MockRepository,
+func serviceSetup(t *testing.T, logger log.Logger, mocksSetup func(
+	repo *staffmocks.MockRepository,
 	authCoreService *authcoremocks.MockService,
 	authctx *authmocks.MockContextReader,
 )) (staff.Service, func()) {
