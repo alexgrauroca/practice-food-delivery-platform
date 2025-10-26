@@ -1,9 +1,9 @@
 post:
-  summary: Login as a customer
-  description: Authenticates a customer and returns access and refresh tokens
-  operationId: loginCustomer
+  summary: Login as staff user
+  description: Authenticates a staff user and returns access and refresh tokens
+  operationId: loginStaff
   tags:
-    - Customers
+    - Staff
   security: []
   requestBody:
     required: true

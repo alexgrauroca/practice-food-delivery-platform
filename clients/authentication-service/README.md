@@ -85,14 +85,15 @@ Class | Method | HTTP request | Description
 *CustomersAPI* | [**LoginCustomer**](docs/CustomersAPI.md#logincustomer) | **Post** /v1.0/customers/login | Login as a customer
 *CustomersAPI* | [**RefreshCustomer**](docs/CustomersAPI.md#refreshcustomer) | **Post** /v1.0/customers/refresh | Refresh access token
 *CustomersAPI* | [**RegisterCustomer**](docs/CustomersAPI.md#registercustomer) | **Post** /v1.0/auth/customers | Register a new customer
+*StaffAPI* | [**LoginStaff**](docs/StaffAPI.md#loginstaff) | **Post** /v1.0/staff/login | Login as staff user
 *StaffAPI* | [**RegisterStaff**](docs/StaffAPI.md#registerstaff) | **Post** /v1.0/auth/staff | Register a new staff user
 
 
 ## Documentation For Models
 
  - [ErrorResponse](docs/ErrorResponse.md)
- - [LoginCustomerRequest](docs/LoginCustomerRequest.md)
- - [LoginCustomerResponse](docs/LoginCustomerResponse.md)
+ - [LoginRequest](docs/LoginRequest.md)
+ - [LoginResponse](docs/LoginResponse.md)
  - [RefreshCustomerRequest](docs/RefreshCustomerRequest.md)
  - [RefreshCustomerResponse](docs/RefreshCustomerResponse.md)
  - [RegisterCustomerRequest](docs/RegisterCustomerRequest.md)

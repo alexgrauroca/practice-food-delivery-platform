@@ -31,14 +31,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/LoginCustomerRequest"
+              $ref: "#/components/schemas/LoginRequest"
         required: true
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/LoginCustomerResponse"
+                $ref: "#/components/schemas/LoginResponse"
           description: Login successful
         "400":
           content:
@@ -183,6 +183,55 @@ paths:
       summary: Register a new customer
       tags:
       - Customers
+  /v1.0/staff/login:
+    post:
+      description: Authenticates a staff user and returns access and refresh tokens
+      operationId: loginStaff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+          description: Login successful
+        "400":
+          content:
+            application/json:
+              examples:
+                invalidRequest:
+                  $ref: "#/components/examples/InvalidRequest"
+                validationError:
+                  summary: Validation error
+                  value:
+                    code: VALIDATION_ERROR
+                    message: validation failed
+                    details:
+                    - email is required
+                    - password is required
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+          description: Invalid input or validation error
+        "401":
+          content:
+            application/json:
+              examples:
+                invalidCredentials:
+                  $ref: "#/components/examples/InvalidCredentials"
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+          description: Invalid credentials
+        "500":
+          $ref: "#/components/responses/InternalError"
+      security: []
+      summary: Login as staff user
+      tags:
+      - Staff
   /v1.0/auth/staff:
     post:
       description: Creates a new staff account with the provided information
@@ -290,18 +339,16 @@ components:
             $ref: "#/components/schemas/ErrorResponse"
       description: Internal server error
   schemas:
-    LoginCustomerRequest:
+    LoginRequest:
       example:
         password: strongpassword123
         email: user@example.com
       properties:
         email:
-          description: Customer's email address
           example: user@example.com
           format: email
           type: string
         password:
-          description: Customer's password
           example: strongpassword123
           format: password
           minLength: 8
@@ -311,7 +358,7 @@ components:
       - email
       - password
       type: object
-    LoginCustomerResponse:
+    LoginResponse:
       example:
         access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
         refresh_token: dGhpc2lzYXJlZnJlc2h0b2tlbg==

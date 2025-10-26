@@ -12,7 +12,7 @@ Method | HTTP request | Description
 
 ## LoginCustomer
 
-> LoginCustomerResponse LoginCustomer(ctx).LoginCustomerRequest(loginCustomerRequest).Execute()
+> LoginResponse LoginCustomer(ctx).LoginRequest(loginRequest).Execute()
 
 Login as a customer
 
@@ -31,16 +31,16 @@ import (
 )
 
 func main() {
-	loginCustomerRequest := *openapiclient.NewLoginCustomerRequest("user@example.com", "strongpassword123") // LoginCustomerRequest | 
+	loginRequest := *openapiclient.NewLoginRequest("user@example.com", "strongpassword123") // LoginRequest | 
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)
-	resp, r, err := apiClient.CustomersAPI.LoginCustomer(context.Background()).LoginCustomerRequest(loginCustomerRequest).Execute()
+	resp, r, err := apiClient.CustomersAPI.LoginCustomer(context.Background()).LoginRequest(loginRequest).Execute()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error when calling `CustomersAPI.LoginCustomer``: %v\n", err)
 		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
 	}
-	// response from `LoginCustomer`: LoginCustomerResponse
+	// response from `LoginCustomer`: LoginResponse
 	fmt.Fprintf(os.Stdout, "Response from `CustomersAPI.LoginCustomer`: %v\n", resp)
 }
 ```
@@ -56,11 +56,11 @@ Other parameters are passed through a pointer to a apiLoginCustomerRequest struc
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **loginCustomerRequest** | [**LoginCustomerRequest**](LoginCustomerRequest.md) |  | 
+ **loginRequest** | [**LoginRequest**](LoginRequest.md) |  | 
 
 ### Return type
 
-[**LoginCustomerResponse**](LoginCustomerResponse.md)
+[**LoginResponse**](LoginResponse.md)
 
 ### Authorization
 

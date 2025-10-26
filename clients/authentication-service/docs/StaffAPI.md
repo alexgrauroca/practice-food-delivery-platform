@@ -4,8 +4,75 @@ All URIs are relative to *http://localhost:80*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
+[**LoginStaff**](StaffAPI.md#LoginStaff) | **Post** /v1.0/staff/login | Login as staff user
 [**RegisterStaff**](StaffAPI.md#RegisterStaff) | **Post** /v1.0/auth/staff | Register a new staff user
 
+
+
+## LoginStaff
+
+> LoginResponse LoginStaff(ctx).LoginRequest(loginRequest).Execute()
+
+Login as staff user
+
+
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	openapiclient "github.com/alexgrauroca/practice-food-delivery-platform/authclient"
+)
+
+func main() {
+	loginRequest := *openapiclient.NewLoginRequest("user@example.com", "strongpassword123") // LoginRequest | 
+
+	configuration := openapiclient.NewConfiguration()
+	apiClient := openapiclient.NewAPIClient(configuration)
+	resp, r, err := apiClient.StaffAPI.LoginStaff(context.Background()).LoginRequest(loginRequest).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error when calling `StaffAPI.LoginStaff``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+	// response from `LoginStaff`: LoginResponse
+	fmt.Fprintf(os.Stdout, "Response from `StaffAPI.LoginStaff`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiLoginStaffRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **loginRequest** | [**LoginRequest**](LoginRequest.md) |  | 
+
+### Return type
+
+[**LoginResponse**](LoginResponse.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
 
 
 ## RegisterStaff
