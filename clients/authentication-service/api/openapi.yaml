@@ -184,58 +184,6 @@ paths:
       summary: Register a new customer
       tags:
       - Customers
-  /v1.0/auth/customers/{customerID}:
-    put:
-      description: Returns the customer data updated. It can only be accessed by the
-        customer itself
-      operationId: updateCustomer
-      parameters:
-      - description: Customer identifier
-        explode: false
-        in: path
-        name: customerID
-        required: true
-        schema:
-          pattern: "^[0-9a-fA-F]{24}$"
-          type: string
-        style: simple
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateCustomerRequest"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Customer"
-          description: Customer updated successfully
-        "400":
-          content:
-            application/json:
-              examples:
-                invalidRequest:
-                  $ref: "#/components/examples/InvalidRequest"
-                validationError:
-                  $ref: "#/components/examples/UpdateCustomerValidationError"
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-          description: Invalid input or validation error
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "500":
-          $ref: "#/components/responses/InternalError"
-      security:
-      - BearerAuth: []
-      summary: Update a specific customer data
-      tags:
-      - Customers
   /v1.0/auth/staff:
     post:
       description: Creates a new staff account with the provided information
@@ -326,38 +274,6 @@ components:
         code: CUSTOMER_ALREADY_EXISTS
         message: customer already exists
         details: []
-    UpdateCustomerValidationError:
-      summary: Validation error
-      value:
-        code: VALIDATION_ERROR
-        message: validation failed
-        details:
-        - name is required
-        - name must not exceed 100 characters long
-    Unauthorized:
-      summary: Authentication required
-      value:
-        code: UNAUTHORIZED
-        message: Authentication is required to access this resource
-        details: []
-    TokenExpired:
-      summary: Token expired
-      value:
-        code: TOKEN_EXPIRED
-        message: Token has expired
-        details: []
-    Forbidden:
-      summary: Access forbidden
-      value:
-        code: FORBIDDEN
-        message: You do not have permission to access this resource
-        details: []
-    NotFound:
-      summary: Resource not found
-      value:
-        code: NOT_FOUND
-        message: Resource not found
-        details: []
     StaffExists:
       summary: Staff already exists
       value:
@@ -374,35 +290,6 @@ components:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
       description: Internal server error
-    Unauthorized:
-      content:
-        application/json:
-          examples:
-            unauthorizedError:
-              $ref: "#/components/examples/Unauthorized"
-            tokenExpiredError:
-              $ref: "#/components/examples/TokenExpired"
-          schema:
-            $ref: "#/components/schemas/ErrorResponse"
-      description: Unauthorized
-    Forbidden:
-      content:
-        application/json:
-          examples:
-            internalError:
-              $ref: "#/components/examples/Forbidden"
-          schema:
-            $ref: "#/components/schemas/ErrorResponse"
-      description: Forbidden
-    NotFound:
-      content:
-        application/json:
-          examples:
-            internalError:
-              $ref: "#/components/examples/NotFound"
-          schema:
-            $ref: "#/components/schemas/ErrorResponse"
-      description: NotFound
   schemas:
     LoginCustomerRequest:
       example:
@@ -609,58 +496,6 @@ components:
       - id
       - name
       type: object
-    UpdateCustomerRequest:
-      example:
-        name: John Doe
-      properties:
-        name:
-          description: Customer's full name
-          example: John Doe
-          maxLength: 100
-          minLength: 1
-          type: string
-      required:
-      - name
-      type: object
-    Customer:
-      example:
-        updated_at: 2025-01-01T00:00:00Z
-        name: John Doe
-        created_at: 2025-01-01T00:00:00Z
-        id: 507f1f77bcf86cd799439011
-        email: user@example.com
-      properties:
-        id:
-          description: Unique customer identifier in the auth service
-          example: 507f1f77bcf86cd799439011
-          pattern: "^[0-9a-fA-F]{24}$"
-          type: string
-        email:
-          description: Customer's email address
-          example: user@example.com
-          format: email
-          type: string
-        name:
-          description: Customer's full name
-          example: John Doe
-          type: string
-        created_at:
-          description: Account creation timestamp
-          example: 2025-01-01T00:00:00Z
-          format: date-time
-          type: string
-        updated_at:
-          description: Account last update timestamp
-          example: 2025-01-01T00:00:00Z
-          format: date-time
-          type: string
-      required:
-      - created_at
-      - email
-      - id
-      - name
-      - updated_at
-      type: object
     RegisterStaffRequest:
       example:
         password: strongpassword123
@@ -716,8 +551,6 @@ components:
       - email
       - id
       type: object
-    UpdateCustomerResponse:
-      $ref: "#/components/schemas/Customer"
   securitySchemes:
     BearerAuth:
       bearerFormat: JWT
