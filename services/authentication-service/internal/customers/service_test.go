@@ -126,19 +126,9 @@ func TestService_RegisterCustomer(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+			service, cleanup := serviceSetup(t, logger, tt.mocksSetup)
+			defer cleanup()
 
-			repo := customersmocks.NewMockRepository(ctrl)
-			refreshService := refreshmocks.NewMockService(ctrl)
-			authService := authmocks.NewMockService(ctrl)
-			authctx := authmocks.NewMockContextReader(ctrl)
-
-			if tt.mocksSetup != nil {
-				tt.mocksSetup(repo, refreshService, authService, authctx)
-			}
-
-			service := customers.NewService(logger, repo, refreshService, authService, authctx)
 			got, err := service.RegisterCustomer(context.Background(), tt.input)
 
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -330,19 +320,9 @@ func TestService_LoginCustomer(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+			service, cleanup := serviceSetup(t, logger, tt.mocksSetup)
+			defer cleanup()
 
-			repo := customersmocks.NewMockRepository(ctrl)
-			refreshService := refreshmocks.NewMockService(ctrl)
-			authService := authmocks.NewMockService(ctrl)
-			authctx := authmocks.NewMockContextReader(ctrl)
-
-			if tt.mocksSetup != nil {
-				tt.mocksSetup(repo, refreshService, authService, authctx)
-			}
-
-			service := customers.NewService(logger, repo, refreshService, authService, authctx)
 			got, err := service.LoginCustomer(context.Background(), tt.input)
 
 			assert.ErrorIs(t, err, tt.wantErr)
@@ -684,23 +664,36 @@ func TestService_RefreshCustomer(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+			service, cleanup := serviceSetup(t, logger, tt.mocksSetup)
+			defer cleanup()
 
-			repo := customersmocks.NewMockRepository(ctrl)
-			refreshService := refreshmocks.NewMockService(ctrl)
-			authService := authmocks.NewMockService(ctrl)
-			authctx := authmocks.NewMockContextReader(ctrl)
-
-			if tt.mocksSetup != nil {
-				tt.mocksSetup(repo, refreshService, authService, authctx)
-			}
-
-			service := customers.NewService(logger, repo, refreshService, authService, authctx)
 			got, err := service.RefreshCustomer(context.Background(), tt.input)
 
 			assert.ErrorIs(t, err, tt.wantErr)
 			assert.Equal(t, tt.want, got)
 		})
+	}
+}
+
+func serviceSetup(t *testing.T, logger log.Logger, mocksSetup func(
+	repo *customersmocks.MockRepository,
+	refreshService *refreshmocks.MockService,
+	authService *authmocks.MockService,
+	authctx *authmocks.MockContextReader,
+)) (customers.Service, func()) {
+	ctrl := gomock.NewController(t)
+
+	repo := customersmocks.NewMockRepository(ctrl)
+	refreshService := refreshmocks.NewMockService(ctrl)
+	authService := authmocks.NewMockService(ctrl)
+	authctx := authmocks.NewMockContextReader(ctrl)
+
+	if mocksSetup != nil {
+		mocksSetup(repo, refreshService, authService, authctx)
+	}
+
+	service := customers.NewService(logger, repo, refreshService, authService, authctx)
+	return service, func() {
+		ctrl.Finish()
 	}
 }

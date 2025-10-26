@@ -14,6 +14,7 @@ import (
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/clock"
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/infraestructure/mongodb"
 	customlog "github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/authcore"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/staff"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
@@ -55,8 +56,9 @@ func main() {
 	// Initialize features
 	refreshService := initRefreshFeature(logger, db)
 	authService, authMiddleware, authctx := initAuthFeature(logger)
+	authCoreService := initAuthCoreFeature(logger, authService, refreshService)
 	initCustomersFeature(logger, db, router, refreshService, authService, authMiddleware, authctx)
-	initStaffFeature(logger, db, router, refreshService, authService, authMiddleware, authctx)
+	initStaffFeature(logger, db, router, authCoreService, authMiddleware, authctx)
 
 	logger.Info("Starting http server")
 	// Start the server
@@ -87,6 +89,14 @@ func initAuthFeature(logger customlog.Logger) (
 	return authService, authMiddleware, authContextReader
 }
 
+func initAuthCoreFeature(
+	logger customlog.Logger,
+	authService auth.Service,
+	refreshService refresh.Service,
+) authcore.Service {
+	return authcore.NewService(logger, authService, refreshService)
+}
+
 func initCustomersFeature(
 	logger customlog.Logger,
 	db *mongo.Database,
@@ -111,13 +121,12 @@ func initStaffFeature(
 	logger customlog.Logger,
 	db *mongo.Database,
 	router *gin.Engine,
-	refreshService refresh.Service,
-	authService auth.Service,
+	authCoreService authcore.Service,
 	authMiddleware auth.Middleware,
 	authctx auth.ContextReader,
 ) {
 	repo := staff.NewRepository(logger, db, clock.RealClock{})
-	service := staff.NewService(logger, repo, refreshService, authService, authctx)
+	service := staff.NewService(logger, repo, authCoreService, authctx)
 	handler := staff.NewHandler(logger, service, authMiddleware)
 	handler.RegisterRoutes(router)
 }

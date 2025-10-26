@@ -14,8 +14,9 @@ import (
 
 	authmocks "github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth/mocks"
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/authcore"
+	authcoremocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/authcore/mocks"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/password"
-	refreshmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh/mocks"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/staff"
 	staffmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/staff/mocks"
 )
@@ -31,8 +32,7 @@ type staffServiceTestCase[I, W any] struct {
 	want       W
 	mocksSetup func(
 		repo *staffmocks.MockRepository,
-		refreshService *refreshmocks.MockService,
-		authService *authmocks.MockService,
+		authCoreService *authcoremocks.MockService,
 		authctx *authmocks.MockContextReader,
 	)
 	wantErr error
@@ -53,8 +53,7 @@ func TestService_RegisterStaff(t *testing.T) {
 			},
 			mocksSetup: func(
 				repo *staffmocks.MockRepository,
-				_ *refreshmocks.MockService,
-				_ *authmocks.MockService,
+				_ *authcoremocks.MockService,
 				_ *authmocks.MockContextReader,
 			) {
 				repo.EXPECT().CreateStaff(gomock.Any(), gomock.Any()).
@@ -72,8 +71,7 @@ func TestService_RegisterStaff(t *testing.T) {
 			},
 			mocksSetup: func(
 				repo *staffmocks.MockRepository,
-				_ *refreshmocks.MockService,
-				_ *authmocks.MockService,
+				_ *authcoremocks.MockService,
 				_ *authmocks.MockContextReader,
 			) {
 				repo.EXPECT().CreateStaff(gomock.Any(), gomock.Any()).
@@ -91,8 +89,7 @@ func TestService_RegisterStaff(t *testing.T) {
 			},
 			mocksSetup: func(
 				repo *staffmocks.MockRepository,
-				_ *refreshmocks.MockService,
-				_ *authmocks.MockService,
+				_ *authcoremocks.MockService,
 				_ *authmocks.MockContextReader,
 			) {
 				repo.EXPECT().CreateStaff(gomock.Any(), gomock.Any()).
@@ -123,23 +120,188 @@ func TestService_RegisterStaff(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+			service, cleanup := serviceSetup(t, logger, tt.mocksSetup)
+			defer cleanup()
 
-			repo := staffmocks.NewMockRepository(ctrl)
-			refreshService := refreshmocks.NewMockService(ctrl)
-			authService := authmocks.NewMockService(ctrl)
-			authctx := authmocks.NewMockContextReader(ctrl)
-
-			if tt.mocksSetup != nil {
-				tt.mocksSetup(repo, refreshService, authService, authctx)
-			}
-
-			service := staff.NewService(logger, repo, refreshService, authService, authctx)
 			got, err := service.RegisterStaff(context.Background(), tt.input)
 
 			assert.ErrorIs(t, err, tt.wantErr)
 			assert.Equal(t, tt.want, got)
 		})
+	}
+}
+
+func TestService_LoginStaff(t *testing.T) {
+	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	logger, _ := log.NewTest()
+
+	tests := []staffServiceTestCase[staff.LoginStaffInput, staff.LoginStaffOutput]{
+		{
+			name: "when there is not an active staff with the same email, " +
+				"then it should return an invalid credentials error",
+			input: staff.LoginStaffInput{
+				Email:    "test@example.com",
+				Password: "ValidPassword123",
+			},
+			mocksSetup: func(
+				repo *staffmocks.MockRepository,
+				_ *authcoremocks.MockService,
+				_ *authmocks.MockContextReader,
+			) {
+				repo.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).
+					Return(staff.Staff{}, staff.ErrStaffNotFound)
+			},
+			want:    staff.LoginStaffOutput{},
+			wantErr: authcore.ErrInvalidCredentials,
+		},
+		{
+			name: "when there is not an active staff with the same password, " +
+				"then it should return an invalid credentials error",
+			input: staff.LoginStaffInput{
+				Email:    "test@example.com",
+				Password: "InvalidPassword123",
+			},
+			mocksSetup: func(
+				repo *staffmocks.MockRepository,
+				_ *authcoremocks.MockService,
+				_ *authmocks.MockContextReader,
+			) {
+				hashedPassword, err := password.Hash("ValidPassword123")
+				require.NoError(t, err)
+
+				repo.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).
+					Return(staff.Staff{
+						ID:        "fake-id",
+						Email:     "test@example.com",
+						Password:  hashedPassword, // This should be a hashed password
+						CreatedAt: now,
+						UpdatedAt: now,
+						Active:    true,
+					}, nil)
+			},
+			want:    staff.LoginStaffOutput{},
+			wantErr: authcore.ErrInvalidCredentials,
+		},
+		{
+			name: "when there is an unexpected error when fetching the staff, then it should propagate the error",
+			input: staff.LoginStaffInput{
+				Email:    "test@example.com",
+				Password: "ValidPassword123",
+			},
+			mocksSetup: func(
+				repo *staffmocks.MockRepository,
+				_ *authcoremocks.MockService,
+				_ *authmocks.MockContextReader,
+			) {
+				repo.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).
+					Return(staff.Staff{}, errRepo)
+			},
+			want:    staff.LoginStaffOutput{},
+			wantErr: errRepo,
+		},
+		{
+			name: "when there is an error generating the token pair, then it should propagate the error",
+			input: staff.LoginStaffInput{
+				Email:    "test@example.com",
+				Password: "ValidPassword123",
+			},
+			mocksSetup: func(
+				repo *staffmocks.MockRepository,
+				authCoreService *authcoremocks.MockService,
+				_ *authmocks.MockContextReader,
+			) {
+				hashedPassword, err := password.Hash("ValidPassword123")
+				require.NoError(t, err)
+
+				repo.EXPECT().FindByEmail(gomock.Any(), "test@example.com").
+					Return(staff.Staff{
+						ID:        "fake-id",
+						Email:     "test@example.com",
+						Password:  hashedPassword, // This should be a hashed password
+						CreatedAt: now,
+						UpdatedAt: now,
+						Active:    true,
+					}, nil)
+
+				authCoreService.EXPECT().GenerateTokenPair(gomock.Any(), gomock.Any()).
+					Return(authcore.TokenPair{}, errToken)
+			},
+			want:    staff.LoginStaffOutput{},
+			wantErr: errToken,
+		},
+		{
+			name: "when there is an active staff with the same email and password, then it should return its token",
+			input: staff.LoginStaffInput{
+				Email:    "test@example.com",
+				Password: "ValidPassword123",
+			},
+			mocksSetup: func(
+				repo *staffmocks.MockRepository,
+				authCoreService *authcoremocks.MockService,
+				_ *authmocks.MockContextReader,
+			) {
+				hashedPassword, err := password.Hash("ValidPassword123")
+				require.NoError(t, err)
+
+				repo.EXPECT().FindByEmail(gomock.Any(), "test@example.com").
+					Return(staff.Staff{
+						ID:        "fake-staff-id",
+						StaffID:   "fake-id",
+						Email:     "test@example.com",
+						Password:  hashedPassword, // This should be a hashed password
+						CreatedAt: now,
+						UpdatedAt: now,
+						Active:    true,
+					}, nil)
+
+				authCoreService.EXPECT().GenerateTokenPair(gomock.Any(), gomock.Any()).
+					Return(authcore.TokenPair{
+						AccessToken:  "fake-token",
+						RefreshToken: "fake-refresh-token",
+						ExpiresIn:    3600,
+						TokenType:    "Bearer",
+					}, nil)
+			},
+			want: staff.LoginStaffOutput{
+				TokenPair: authcore.TokenPair{
+					AccessToken:  "fake-token",
+					ExpiresIn:    3600, // 1 hour
+					TokenType:    "Bearer",
+					RefreshToken: "fake-refresh-token",
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			service, cleanup := serviceSetup(t, logger, tt.mocksSetup)
+			defer cleanup()
+
+			got, err := service.LoginStaff(context.Background(), tt.input)
+
+			assert.ErrorIs(t, err, tt.wantErr)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func serviceSetup(t *testing.T, logger log.Logger, mocksSetup func(repo *staffmocks.MockRepository,
+	authCoreService *authcoremocks.MockService,
+	authctx *authmocks.MockContextReader,
+)) (staff.Service, func()) {
+	ctrl := gomock.NewController(t)
+
+	repo := staffmocks.NewMockRepository(ctrl)
+	authCoreService := authcoremocks.NewMockService(ctrl)
+	authctx := authmocks.NewMockContextReader(ctrl)
+
+	if mocksSetup != nil {
+		mocksSetup(repo, authCoreService, authctx)
+	}
+
+	service := staff.NewService(logger, repo, authCoreService, authctx)
+	return service, func() {
+		ctrl.Finish()
 	}
 }

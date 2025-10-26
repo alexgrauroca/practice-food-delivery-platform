@@ -37,6 +37,7 @@ type Staff struct {
 //go:generate mockgen -destination=./mocks/repository_mock.go -package=staff_mocks github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/staff Repository
 type Repository interface {
 	CreateStaff(ctx context.Context, params CreateStaffParams) (Staff, error)
+	FindByEmail(ctx context.Context, email string) (Staff, error)
 }
 
 type repository struct {
@@ -85,4 +86,8 @@ func (r *repository) CreateStaff(ctx context.Context, params CreateStaffParams) 
 	c.ID = res.InsertedID.(primitive.ObjectID).Hex()
 	logger.Info("Staff created successfully", log.Field{Key: "staff_id", Value: c.ID})
 	return c, nil
+}
+
+func (r *repository) FindByEmail(ctx context.Context, email string) (Staff, error) {
+	panic("implement me")
 }
