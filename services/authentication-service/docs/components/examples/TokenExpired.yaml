@@ -1,5 +1,0 @@
-summary: Token expired
-value:
-  code: TOKEN_EXPIRED
-  message: Token has expired
-  details: [ ]

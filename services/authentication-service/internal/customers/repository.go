@@ -8,7 +8,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/clock"
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/infraestructure/mongodb"
@@ -23,12 +22,6 @@ const (
 	FieldEmail = "email"
 	// FieldActive represents the field name used to indicate the active status of a customer in the database.
 	FieldActive = "active"
-	// FieldCustomerID represents the field name used to store the unique CustomerID of a customer in the database.
-	FieldCustomerID = "customer_id"
-	// FieldName represents the field name used to store the customer's name in the database.
-	FieldName = "name"
-	// FieldUpdatedAt represents the field name used to store the timestamp when the customer was last updated.
-	FieldUpdatedAt = "updated_at"
 )
 
 // Customer represents a user in the system with associated details such as email, name, and account activation status.
@@ -50,7 +43,6 @@ type Customer struct {
 type Repository interface {
 	CreateCustomer(ctx context.Context, params CreateCustomerParams) (Customer, error)
 	FindByEmail(ctx context.Context, email string) (Customer, error)
-	UpdateCustomer(ctx context.Context, params UpdateCustomerParams) (Customer, error)
 }
 
 type repository struct {
@@ -125,44 +117,5 @@ func (r *repository) FindByEmail(ctx context.Context, email string) (Customer, e
 		logger.Error("Failed to find customer", err)
 		return Customer{}, err
 	}
-	return customer, nil
-}
-
-// UpdateCustomerParams represents the parameters needed to update an existing customer's information.
-type UpdateCustomerParams struct {
-	CustomerID string
-	Name       string
-}
-
-func (r *repository) UpdateCustomer(ctx context.Context, params UpdateCustomerParams) (Customer, error) {
-	logger := r.logger.WithContext(ctx)
-	logger.Info("Updating customer", log.Field{Key: "customer_id", Value: params.CustomerID})
-
-	if _, err := primitive.ObjectIDFromHex(params.CustomerID); err != nil {
-		logger.Warn("Invalid customer CustomerID format", log.Field{Key: "customer_id", Value: params.CustomerID})
-		return Customer{}, ErrCustomerNotFound
-	}
-
-	var customer Customer
-	update := bson.M{
-		"$set": bson.M{
-			FieldName:      params.Name,
-			FieldUpdatedAt: r.clock.Now(),
-		},
-	}
-
-	// Update the customer document in the database and return the updated document
-	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
-	err := r.collection.FindOneAndUpdate(ctx, bson.M{FieldCustomerID: params.CustomerID}, update, opts).
-		Decode(&customer)
-	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			logger.Warn("Customer not found", log.Field{Key: "customer_id", Value: params.CustomerID})
-			return Customer{}, ErrCustomerNotFound
-		}
-		logger.Error("Failed to update customer", err)
-		return Customer{}, err
-	}
-
 	return customer, nil
 }

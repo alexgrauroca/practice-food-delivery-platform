@@ -7,8 +7,6 @@ RegisterCustomerRequest:
   $ref: './requests/RegisterCustomerRequest.yaml'
 RegisterStaffRequest:
   $ref: './requests/RegisterStaffRequest.yaml'
-UpdateCustomerRequest:
-  $ref: './requests/UpdateCustomerRequest.yaml'
 
 # Response schemas
 ErrorResponse:
@@ -21,5 +19,3 @@ RegisterCustomerResponse:
   $ref: './responses/RegisterCustomerResponse.yaml'
 RegisterStaffResponse:
   $ref: './responses/RegisterStaffResponse.yaml'
-UpdateCustomerResponse:
-  $ref: './responses/UpdateCustomerResponse.yaml'

@@ -183,55 +183,6 @@ paths:
                   $ref: '#/components/examples/CustomerExists'
         '500':
           $ref: '#/components/responses/InternalError'
-  /v1.0/auth/customers/{customerID}:
-    put:
-      summary: Update a specific customer data
-      description: Returns the customer data updated. It can only be accessed by the customer itself
-      operationId: updateCustomer
-      tags:
-        - Customers
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: customerID
-          in: path
-          required: true
-          description: Customer identifier
-          schema:
-            type: string
-            pattern: ^[0-9a-fA-F]{24}$
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateCustomerRequest'
-      responses:
-        '200':
-          description: Customer updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Customer'
-        '400':
-          description: Invalid input or validation error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                invalidRequest:
-                  $ref: '#/components/examples/InvalidRequest'
-                validationError:
-                  $ref: '#/components/examples/UpdateCustomerValidationError'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalError'
   /v1.0/auth/staff:
     post:
       summary: Register a new staff user
@@ -326,38 +277,6 @@ components:
       value:
         code: CUSTOMER_ALREADY_EXISTS
         message: customer already exists
-        details: []
-    UpdateCustomerValidationError:
-      summary: Validation error
-      value:
-        code: VALIDATION_ERROR
-        message: validation failed
-        details:
-          - name is required
-          - name must not exceed 100 characters long
-    Unauthorized:
-      summary: Authentication required
-      value:
-        code: UNAUTHORIZED
-        message: Authentication is required to access this resource
-        details: []
-    TokenExpired:
-      summary: Token expired
-      value:
-        code: TOKEN_EXPIRED
-        message: Token has expired
-        details: []
-    Forbidden:
-      summary: Access forbidden
-      value:
-        code: FORBIDDEN
-        message: You do not have permission to access this resource
-        details: []
-    NotFound:
-      summary: Resource not found
-      value:
-        code: NOT_FOUND
-        message: Resource not found
         details: []
     StaffExists:
       summary: Staff already exists
@@ -539,50 +458,6 @@ components:
           format: date-time
           description: Account creation timestamp
           example: '2025-01-01T00:00:00Z'
-    UpdateCustomerRequest:
-      type: object
-      required:
-        - name
-      properties:
-        name:
-          type: string
-          minLength: 1
-          maxLength: 100
-          description: Customer's full name
-          example: John Doe
-    Customer:
-      type: object
-      required:
-        - id
-        - name
-        - email
-        - created_at
-        - updated_at
-      properties:
-        id:
-          type: string
-          pattern: ^[0-9a-fA-F]{24}$
-          description: Unique customer identifier in the auth service
-          example: 507f1f77bcf86cd799439011
-        email:
-          type: string
-          format: email
-          description: Customer's email address
-          example: user@example.com
-        name:
-          type: string
-          description: Customer's full name
-          example: John Doe
-        created_at:
-          type: string
-          format: date-time
-          description: Account creation timestamp
-          example: '2025-01-01T00:00:00Z'
-        updated_at:
-          type: string
-          format: date-time
-          description: Account last update timestamp
-          example: '2025-01-01T00:00:00Z'
     RegisterStaffRequest:
       type: object
       required:
@@ -630,8 +505,6 @@ components:
           format: date-time
           description: Account creation timestamp
           example: '2025-01-01T00:00:00Z'
-    UpdateCustomerResponse:
-      $ref: '#/components/schemas/Customer'
   responses:
     InternalError:
       description: Internal server error
@@ -642,32 +515,3 @@ components:
           examples:
             internalError:
               $ref: '#/components/examples/InternalError'
-    Unauthorized:
-      description: Unauthorized
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-          examples:
-            unauthorizedError:
-              $ref: '#/components/examples/Unauthorized'
-            tokenExpiredError:
-              $ref: '#/components/examples/TokenExpired'
-    Forbidden:
-      description: Forbidden
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-          examples:
-            internalError:
-              $ref: '#/components/examples/Forbidden'
-    NotFound:
-      description: NotFound
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-          examples:
-            internalError:
-              $ref: '#/components/examples/NotFound'

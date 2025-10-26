@@ -1,7 +1,5 @@
 CustomerExists:
   $ref: './CustomerExists.yaml'
-Forbidden:
-  $ref: './Forbidden.yaml'
 InternalError:
   $ref: './InternalError.yaml'
 InvalidCredentials:
@@ -10,15 +8,7 @@ InvalidRefreshToken:
   $ref: './InvalidRefreshToken.yaml'
 InvalidRequest:
   $ref: './InvalidRequest.yaml'
-NotFound:
-  $ref: './NotFound.yaml'
 StaffExists:
   $ref: './StaffExists.yaml'
-TokenExpired:
-  $ref: './TokenExpired.yaml'
 TokenMismatch:
   $ref: './TokenMismatch.yaml'
-Unauthorized:
-  $ref: './Unauthorized.yaml'
-UpdateCustomerValidationError:
-  $ref: './UpdateCustomerValidationError.yaml'

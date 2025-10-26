@@ -18,8 +18,6 @@ paths:
     $ref: './paths/customers/refresh.yaml'
   /v1.0/auth/customers:
     $ref: './paths/customers/customers.yaml'
-  /v1.0/auth/customers/{customerID}:
-    $ref: './paths/customers/customer.yaml'
   /v1.0/auth/staff:
     $ref: './paths/staff/staff-users.yaml'
 
