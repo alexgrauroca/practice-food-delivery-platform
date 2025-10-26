@@ -7,6 +7,7 @@ import (
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth"
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/authcore"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/password"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh"
 )
@@ -106,7 +107,7 @@ type LoginCustomerInput struct {
 
 // LoginCustomerOutput represents the output returned upon successful login of a customer.
 type LoginCustomerOutput struct {
-	TokenPair
+	authcore.TokenPair
 }
 
 func (s *service) LoginCustomer(ctx context.Context, input LoginCustomerInput) (LoginCustomerOutput, error) {
@@ -117,7 +118,7 @@ func (s *service) LoginCustomer(ctx context.Context, input LoginCustomerInput) (
 	if err != nil {
 		if errors.Is(err, ErrCustomerNotFound) {
 			logger.Warn("customer not found", log.Field{Key: "email", Value: input.Email})
-			return LoginCustomerOutput{}, ErrInvalidCredentials
+			return LoginCustomerOutput{}, authcore.ErrInvalidCredentials
 		}
 		logger.Error("failed to find customer by email", err)
 		return LoginCustomerOutput{}, err
@@ -126,7 +127,7 @@ func (s *service) LoginCustomer(ctx context.Context, input LoginCustomerInput) (
 	// Check if the stored password matches the provided password
 	if !password.Verify(customer.Password, input.Password) {
 		logger.Warn("invalid credentials")
-		return LoginCustomerOutput{}, ErrInvalidCredentials
+		return LoginCustomerOutput{}, authcore.ErrInvalidCredentials
 	}
 
 	tokenPair, err := s.generateTokenPair(ctx, customer)
@@ -146,7 +147,7 @@ type RefreshCustomerInput struct {
 
 // RefreshCustomerOutput wraps the response of a successful customer token refresh operation.
 type RefreshCustomerOutput struct {
-	TokenPair
+	authcore.TokenPair
 }
 
 func (s *service) RefreshCustomer(ctx context.Context, input RefreshCustomerInput) (RefreshCustomerOutput, error) {
@@ -197,15 +198,7 @@ func (s *service) RefreshCustomer(ctx context.Context, input RefreshCustomerInpu
 	return RefreshCustomerOutput{TokenPair: tokenPair}, nil
 }
 
-// TokenPair represents a pair of tokens typically used for authentication and session management.
-type TokenPair struct {
-	AccessToken  string
-	RefreshToken string
-	ExpiresIn    int // Number of seconds until the token expires
-	TokenType    string
-}
-
-func (s *service) generateTokenPair(ctx context.Context, customer Customer) (TokenPair, error) {
+func (s *service) generateTokenPair(ctx context.Context, customer Customer) (authcore.TokenPair, error) {
 	logger := s.logger.WithContext(ctx)
 
 	generateOutput, err := s.authService.GenerateToken(ctx, auth.GenerateTokenInput{
@@ -215,7 +208,7 @@ func (s *service) generateTokenPair(ctx context.Context, customer Customer) (Tok
 	})
 	if err != nil {
 		logger.Error("failed to generate JWT", err)
-		return TokenPair{}, err
+		return authcore.TokenPair{}, err
 	}
 
 	refreshToken, err := s.refreshService.Generate(ctx, refresh.GenerateTokenInput{
@@ -224,10 +217,10 @@ func (s *service) generateTokenPair(ctx context.Context, customer Customer) (Tok
 	})
 	if err != nil {
 		logger.Error("failed to generate refresh token", err)
-		return TokenPair{}, err
+		return authcore.TokenPair{}, err
 	}
 
-	return TokenPair{
+	return authcore.TokenPair{
 		AccessToken:  generateOutput.AccessToken,
 		RefreshToken: refreshToken.Token,
 		TokenType:    auth.DefaultTokenType,

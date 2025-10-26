@@ -10,6 +10,7 @@ import (
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth"
 	customhttp "github.com/alexgrauroca/practice-food-delivery-platform/pkg/http"
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/authcore"
 )
 
 const (
@@ -17,22 +18,7 @@ const (
 	CodeStaffAlreadyExists = "STAFF_ALREADY_EXISTS"
 	// MsgStaffAlreadyExists represents the error message indicating that the staff already exists in the system.
 	MsgStaffAlreadyExists = "staff already exists"
-
-	// CodeInvalidCredentials represents the error code for failed authentication due to invalid login credentials.
-	CodeInvalidCredentials = "INVALID_CREDENTIALS"
-	// MsgInvalidCredentials represents the error message returned when login authentication fails due to invalid credentials.
-	MsgInvalidCredentials = "invalid credentials"
 )
-
-// TODO refactor token pair management if possible, as it will be the same for all logins
-
-// TokenPairResponse represents the structure for holding both access and refresh tokens along with metadata.
-type TokenPairResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	ExpiresIn    int    `json:"expires_in"` // the number of seconds until the token expires
-	TokenType    string `json:"token_type"`
-}
 
 // Handler manages HTTP requests for auth-customer-related operations.
 type Handler struct {
@@ -119,7 +105,7 @@ type LoginStaffRequest struct {
 
 // LoginStaffResponse represents the response payload for a successful staff user login.
 type LoginStaffResponse struct {
-	TokenPairResponse
+	authcore.TokenPairResponse
 }
 
 // LoginStaff processes the login request for a staff user using credentials provided in JSON format.
@@ -140,9 +126,12 @@ func (h *Handler) LoginStaff(c *gin.Context) {
 	input := LoginStaffInput(req)
 	output, err := h.service.LoginStaff(ctx, input)
 	if err != nil {
-		if errors.Is(err, ErrInvalidCredentials) {
+		if errors.Is(err, authcore.ErrInvalidCredentials) {
 			logger.Warn("Invalid credentials provided", log.Field{Key: "email", Value: req.Email})
-			c.JSON(http.StatusUnauthorized, customhttp.NewErrorResponse(CodeInvalidCredentials, MsgInvalidCredentials))
+			c.JSON(http.StatusUnauthorized, customhttp.NewErrorResponse(
+				authcore.CodeInvalidCredentials,
+				authcore.MsgInvalidCredentials,
+			))
 			return
 		}
 		logger.Error("Failed to login staff user", err)
@@ -153,7 +142,7 @@ func (h *Handler) LoginStaff(c *gin.Context) {
 		return
 	}
 
-	resp := LoginStaffResponse{TokenPairResponse: TokenPairResponse(output.TokenPair)}
+	resp := LoginStaffResponse{TokenPairResponse: authcore.TokenPairResponse(output.TokenPair)}
 	logger.Info("Staff logged in successfully")
 	c.JSON(http.StatusOK, resp)
 }

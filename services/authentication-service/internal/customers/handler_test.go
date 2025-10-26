@@ -14,6 +14,7 @@ import (
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth"
 	authmocks "github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth/mocks"
 	customhttp "github.com/alexgrauroca/practice-food-delivery-platform/pkg/http"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/authcore"
 	customersmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers/mocks"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
@@ -221,7 +222,7 @@ func TestHandler_LoginCustomer(t *testing.T) {
 			jsonPayload: `{"email": "test@example.com", "password": "ValidPassword123"}`,
 			mocksSetup: func(service *customersmocks.MockService, _ *authmocks.MockService) {
 				service.EXPECT().LoginCustomer(gomock.Any(), gomock.Any()).
-					Return(customers.LoginCustomerOutput{}, customers.ErrInvalidCredentials)
+					Return(customers.LoginCustomerOutput{}, authcore.ErrInvalidCredentials)
 			},
 			wantJSON: `{
 				"code": "INVALID_CREDENTIALS",
@@ -252,7 +253,7 @@ func TestHandler_LoginCustomer(t *testing.T) {
 					Email:    "test@example.com",
 					Password: "ValidPassword123",
 				}).Return(customers.LoginCustomerOutput{
-					TokenPair: customers.TokenPair{
+					TokenPair: authcore.TokenPair{
 						AccessToken:  "fake-token",
 						RefreshToken: "fake-refresh-token",
 						ExpiresIn:    customers.DefaultTokenExpiration,
@@ -357,7 +358,7 @@ func TestHandler_RefreshCustomer(t *testing.T) {
 					AccessToken:  "valid-access-token",
 					RefreshToken: "valid-refresh-token",
 				}).Return(customers.RefreshCustomerOutput{
-					TokenPair: customers.TokenPair{
+					TokenPair: authcore.TokenPair{
 						AccessToken:  "fake-token",
 						RefreshToken: "fake-refresh-token",
 						ExpiresIn:    customers.DefaultTokenExpiration,

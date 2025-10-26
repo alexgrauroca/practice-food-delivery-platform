@@ -10,6 +10,7 @@ import (
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth"
 	customhttp "github.com/alexgrauroca/practice-food-delivery-platform/pkg/http"
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/authcore"
 )
 
 const (
@@ -17,11 +18,6 @@ const (
 	CodeCustomerAlreadyExists = "CUSTOMER_ALREADY_EXISTS"
 	// MsgCustomerAlreadyExists represents the error message indicating that the customer already exists in the system.
 	MsgCustomerAlreadyExists = "customer already exists"
-
-	// CodeInvalidCredentials represents the error code for failed authentication due to invalid login credentials.
-	CodeInvalidCredentials = "INVALID_CREDENTIALS"
-	// MsgInvalidCredentials represents the error message returned when login authentication fails due to invalid credentials.
-	MsgInvalidCredentials = "invalid credentials"
 
 	// CodeInvalidRefreshToken represents the error code for an invalid or expired refresh token used in authentication processes.
 	CodeInvalidRefreshToken = "INVALID_REFRESH_TOKEN"
@@ -33,14 +29,6 @@ const (
 	// MsgTokenMismatch represents the error message for a token mismatch scenario.
 	MsgTokenMismatch = "token mismatch"
 )
-
-// TokenPairResponse represents the structure for holding both access and refresh tokens along with metadata.
-type TokenPairResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	ExpiresIn    int    `json:"expires_in"` // the number of seconds until the token expires
-	TokenType    string `json:"token_type"`
-}
 
 // Handler manages HTTP requests for auth-customer-related operations.
 type Handler struct {
@@ -128,7 +116,7 @@ type LoginCustomerRequest struct {
 
 // LoginCustomerResponse represents the response payload for a successful customer login.
 type LoginCustomerResponse struct {
-	TokenPairResponse
+	authcore.TokenPairResponse
 }
 
 // LoginCustomer processes the login request for a customer using credentials provided in JSON format.
@@ -149,9 +137,12 @@ func (h *Handler) LoginCustomer(c *gin.Context) {
 	input := LoginCustomerInput(req)
 	output, err := h.service.LoginCustomer(ctx, input)
 	if err != nil {
-		if errors.Is(err, ErrInvalidCredentials) {
+		if errors.Is(err, authcore.ErrInvalidCredentials) {
 			logger.Warn("Invalid credentials provided", log.Field{Key: "email", Value: req.Email})
-			c.JSON(http.StatusUnauthorized, customhttp.NewErrorResponse(CodeInvalidCredentials, MsgInvalidCredentials))
+			c.JSON(http.StatusUnauthorized, customhttp.NewErrorResponse(
+				authcore.CodeInvalidCredentials,
+				authcore.MsgInvalidCredentials,
+			))
 			return
 		}
 		logger.Error("Failed to login customer", err)
@@ -162,7 +153,7 @@ func (h *Handler) LoginCustomer(c *gin.Context) {
 		return
 	}
 
-	resp := LoginCustomerResponse{TokenPairResponse: TokenPairResponse(output.TokenPair)}
+	resp := LoginCustomerResponse{TokenPairResponse: authcore.TokenPairResponse(output.TokenPair)}
 	logger.Info("Customer logged in successfully")
 	c.JSON(http.StatusOK, resp)
 }
@@ -175,7 +166,7 @@ type RefreshCustomerRequest struct {
 
 // RefreshCustomerResponse represents the response returned when refreshing a customer's token.
 type RefreshCustomerResponse struct {
-	TokenPairResponse
+	authcore.TokenPairResponse
 }
 
 // RefreshCustomer handles the refreshing of a customer's authentication token.
@@ -214,7 +205,7 @@ func (h *Handler) RefreshCustomer(c *gin.Context) {
 		return
 	}
 
-	resp := RefreshCustomerResponse{TokenPairResponse: TokenPairResponse(output.TokenPair)}
+	resp := RefreshCustomerResponse{TokenPairResponse: authcore.TokenPairResponse(output.TokenPair)}
 	logger.Info("Customer refreshed successfully")
 	c.JSON(http.StatusOK, resp)
 }

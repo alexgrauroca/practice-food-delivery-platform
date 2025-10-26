@@ -6,6 +6,7 @@ import (
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth"
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/authcore"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/password"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh"
 )
@@ -96,19 +97,9 @@ type LoginStaffInput struct {
 
 // LoginStaffOutput represents the output returned upon successful login of a staff user.
 type LoginStaffOutput struct {
-	TokenPair
+	authcore.TokenPair
 }
 
 func (s *service) LoginStaff(ctx context.Context, input LoginStaffInput) (LoginStaffOutput, error) {
 	panic("implement me")
-}
-
-// TODO would it be possible to refactor token pair generation and make it common?
-
-// TokenPair represents a pair of tokens typically used for authentication and session management.
-type TokenPair struct {
-	AccessToken  string
-	RefreshToken string
-	ExpiresIn    int // Number of seconds until the token expires
-	TokenType    string
 }

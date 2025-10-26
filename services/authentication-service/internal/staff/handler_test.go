@@ -15,6 +15,7 @@ import (
 	authmocks "github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth/mocks"
 	customhttp "github.com/alexgrauroca/practice-food-delivery-platform/pkg/http"
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/authcore"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/staff"
 	staffmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/staff/mocks"
@@ -223,7 +224,7 @@ func TestHandler_LoginStaff(t *testing.T) {
 			jsonPayload: `{"email": "test@example.com", "password": "ValidPassword123"}`,
 			mocksSetup: func(service *staffmocks.MockService, _ *authmocks.MockService) {
 				service.EXPECT().LoginStaff(gomock.Any(), gomock.Any()).
-					Return(staff.LoginStaffOutput{}, staff.ErrInvalidCredentials)
+					Return(staff.LoginStaffOutput{}, authcore.ErrInvalidCredentials)
 			},
 			wantJSON: `{
 				"code": "INVALID_CREDENTIALS",
@@ -256,7 +257,7 @@ func TestHandler_LoginStaff(t *testing.T) {
 					Email:    "test@example.com",
 					Password: "ValidPassword123",
 				}).Return(staff.LoginStaffOutput{
-					TokenPair: staff.TokenPair{
+					TokenPair: authcore.TokenPair{
 						AccessToken:  "fake-token",
 						RefreshToken: "fake-refresh-token",
 						ExpiresIn:    customers.DefaultTokenExpiration,
