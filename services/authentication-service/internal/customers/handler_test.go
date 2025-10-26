@@ -311,7 +311,7 @@ func TestHandler_RefreshCustomer(t *testing.T) {
 			jsonPayload: `{"access_token": "valid-access-token", "refresh_token": "invalid-refresh-token"}`,
 			mocksSetup: func(service *customersmocks.MockService, _ *authmocks.MockService) {
 				service.EXPECT().RefreshCustomer(gomock.Any(), gomock.Any()).
-					Return(customers.RefreshCustomerOutput{}, customers.ErrInvalidRefreshToken)
+					Return(customers.RefreshCustomerOutput{}, authcore.ErrInvalidRefreshToken)
 			},
 			wantJSON: `{
 				"code": "INVALID_REFRESH_TOKEN",
@@ -326,7 +326,7 @@ func TestHandler_RefreshCustomer(t *testing.T) {
 			jsonPayload: `{"access_token": "invalid-access-token", "refresh_token": "valid-refresh-token"}`,
 			mocksSetup: func(service *customersmocks.MockService, _ *authmocks.MockService) {
 				service.EXPECT().RefreshCustomer(gomock.Any(), gomock.Any()).
-					Return(customers.RefreshCustomerOutput{}, customers.ErrTokenMismatch)
+					Return(customers.RefreshCustomerOutput{}, authcore.ErrTokenMismatch)
 			},
 			wantJSON: `{
 				"code": "TOKEN_MISMATCH",

@@ -83,8 +83,8 @@ func (s service) GenerateTokenPair(ctx context.Context, input GenerateTokenPairI
 
 // RefreshTokenInput defines the input structure required for refreshing a token pair.
 type RefreshTokenInput struct {
-	RefreshToken string
 	AccessToken  string
+	RefreshToken string
 	Expiration   int
 	Role         string
 }
