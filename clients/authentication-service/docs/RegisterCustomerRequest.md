@@ -7,13 +7,12 @@ Name | Type | Description | Notes
 **CustomerId** | **string** | Unique customer identifier | 
 **Email** | **string** | Customer&#39;s email address | 
 **Password** | **string** | Password must be at least 8 characters long | 
-**Name** | **string** | Customer&#39;s full name | 
 
 ## Methods
 
 ### NewRegisterCustomerRequest
 
-`func NewRegisterCustomerRequest(customerId string, email string, password string, name string, ) *RegisterCustomerRequest`
+`func NewRegisterCustomerRequest(customerId string, email string, password string, ) *RegisterCustomerRequest`
 
 NewRegisterCustomerRequest instantiates a new RegisterCustomerRequest object
 This constructor will assign default values to properties that have it defined,
@@ -86,26 +85,6 @@ and a boolean to check if the value has been set.
 `func (o *RegisterCustomerRequest) SetPassword(v string)`
 
 SetPassword sets Password field to given value.
-
-
-### GetName
-
-`func (o *RegisterCustomerRequest) GetName() string`
-
-GetName returns the Name field if non-nil, zero value otherwise.
-
-### GetNameOk
-
-`func (o *RegisterCustomerRequest) GetNameOk() (*string, bool)`
-
-GetNameOk returns a tuple with the Name field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetName
-
-`func (o *RegisterCustomerRequest) SetName(v string)`
-
-SetName sets Name field to given value.
 
 
 
