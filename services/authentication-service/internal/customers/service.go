@@ -5,11 +5,9 @@ import (
 	"errors"
 	"time"
 
-	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth"
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/authcore"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/password"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh"
 )
 
 const (
@@ -30,27 +28,21 @@ type Service interface {
 }
 
 type service struct {
-	logger         log.Logger
-	repo           Repository
-	refreshService refresh.Service
-	authService    auth.Service
-	authctx        auth.ContextReader
+	logger          log.Logger
+	repo            Repository
+	authCoreService authcore.Service
 }
 
 // NewService creates a new instance of Service with the provided dependencies.
 func NewService(
 	logger log.Logger,
 	repo Repository,
-	refreshService refresh.Service,
-	authService auth.Service,
-	authctx auth.ContextReader,
+	authCoreService authcore.Service,
 ) Service {
 	return &service{
-		logger:         logger,
-		repo:           repo,
-		refreshService: refreshService,
-		authService:    authService,
-		authctx:        authctx,
+		logger:          logger,
+		repo:            repo,
+		authCoreService: authCoreService,
 	}
 }
 
@@ -130,7 +122,11 @@ func (s *service) LoginCustomer(ctx context.Context, input LoginCustomerInput) (
 		return LoginCustomerOutput{}, authcore.ErrInvalidCredentials
 	}
 
-	tokenPair, err := s.generateTokenPair(ctx, customer)
+	tokenPair, err := s.authCoreService.GenerateTokenPair(ctx, authcore.GenerateTokenPairInput{
+		UserID:     customer.CustomerID,
+		Expiration: DefaultTokenExpiration,
+		Role:       DefaultTokenRole,
+	})
 	if err != nil {
 		logger.Error("failed to generate token pair", err)
 		return LoginCustomerOutput{}, err
@@ -154,76 +150,17 @@ func (s *service) RefreshCustomer(ctx context.Context, input RefreshCustomerInpu
 	logger := s.logger.WithContext(ctx)
 
 	logger.Info("refreshing customer token")
-	refreshToken, err := s.refreshService.FindActiveToken(ctx, refresh.FindActiveTokenInput{
-		Token: input.RefreshToken,
+
+	tokenPair, err := s.authCoreService.RefreshToken(ctx, authcore.RefreshTokenInput{
+		RefreshToken: input.RefreshToken,
+		AccessToken:  input.AccessToken,
+		Expiration:   DefaultTokenExpiration,
+		Role:         DefaultTokenRole,
 	})
 	if err != nil {
-		if errors.Is(err, refresh.ErrRefreshTokenNotFound) {
-			logger.Warn("refresh token not found")
-			return RefreshCustomerOutput{}, ErrInvalidRefreshToken
-		}
-		logger.Error("failed to find active refresh token", err)
-		return RefreshCustomerOutput{}, err
-	}
-
-	claimsOutput, err := s.authService.GetClaims(ctx, auth.GetClaimsInput{AccessToken: input.AccessToken})
-	if err != nil {
-		if errors.Is(err, auth.ErrInvalidToken) {
-			logger.Warn("access token is invalid")
-			return RefreshCustomerOutput{}, ErrTokenMismatch
-		}
-		logger.Error("failed to get claims from access token", err)
-		return RefreshCustomerOutput{}, err
-	}
-
-	claims := claimsOutput.Claims
-	if claims.Subject != refreshToken.UserID || claims.Role != refreshToken.Role {
-		logger.Warn("token mismatch")
-		return RefreshCustomerOutput{}, ErrTokenMismatch
-	}
-
-	tokenPair, err := s.generateTokenPair(ctx, Customer{CustomerID: refreshToken.UserID})
-	if err != nil {
-		logger.Error("failed to generate token pair", err)
-		return RefreshCustomerOutput{}, err
-	}
-
-	_, err = s.refreshService.Expire(ctx, refresh.ExpireInput{Token: input.RefreshToken})
-	// ErrRefreshTokenNotFound is silent because it does not affect the result of the workflow
-	if err != nil && !errors.Is(err, refresh.ErrRefreshTokenNotFound) {
-		logger.Error("failed to expire refresh token", err)
+		logger.Error("failed to refresh the customer token", err)
 		return RefreshCustomerOutput{}, err
 	}
 
 	return RefreshCustomerOutput{TokenPair: tokenPair}, nil
-}
-
-func (s *service) generateTokenPair(ctx context.Context, customer Customer) (authcore.TokenPair, error) {
-	logger := s.logger.WithContext(ctx)
-
-	generateOutput, err := s.authService.GenerateToken(ctx, auth.GenerateTokenInput{
-		ID:         customer.CustomerID,
-		Expiration: DefaultTokenExpiration,
-		Role:       DefaultTokenRole,
-	})
-	if err != nil {
-		logger.Error("failed to generate JWT", err)
-		return authcore.TokenPair{}, err
-	}
-
-	refreshToken, err := s.refreshService.Generate(ctx, refresh.GenerateTokenInput{
-		UserID: customer.CustomerID,
-		Role:   DefaultTokenRole,
-	})
-	if err != nil {
-		logger.Error("failed to generate refresh token", err)
-		return authcore.TokenPair{}, err
-	}
-
-	return authcore.TokenPair{
-		AccessToken:  generateOutput.AccessToken,
-		RefreshToken: refreshToken.Token,
-		TokenType:    auth.DefaultTokenType,
-		ExpiresIn:    DefaultTokenExpiration,
-	}, nil
 }

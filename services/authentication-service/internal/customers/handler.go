@@ -187,11 +187,11 @@ func (h *Handler) RefreshCustomer(c *gin.Context) {
 	input := RefreshCustomerInput(req)
 	output, err := h.service.RefreshCustomer(c.Request.Context(), input)
 	if err != nil {
-		if errors.Is(err, ErrInvalidRefreshToken) {
+		if errors.Is(err, authcore.ErrInvalidRefreshToken) {
 			logger.Warn("Invalid refresh token provided")
 			c.JSON(http.StatusUnauthorized, customhttp.NewErrorResponse(CodeInvalidRefreshToken, MsgInvalidRefreshToken))
 			return
-		} else if errors.Is(err, ErrTokenMismatch) {
+		} else if errors.Is(err, authcore.ErrTokenMismatch) {
 			logger.Warn("Token mismatch")
 			c.JSON(http.StatusForbidden, customhttp.NewErrorResponse(CodeTokenMismatch, MsgTokenMismatch))
 			return

@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
-	authmocks "github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth/mocks"
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/authcore"
 	authcoremocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/authcore/mocks"
@@ -33,7 +32,6 @@ type staffServiceTestCase[I, W any] struct {
 	mocksSetup func(
 		repo *staffmocks.MockRepository,
 		authCoreService *authcoremocks.MockService,
-		authctx *authmocks.MockContextReader,
 	)
 	wantErr error
 }
@@ -54,7 +52,6 @@ func TestService_RegisterStaff(t *testing.T) {
 			mocksSetup: func(
 				repo *staffmocks.MockRepository,
 				_ *authcoremocks.MockService,
-				_ *authmocks.MockContextReader,
 			) {
 				repo.EXPECT().CreateStaff(gomock.Any(), gomock.Any()).
 					Return(staff.Staff{}, staff.ErrStaffAlreadyExists)
@@ -72,7 +69,6 @@ func TestService_RegisterStaff(t *testing.T) {
 			mocksSetup: func(
 				repo *staffmocks.MockRepository,
 				_ *authcoremocks.MockService,
-				_ *authmocks.MockContextReader,
 			) {
 				repo.EXPECT().CreateStaff(gomock.Any(), gomock.Any()).
 					Return(staff.Staff{}, errRepo)
@@ -90,7 +86,6 @@ func TestService_RegisterStaff(t *testing.T) {
 			mocksSetup: func(
 				repo *staffmocks.MockRepository,
 				_ *authcoremocks.MockService,
-				_ *authmocks.MockContextReader,
 			) {
 				repo.EXPECT().CreateStaff(gomock.Any(), gomock.Any()).
 					DoAndReturn(func(_ context.Context, params staff.CreateStaffParams) (staff.Staff, error) {
@@ -146,7 +141,6 @@ func TestService_LoginStaff(t *testing.T) {
 			mocksSetup: func(
 				repo *staffmocks.MockRepository,
 				_ *authcoremocks.MockService,
-				_ *authmocks.MockContextReader,
 			) {
 				repo.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).
 					Return(staff.Staff{}, staff.ErrStaffNotFound)
@@ -164,7 +158,6 @@ func TestService_LoginStaff(t *testing.T) {
 			mocksSetup: func(
 				repo *staffmocks.MockRepository,
 				_ *authcoremocks.MockService,
-				_ *authmocks.MockContextReader,
 			) {
 				hashedPassword, err := password.Hash("ValidPassword123")
 				require.NoError(t, err)
@@ -191,7 +184,6 @@ func TestService_LoginStaff(t *testing.T) {
 			mocksSetup: func(
 				repo *staffmocks.MockRepository,
 				_ *authcoremocks.MockService,
-				_ *authmocks.MockContextReader,
 			) {
 				repo.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).
 					Return(staff.Staff{}, errRepo)
@@ -208,7 +200,6 @@ func TestService_LoginStaff(t *testing.T) {
 			mocksSetup: func(
 				repo *staffmocks.MockRepository,
 				authCoreService *authcoremocks.MockService,
-				_ *authmocks.MockContextReader,
 			) {
 				hashedPassword, err := password.Hash("ValidPassword123")
 				require.NoError(t, err)
@@ -238,7 +229,6 @@ func TestService_LoginStaff(t *testing.T) {
 			mocksSetup: func(
 				repo *staffmocks.MockRepository,
 				authCoreService *authcoremocks.MockService,
-				_ *authmocks.MockContextReader,
 			) {
 				hashedPassword, err := password.Hash("ValidPassword123")
 				require.NoError(t, err)
@@ -286,21 +276,20 @@ func TestService_LoginStaff(t *testing.T) {
 	}
 }
 
-func serviceSetup(t *testing.T, logger log.Logger, mocksSetup func(repo *staffmocks.MockRepository,
+func serviceSetup(t *testing.T, logger log.Logger, mocksSetup func(
+	repo *staffmocks.MockRepository,
 	authCoreService *authcoremocks.MockService,
-	authctx *authmocks.MockContextReader,
 )) (staff.Service, func()) {
 	ctrl := gomock.NewController(t)
 
 	repo := staffmocks.NewMockRepository(ctrl)
 	authCoreService := authcoremocks.NewMockService(ctrl)
-	authctx := authmocks.NewMockContextReader(ctrl)
 
 	if mocksSetup != nil {
-		mocksSetup(repo, authCoreService, authctx)
+		mocksSetup(repo, authCoreService)
 	}
 
-	service := staff.NewService(logger, repo, authCoreService, authctx)
+	service := staff.NewService(logger, repo, authCoreService)
 	return service, func() {
 		ctrl.Finish()
 	}

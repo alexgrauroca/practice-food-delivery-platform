@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth"
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/authcore"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/password"
@@ -31,7 +30,6 @@ type service struct {
 	logger          log.Logger
 	repo            Repository
 	authCoreService authcore.Service
-	authctx         auth.ContextReader
 }
 
 // NewService creates a new instance of Service with the provided dependencies.
@@ -39,13 +37,11 @@ func NewService(
 	logger log.Logger,
 	repo Repository,
 	authCoreService authcore.Service,
-	authctx auth.ContextReader,
 ) Service {
 	return &service{
 		logger:          logger,
 		repo:            repo,
 		authCoreService: authCoreService,
-		authctx:         authctx,
 	}
 }
 
