@@ -25,15 +25,15 @@ type CustomersAPIService service
 type ApiLoginCustomerRequest struct {
 	ctx context.Context
 	ApiService *CustomersAPIService
-	loginCustomerRequest *LoginCustomerRequest
+	loginRequest *LoginRequest
 }
 
-func (r ApiLoginCustomerRequest) LoginCustomerRequest(loginCustomerRequest LoginCustomerRequest) ApiLoginCustomerRequest {
-	r.loginCustomerRequest = &loginCustomerRequest
+func (r ApiLoginCustomerRequest) LoginRequest(loginRequest LoginRequest) ApiLoginCustomerRequest {
+	r.loginRequest = &loginRequest
 	return r
 }
 
-func (r ApiLoginCustomerRequest) Execute() (*LoginCustomerResponse, *http.Response, error) {
+func (r ApiLoginCustomerRequest) Execute() (*LoginResponse, *http.Response, error) {
 	return r.ApiService.LoginCustomerExecute(r)
 }
 
@@ -53,13 +53,13 @@ func (a *CustomersAPIService) LoginCustomer(ctx context.Context) ApiLoginCustome
 }
 
 // Execute executes the request
-//  @return LoginCustomerResponse
-func (a *CustomersAPIService) LoginCustomerExecute(r ApiLoginCustomerRequest) (*LoginCustomerResponse, *http.Response, error) {
+//  @return LoginResponse
+func (a *CustomersAPIService) LoginCustomerExecute(r ApiLoginCustomerRequest) (*LoginResponse, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodPost
 		localVarPostBody     interface{}
 		formFiles            []formFile
-		localVarReturnValue  *LoginCustomerResponse
+		localVarReturnValue  *LoginResponse
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "CustomersAPIService.LoginCustomer")
@@ -72,8 +72,8 @@ func (a *CustomersAPIService) LoginCustomerExecute(r ApiLoginCustomerRequest) (*
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
-	if r.loginCustomerRequest == nil {
-		return localVarReturnValue, nil, reportError("loginCustomerRequest is required and must be specified")
+	if r.loginRequest == nil {
+		return localVarReturnValue, nil, reportError("loginRequest is required and must be specified")
 	}
 
 	// to determine the Content-Type header
@@ -94,7 +94,7 @@ func (a *CustomersAPIService) LoginCustomerExecute(r ApiLoginCustomerRequest) (*
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	// body params
-	localVarPostBody = r.loginCustomerRequest
+	localVarPostBody = r.loginRequest
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
 	if err != nil {
 		return localVarReturnValue, nil, err
