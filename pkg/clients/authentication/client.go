@@ -16,7 +16,6 @@ import (
 //go:generate mockgen -destination=./mocks/authclient_mock.go -package=authentication_mocks github.com/alexgrauroca/practice-food-delivery-platform/pkg/clients/authentication Client
 type Client interface {
 	RegisterCustomer(ctx context.Context, req RegisterCustomerRequest) (RegisterCustomerResponse, error)
-	UpdateCustomer(ctx context.Context, req UpdateCustomerRequest) (UpdateCustomerResponse, error)
 }
 
 // Config holds the configuration options for the authentication client.
@@ -91,59 +90,4 @@ func (c *client) RegisterCustomer(ctx context.Context, req RegisterCustomerReque
 		Name:      resp.Name,
 		CreatedAt: resp.CreatedAt,
 	}, nil
-}
-
-// UpdateCustomerRequest represents the data required to update an existing customer's
-// information in the authentication service.
-type UpdateCustomerRequest struct {
-	AccessToken string
-	CustomerID  string
-	Name        string
-}
-
-// UpdateCustomerResponse contains the updated customer data returned after successfully
-// modifying a customer's information in the authentication service.
-type UpdateCustomerResponse struct {
-	ID        string
-	Email     string
-	Name      string
-	CreatedAt time.Time
-	UpdatedAt time.Time
-}
-
-func (c *client) UpdateCustomer(ctx context.Context, req UpdateCustomerRequest) (UpdateCustomerResponse, error) {
-	c.logger.Info("Updating customer", log.Field{Key: "customerID", Value: req.CustomerID})
-	ctx, err := c.setAuthHeader(ctx, req)
-	if err != nil {
-		return UpdateCustomerResponse{}, err
-	}
-	authreq := authclient.UpdateCustomerRequest{Name: req.Name}
-	resp, r, err := c.apicli.CustomersAPI.UpdateCustomer(ctx, req.CustomerID).UpdateCustomerRequest(authreq).Execute()
-	if err != nil {
-		c.logger.Warn(
-			"Failed to update customer",
-			log.Field{Key: "error", Value: err.Error()},
-			log.Field{Key: "response", Value: r},
-		)
-		return UpdateCustomerResponse{}, err
-	}
-	c.logger.Info(
-		"Customer updated successfully at authentication service",
-		log.Field{Key: "customerID", Value: resp.Id},
-	)
-	return UpdateCustomerResponse{
-		ID:        resp.Id,
-		Email:     resp.Email,
-		Name:      resp.Name,
-		CreatedAt: resp.CreatedAt,
-		UpdatedAt: resp.UpdatedAt,
-	}, nil
-}
-
-func (c *client) setAuthHeader(ctx context.Context, req UpdateCustomerRequest) (context.Context, error) {
-	if req.AccessToken == "" {
-		return nil, ErrAccessTokenRequired
-	}
-	ctx = context.WithValue(ctx, authclient.ContextAccessToken, req.AccessToken)
-	return ctx, nil
 }
