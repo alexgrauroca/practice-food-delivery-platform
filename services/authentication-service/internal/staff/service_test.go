@@ -50,7 +50,6 @@ func TestService_RegisterStaff(t *testing.T) {
 				StaffID:  "fake-staff-id",
 				Email:    "test@example.com",
 				Password: "ValidPassword123",
-				Name:     "John Doe",
 			},
 			mocksSetup: func(
 				repo *staffmocks.MockRepository,
@@ -70,7 +69,6 @@ func TestService_RegisterStaff(t *testing.T) {
 				StaffID:  "fake-staff-id",
 				Email:    "test@example.com",
 				Password: "ValidPassword123",
-				Name:     "John Doe",
 			},
 			mocksSetup: func(
 				repo *staffmocks.MockRepository,
@@ -90,7 +88,6 @@ func TestService_RegisterStaff(t *testing.T) {
 				StaffID:  "fake-staff-id",
 				Email:    "test@example.com",
 				Password: "ValidPassword123",
-				Name:     "John Doe",
 			},
 			mocksSetup: func(
 				repo *staffmocks.MockRepository,
@@ -108,7 +105,6 @@ func TestService_RegisterStaff(t *testing.T) {
 							ID:        "fake-id",
 							StaffID:   params.StaffID,
 							Email:     params.Email,
-							Name:      params.Name,
 							Password:  params.Password,
 							CreatedAt: now,
 							UpdatedAt: now,
@@ -119,7 +115,6 @@ func TestService_RegisterStaff(t *testing.T) {
 			want: staff.RegisterStaffOutput{
 				ID:        "fake-id",
 				Email:     "test@example.com",
-				Name:      "John Doe",
 				CreatedAt: now,
 			},
 			wantErr: nil,

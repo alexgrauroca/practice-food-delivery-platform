@@ -48,14 +48,12 @@ type RegisterStaffRequest struct {
 	StaffID  string `json:"staff_id" binding:"required"`
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required,min=8"`
-	Name     string `json:"name" binding:"required"`
 }
 
 // RegisterStaffResponse represents the response returned after successfully registering a new staff user.
 type RegisterStaffResponse struct {
 	ID        string    `json:"id"`
 	Email     string    `json:"email"`
-	Name      string    `json:"name"`
 	CreatedAt time.Time `json:"created_at"`
 }
 

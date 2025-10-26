@@ -37,7 +37,6 @@ func TestRepository_CreateStaff(t *testing.T) {
 				mongodb.InsertTestDocument(t, coll, staff.Staff{
 					StaffID:   "fake-staff-id",
 					Email:     "test@example.com",
-					Name:      "John Doe",
 					Password:  "fakehashedpassword",
 					Active:    true,
 					CreatedAt: now,
@@ -48,7 +47,6 @@ func TestRepository_CreateStaff(t *testing.T) {
 				StaffID:  "fake-staff-id",
 				Email:    "test@example.com",
 				Password: "ValidPassword123",
-				Name:     "John Doe",
 			},
 			want:    staff.Staff{},
 			wantErr: staff.ErrStaffAlreadyExists,
@@ -59,12 +57,10 @@ func TestRepository_CreateStaff(t *testing.T) {
 				StaffID:  "fake-staff-id",
 				Email:    "test@example.com",
 				Password: "ValidPassword123",
-				Name:     "John Doe",
 			},
 			want: staff.Staff{
 				StaffID:   "fake-staff-id",
 				Email:     "test@example.com",
-				Name:      "John Doe",
 				Active:    true,
 				Password:  "ValidPassword123",
 				CreatedAt: now,

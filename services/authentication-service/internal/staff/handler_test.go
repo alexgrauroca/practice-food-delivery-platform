@@ -39,7 +39,7 @@ func TestHandler_RegisterStaff(t *testing.T) {
 	tests := []staffHandlerTestCase{
 		{
 			name:        "when invalid payload is provided, then it should return a 400 with invalid request error",
-			jsonPayload: `{"name": 1.2, "email": true}`,
+			jsonPayload: `{"password": 1.2, "email": true}`,
 			wantJSON: `{
 				"code": "INVALID_REQUEST",
 				"message": "invalid request",
@@ -56,8 +56,7 @@ func TestHandler_RegisterStaff(t *testing.T) {
 				"details": [
 					"staff_id is required",
 					"email is required",
-					"password is required",
-					"name is required"
+					"password is required"
 				]
 			}`,
 			wantStatus: http.StatusBadRequest,
@@ -67,7 +66,6 @@ func TestHandler_RegisterStaff(t *testing.T) {
 			jsonPayload: `{
 				"staff_id": "fake-staff-id",
 				"email": "invalid-email",
-				"name": "John Doe", 
 				"password": "ValidPassword123"
 			}`,
 			wantJSON: `{
@@ -84,7 +82,6 @@ func TestHandler_RegisterStaff(t *testing.T) {
 			jsonPayload: `{
 				"staff_id": "fake-staff-id",
 				"email": "test@example.com",
-				"name": "John Doe", 
 				"password": "short"
 			}`,
 			wantJSON: `{
@@ -101,7 +98,6 @@ func TestHandler_RegisterStaff(t *testing.T) {
 			jsonPayload: `{
 				"staff_id": "fake-staff-id",
 				"email": "test@example.com",
-				"name": "John Doe", 
 				"password": "ValidPassword123"
 			}`,
 			mocksSetup: func(service *staffmocks.MockService, _ *authmocks.MockService) {
@@ -121,7 +117,6 @@ func TestHandler_RegisterStaff(t *testing.T) {
 			jsonPayload: `{
 				"staff_id": "fake-staff-id",
 				"email": "test@example.com",
-				"name": "John Doe", 
 				"password": "ValidPassword123"
 			}`,
 			mocksSetup: func(service *staffmocks.MockService, _ *authmocks.MockService) {
@@ -140,7 +135,6 @@ func TestHandler_RegisterStaff(t *testing.T) {
 			jsonPayload: `{
 				"staff_id": "fake-staff-id",
 				"email": "test@example.com",
-				"name": "John Doe", 
 				"password": "ValidPassword123"
 			}`,
 			mocksSetup: func(service *staffmocks.MockService, _ *authmocks.MockService) {
@@ -148,18 +142,15 @@ func TestHandler_RegisterStaff(t *testing.T) {
 					StaffID:  "fake-staff-id",
 					Email:    "test@example.com",
 					Password: "ValidPassword123",
-					Name:     "John Doe",
 				}).Return(staff.RegisterStaffOutput{
 					ID:        "fake-id",
 					Email:     "test@example.com",
-					Name:      "John Doe",
 					CreatedAt: now,
 				}, nil)
 			},
 			wantJSON: `{
 				"id":"fake-id",
 				"email":"test@example.com",
-				"name":"John Doe",
 				"created_at":"2025-01-01T00:00:00Z"
 			}`,
 			wantStatus: http.StatusCreated,
