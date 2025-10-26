@@ -216,11 +216,9 @@ func TestService_RegisterCustomer(t *testing.T) {
 					CustomerID: "fake-id",
 					Email:      "test@example.com",
 					Password:   "ValidPassword123",
-					Name:       "John Doe",
 				}).Return(authentication.RegisterCustomerResponse{
 					ID:        "auth-fake-id",
 					Email:     "test@example.com",
-					Name:      "John Doe",
 					CreatedAt: now,
 				}, nil)
 			},

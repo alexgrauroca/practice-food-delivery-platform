@@ -88,7 +88,6 @@ func (s *service) RegisterCustomer(ctx context.Context, input RegisterCustomerIn
 		CustomerID: customer.ID,
 		Email:      input.Email,
 		Password:   input.Password,
-		Name:       input.Name,
 	}
 	if _, err := s.authcli.RegisterCustomer(ctx, req); err != nil {
 		logger.Error("failed to register customer at auth service", err)
