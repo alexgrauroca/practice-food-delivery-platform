@@ -3,7 +3,6 @@ required:
   - staff_id
   - email
   - password
-  - name
 properties:
   staff_id:
     type: string
@@ -23,9 +22,3 @@ properties:
     description: Password must be at least 8 characters long
     example: strongpassword123
     writeOnly: true
-  name:
-    type: string
-    minLength: 1
-    maxLength: 100
-    description: Staff's full name
-    example: John Doe

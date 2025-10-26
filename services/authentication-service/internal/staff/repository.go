@@ -27,7 +27,6 @@ type Staff struct {
 	StaffID   string    `bson:"staff_id"`
 	Email     string    `bson:"email"`
 	Active    bool      `bson:"active"`
-	Name      string    `bson:"name"`
 	Password  string    `bson:"password,omitempty"`
 	CreatedAt time.Time `bson:"created_at,omitempty"`
 	UpdatedAt time.Time `bson:"updated_at,omitempty"`
@@ -59,7 +58,6 @@ func NewRepository(logger log.Logger, db *mongo.Database, clk clock.Clock) Repos
 type CreateStaffParams struct {
 	StaffID  string `json:"staff_id"`
 	Email    string `json:"email"`
-	Name     string `json:"name"`
 	Password string `json:"password"`
 }
 
@@ -68,13 +66,12 @@ func (r *repository) CreateStaff(ctx context.Context, params CreateStaffParams) 
 
 	now := r.clock.Now()
 	c := Staff{
-		StaffID: params.StaffID,
-		Email:      params.Email,
-		Name:       params.Name,
-		Password:   params.Password,
-		CreatedAt:  now,
-		UpdatedAt:  now,
-		Active:     true,
+		StaffID:   params.StaffID,
+		Email:     params.Email,
+		Password:  params.Password,
+		CreatedAt: now,
+		UpdatedAt: now,
+		Active:    true,
 	}
 	res, err := r.collection.InsertOne(ctx, c)
 	if err != nil {

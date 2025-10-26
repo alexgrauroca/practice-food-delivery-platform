@@ -47,25 +47,19 @@ type RegisterStaffInput struct {
 	StaffID  string
 	Email    string
 	Password string
-	Name     string
 }
 
 // RegisterStaffOutput represents the output data returned after successfully registering a new staff.
 type RegisterStaffOutput struct {
 	ID        string
 	Email     string
-	Name      string
 	CreatedAt time.Time
 }
 
 func (s *service) RegisterStaff(ctx context.Context, input RegisterStaffInput) (RegisterStaffOutput, error) {
 	logger := s.logger.WithContext(ctx)
 
-	logger.Info(
-		"registering staff",
-		log.Field{Key: "email", Value: input.Email},
-		log.Field{Key: "name", Value: input.Name},
-	)
+	logger.Info("registering staff", log.Field{Key: "email", Value: input.Email})
 	hashedPassword, err := password.Hash(input.Password)
 	if err != nil {
 		logger.Error("failed to hash password", err)
@@ -76,7 +70,6 @@ func (s *service) RegisterStaff(ctx context.Context, input RegisterStaffInput) (
 		StaffID:  input.StaffID,
 		Email:    input.Email,
 		Password: hashedPassword,
-		Name:     input.Name,
 	}
 
 	staff, err := s.repo.CreateStaff(ctx, params)
@@ -88,7 +81,6 @@ func (s *service) RegisterStaff(ctx context.Context, input RegisterStaffInput) (
 	output := RegisterStaffOutput{
 		ID:        staff.ID,
 		Email:     staff.Email,
-		Name:      staff.Name,
 		CreatedAt: staff.CreatedAt,
 	}
 	logger.Info("staff registered successfully", log.Field{Key: "staffID", Value: staff.ID})
