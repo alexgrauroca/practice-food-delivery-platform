@@ -1,8 +1,0 @@
-description: NotFound
-content:
-  application/json:
-    schema:
-      $ref: './../schemas/responses/ErrorResponse.yaml'
-    examples:
-      internalError:
-        $ref: './../examples/NotFound.yaml'

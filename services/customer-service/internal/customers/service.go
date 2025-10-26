@@ -207,11 +207,6 @@ func (s *service) UpdateCustomer(ctx context.Context, input UpdateCustomerInput)
 		return UpdateCustomerOutput{}, ErrCustomerIDMismatch
 	}
 
-	oldCustomer, err := s.loadCustomerByID(ctx, input.CustomerID)
-	if err != nil {
-		return UpdateCustomerOutput{}, err
-	}
-
 	customer, err := s.repo.UpdateCustomer(ctx, UpdateCustomerParams(input))
 	if err != nil {
 		if errors.Is(err, ErrCustomerNotFound) {
@@ -220,35 +215,6 @@ func (s *service) UpdateCustomer(ctx context.Context, input UpdateCustomerInput)
 		}
 
 		s.logger.Error("failed to update customer", err)
-		return UpdateCustomerOutput{}, err
-	}
-
-	token, ok := s.authctx.GetToken(ctx)
-	// At this stage we should always have an access token, this is just a safeguard.
-	if !ok {
-		return UpdateCustomerOutput{}, authentication.ErrAccessTokenRequired
-	}
-
-	req := authentication.UpdateCustomerRequest{
-		AccessToken: token,
-		CustomerID:  customer.ID,
-		Name:        customer.Name,
-	}
-	if _, err := s.authcli.UpdateCustomer(ctx, req); err != nil {
-		s.logger.Error("failed to update customer at auth service", err)
-
-		// Roll back the updated customer in case of error when updating the customer at auth service.
-		_, err2 := s.repo.UpdateCustomer(ctx, UpdateCustomerParams{
-			CustomerID:  customer.ID,
-			Name:        oldCustomer.Name,
-			Address:     oldCustomer.Address,
-			City:        oldCustomer.City,
-			PostalCode:  oldCustomer.PostalCode,
-			CountryCode: oldCustomer.CountryCode,
-		})
-		if err2 != nil {
-			s.logger.Error("failed to update customer", err2)
-		}
 		return UpdateCustomerOutput{}, err
 	}
 

@@ -63,7 +63,6 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 	authRouter := router.Group("/v1.0/auth")
 	{
 		authRouter.POST("/customers", h.RegisterCustomer)
-		authRouter.PUT("/customers/:customerID", h.authMiddleware.RequireCustomer(), h.UpdateCustomer)
 	}
 
 	// Existing routes remain for backward compatibility
@@ -221,67 +220,5 @@ func (h *Handler) RefreshCustomer(c *gin.Context) {
 
 	resp := RefreshCustomerResponse{TokenPairResponse: TokenPairResponse(output.TokenPair)}
 	logger.Info("Customer refreshed successfully")
-	c.JSON(http.StatusOK, resp)
-}
-
-// UpdateCustomerRequest represents the request payload for updating an existing customer's information.
-type UpdateCustomerRequest struct {
-	Name string `json:"name" binding:"required,max=100"`
-}
-
-// UpdateCustomerResponse represents the response returned after successfully updating a customer's information.
-type UpdateCustomerResponse struct {
-	ID        string    `json:"id"`
-	Name      string    `json:"name"`
-	Email     string    `json:"email"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-}
-
-// UpdateCustomer handles updating an existing customer's information.
-func (h *Handler) UpdateCustomer(c *gin.Context) {
-	ctx := c.Request.Context()
-	logger := h.logger.WithContext(ctx)
-
-	logger.Info("UpdateCustomer handler called")
-
-	customerID := c.Param("customerID")
-
-	var req UpdateCustomerRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Warn("Failed to bind request", log.Field{Key: "error", Value: err.Error()})
-		errResp := customhttp.GetErrorResponseFromValidationErr(err)
-		c.JSON(http.StatusBadRequest, errResp)
-		return
-	}
-
-	input := UpdateCustomerInput{
-		CustomerID: customerID,
-		Name:       req.Name,
-	}
-
-	output, err := h.service.UpdateCustomer(ctx, input)
-	if err != nil {
-		if errors.Is(err, ErrCustomerNotFound) {
-			logger.Warn("Customer not found", log.Field{Key: "customerID", Value: customerID})
-			c.JSON(http.StatusNotFound, customhttp.NewErrorResponse(customhttp.CodeNotFound, customhttp.MsgNotFound))
-			return
-		}
-		if errors.Is(err, ErrCustomerIDMismatch) {
-			logger.Warn("Customer CustomerID mismatch with the token", log.Field{Key: "customerID", Value: customerID})
-			errResp := customhttp.NewErrorResponse(auth.CodeForbiddenError, auth.MessageForbiddenError)
-			c.JSON(http.StatusForbidden, errResp)
-			return
-		}
-		logger.Error("Failed to update customer", err)
-		c.JSON(http.StatusInternalServerError, customhttp.NewErrorResponse(
-			customhttp.CodeInternalError,
-			customhttp.MsgInternalError,
-		))
-		return
-	}
-
-	resp := UpdateCustomerResponse(output)
-	logger.Info("Customer updated successfully", log.Field{Key: "customer", Value: resp})
 	c.JSON(http.StatusOK, resp)
 }
