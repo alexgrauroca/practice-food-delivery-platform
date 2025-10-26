@@ -15,6 +15,8 @@ import (
 	authmocks "github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth/mocks"
 	customhttp "github.com/alexgrauroca/practice-food-delivery-platform/pkg/http"
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/authcore"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/staff"
 	staffmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/staff/mocks"
 )
@@ -160,6 +162,122 @@ func TestHandler_RegisterStaff(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			runStaffHandlerTestCase(t, logger, http.MethodPost, "/v1.0/auth/staff", tt, "")
+		})
+	}
+}
+
+func TestHandler_LoginStaff(t *testing.T) {
+	logger := customhttp.SetupTestEnv()
+
+	tests := []staffHandlerTestCase{
+		{
+			name:        "when invalid payload is provided, then it should return a 400 with invalid request error",
+			jsonPayload: `{"name": 1.2, "email": true}`,
+			wantJSON: `{
+				"code": "INVALID_REQUEST",
+				"message": "invalid request",
+				"details": []
+			}`,
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name:        "when empty payload is provided, then it should return a 400 with the validation error",
+			jsonPayload: `{}`,
+			wantJSON: `{
+				"code": "VALIDATION_ERROR",
+				"message": "validation failed",
+				"details": [
+					"email is required",
+					"password is required"
+				]
+			}`,
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name:        "when invalid email is provided, then it should return a 400 with the email validation error",
+			jsonPayload: `{"email": "invalid-email", "password": "ValidPassword123"}`,
+			wantJSON: `{
+				"code": "VALIDATION_ERROR",
+				"message": "validation failed",
+				"details": [
+					"email must be a valid email address"
+				]
+			}`,
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name:        "when invalid password is provided, then it should return a 400 with the pwd validation error",
+			jsonPayload: `{"email":"test@example.com", "password": "short"}`,
+			wantJSON: `{
+				"code": "VALIDATION_ERROR",
+				"message": "validation failed",
+				"details": [
+					"password must be a valid password with at least 8 characters long"
+				]
+			}`,
+			wantStatus: http.StatusBadRequest,
+		},
+
+		{
+			name: "when there is not an active staff with the same email and password, " +
+				"then it should return a 401 with invalid credentials error",
+			jsonPayload: `{"email": "test@example.com", "password": "ValidPassword123"}`,
+			mocksSetup: func(service *staffmocks.MockService, _ *authmocks.MockService) {
+				service.EXPECT().LoginStaff(gomock.Any(), gomock.Any()).
+					Return(staff.LoginStaffOutput{}, authcore.ErrInvalidCredentials)
+			},
+			wantJSON: `{
+				"code": "INVALID_CREDENTIALS",
+				"message": "invalid credentials",
+				"details": []
+			}`,
+			wantStatus: http.StatusUnauthorized,
+		},
+		{
+			name: "when unexpected error when login the staff, " +
+				"then it should return a 500 with the internal error",
+			jsonPayload: `{"email": "test@example.com", "password": "ValidPassword123"}`,
+			mocksSetup: func(service *staffmocks.MockService, _ *authmocks.MockService) {
+				service.EXPECT().LoginStaff(gomock.Any(), gomock.Any()).
+					Return(staff.LoginStaffOutput{}, errUnexpected)
+			},
+			wantJSON: `{
+				"code": "INTERNAL_ERROR",
+				"message": "an unexpected error occurred",
+				"details": []
+			}`,
+			wantStatus: http.StatusInternalServerError,
+		},
+		{
+			name: "when an active staff has the same email and password, " +
+				"then it should return a 200 with the token",
+			jsonPayload: `{"email": "test@example.com", "password": "ValidPassword123"}`,
+			mocksSetup: func(service *staffmocks.MockService, _ *authmocks.MockService) {
+				service.EXPECT().LoginStaff(gomock.Any(), staff.LoginStaffInput{
+					Email:    "test@example.com",
+					Password: "ValidPassword123",
+				}).Return(staff.LoginStaffOutput{
+					TokenPair: authcore.TokenPair{
+						AccessToken:  "fake-token",
+						RefreshToken: "fake-refresh-token",
+						ExpiresIn:    customers.DefaultTokenExpiration,
+						TokenType:    auth.DefaultTokenType,
+					},
+				}, nil)
+			},
+			wantJSON: `{
+			  "access_token": "fake-token",
+			  "refresh_token": "fake-refresh-token",
+			  "expires_in": 3600,
+			  "token_type": "Bearer"
+			}`,
+			wantStatus: http.StatusOK,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			runStaffHandlerTestCase(t, logger, http.MethodPost, "/v1.0/staff/login", tt, "")
 		})
 	}
 }

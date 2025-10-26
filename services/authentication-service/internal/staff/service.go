@@ -6,6 +6,7 @@ import (
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth"
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/authcore"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/password"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/refresh"
 )
@@ -15,6 +16,7 @@ import (
 //go:generate mockgen -destination=./mocks/service_mock.go -package=staff_mocks github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/staff Service
 type Service interface {
 	RegisterStaff(ctx context.Context, input RegisterStaffInput) (RegisterStaffOutput, error)
+	LoginStaff(ctx context.Context, input LoginStaffInput) (LoginStaffOutput, error)
 }
 
 type service struct {
@@ -85,4 +87,19 @@ func (s *service) RegisterStaff(ctx context.Context, input RegisterStaffInput) (
 	}
 	logger.Info("staff registered successfully", log.Field{Key: "staffID", Value: staff.ID})
 	return output, nil
+}
+
+// LoginStaffInput represents the input required for the staff user login process.
+type LoginStaffInput struct {
+	Email    string
+	Password string
+}
+
+// LoginStaffOutput represents the output returned upon successful login of a staff user.
+type LoginStaffOutput struct {
+	authcore.TokenPair
+}
+
+func (s *service) LoginStaff(ctx context.Context, input LoginStaffInput) (LoginStaffOutput, error) {
+	panic("implement me")
 }

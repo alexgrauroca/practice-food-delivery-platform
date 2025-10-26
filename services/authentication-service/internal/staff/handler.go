@@ -10,6 +10,7 @@ import (
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth"
 	customhttp "github.com/alexgrauroca/practice-food-delivery-platform/pkg/http"
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/authcore"
 )
 
 const (
@@ -41,6 +42,8 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 	{
 		authRouter.POST("/staff", h.RegisterStaff)
 	}
+
+	router.POST("/v1.0/staff/login", h.LoginStaff)
 }
 
 // RegisterStaffRequest represents the request payload for registering a new staff user.
@@ -92,4 +95,54 @@ func (h *Handler) RegisterStaff(c *gin.Context) {
 	resp := RegisterStaffResponse(output)
 	logger.Info("Staff registered successfully", log.Field{Key: "staff", Value: resp})
 	c.JSON(http.StatusCreated, resp)
+}
+
+// LoginStaffRequest represents the request payload for logging in a staff user.
+type LoginStaffRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required,min=8"`
+}
+
+// LoginStaffResponse represents the response payload for a successful staff user login.
+type LoginStaffResponse struct {
+	authcore.TokenPairResponse
+}
+
+// LoginStaff processes the login request for a staff user using credentials provided in JSON format.
+func (h *Handler) LoginStaff(c *gin.Context) {
+	ctx := c.Request.Context()
+	logger := h.logger.WithContext(ctx)
+
+	logger.Info("LoginStaff handler called")
+
+	var req LoginStaffRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Warn("Failed to bind request", log.Field{Key: "error", Value: err.Error()})
+		errResp := customhttp.GetErrorResponseFromValidationErr(err)
+		c.JSON(http.StatusBadRequest, errResp)
+		return
+	}
+
+	input := LoginStaffInput(req)
+	output, err := h.service.LoginStaff(ctx, input)
+	if err != nil {
+		if errors.Is(err, authcore.ErrInvalidCredentials) {
+			logger.Warn("Invalid credentials provided", log.Field{Key: "email", Value: req.Email})
+			c.JSON(http.StatusUnauthorized, customhttp.NewErrorResponse(
+				authcore.CodeInvalidCredentials,
+				authcore.MsgInvalidCredentials,
+			))
+			return
+		}
+		logger.Error("Failed to login staff user", err)
+		c.JSON(http.StatusInternalServerError, customhttp.NewErrorResponse(
+			customhttp.CodeInternalError,
+			customhttp.MsgInternalError,
+		))
+		return
+	}
+
+	resp := LoginStaffResponse{TokenPairResponse: authcore.TokenPairResponse(output.TokenPair)}
+	logger.Info("Staff logged in successfully")
+	c.JSON(http.StatusOK, resp)
 }

@@ -14,6 +14,7 @@ import (
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth"
 	authmocks "github.com/alexgrauroca/practice-food-delivery-platform/pkg/auth/mocks"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/authcore"
 	customersmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers/mocks"
 
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
@@ -168,7 +169,7 @@ func TestService_LoginCustomer(t *testing.T) {
 					Return(customers.Customer{}, customers.ErrCustomerNotFound)
 			},
 			want:    customers.LoginCustomerOutput{},
-			wantErr: customers.ErrInvalidCredentials,
+			wantErr: authcore.ErrInvalidCredentials,
 		},
 		{
 			name: "when there is not an active customer with the same password, " +
@@ -197,7 +198,7 @@ func TestService_LoginCustomer(t *testing.T) {
 					}, nil)
 			},
 			want:    customers.LoginCustomerOutput{},
-			wantErr: customers.ErrInvalidCredentials,
+			wantErr: authcore.ErrInvalidCredentials,
 		},
 		{
 			name: "when there is an unexpected error when fetching the customer, then it should propagate the error",
@@ -317,7 +318,7 @@ func TestService_LoginCustomer(t *testing.T) {
 				}).Return(refresh.GenerateTokenOutput{Token: "fake-refresh-token"}, nil)
 			},
 			want: customers.LoginCustomerOutput{
-				TokenPair: customers.TokenPair{
+				TokenPair: authcore.TokenPair{
 					AccessToken:  "fake-token",
 					ExpiresIn:    3600, // 1 hour
 					TokenType:    "Bearer",
@@ -623,7 +624,7 @@ func TestService_RefreshCustomer(t *testing.T) {
 				}).Return(refresh.ExpireOutput{}, refresh.ErrRefreshTokenNotFound)
 			},
 			want: customers.RefreshCustomerOutput{
-				TokenPair: customers.TokenPair{
+				TokenPair: authcore.TokenPair{
 					AccessToken:  "fake-token",
 					RefreshToken: "fake-refresh-token",
 					ExpiresIn:    3600,
@@ -671,7 +672,7 @@ func TestService_RefreshCustomer(t *testing.T) {
 				}).Return(refresh.ExpireOutput{}, nil)
 			},
 			want: customers.RefreshCustomerOutput{
-				TokenPair: customers.TokenPair{
+				TokenPair: authcore.TokenPair{
 					AccessToken:  "fake-token",
 					RefreshToken: "fake-refresh-token",
 					ExpiresIn:    3600,
