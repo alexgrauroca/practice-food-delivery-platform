@@ -5,6 +5,7 @@ All URIs are relative to *http://localhost:80*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**LoginStaff**](StaffAPI.md#LoginStaff) | **Post** /v1.0/staff/login | Login as staff user
+[**RefreshStaff**](StaffAPI.md#RefreshStaff) | **Post** /v1.0/staff/refresh | Refresh access token
 [**RegisterStaff**](StaffAPI.md#RegisterStaff) | **Post** /v1.0/auth/staff | Register a new staff user
 
 
@@ -60,6 +61,72 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**LoginResponse**](LoginResponse.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## RefreshStaff
+
+> RefreshResponse RefreshStaff(ctx).RefreshRequest(refreshRequest).Execute()
+
+Refresh access token
+
+
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	openapiclient "github.com/alexgrauroca/practice-food-delivery-platform/authclient"
+)
+
+func main() {
+	refreshRequest := *openapiclient.NewRefreshRequest("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...", "dGhpc2lzYXJlZnJlc2h0b2tlbg==") // RefreshRequest | 
+
+	configuration := openapiclient.NewConfiguration()
+	apiClient := openapiclient.NewAPIClient(configuration)
+	resp, r, err := apiClient.StaffAPI.RefreshStaff(context.Background()).RefreshRequest(refreshRequest).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error when calling `StaffAPI.RefreshStaff``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+	// response from `RefreshStaff`: RefreshResponse
+	fmt.Fprintf(os.Stdout, "Response from `StaffAPI.RefreshStaff`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiRefreshStaffRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **refreshRequest** | [**RefreshRequest**](RefreshRequest.md) |  | 
+
+### Return type
+
+[**RefreshResponse**](RefreshResponse.md)
 
 ### Authorization
 

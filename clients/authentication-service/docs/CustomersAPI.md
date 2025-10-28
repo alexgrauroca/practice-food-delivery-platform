@@ -78,7 +78,7 @@ No authorization required
 
 ## RefreshCustomer
 
-> RefreshCustomerResponse RefreshCustomer(ctx).RefreshCustomerRequest(refreshCustomerRequest).Execute()
+> RefreshResponse RefreshCustomer(ctx).RefreshRequest(refreshRequest).Execute()
 
 Refresh access token
 
@@ -97,16 +97,16 @@ import (
 )
 
 func main() {
-	refreshCustomerRequest := *openapiclient.NewRefreshCustomerRequest("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...", "dGhpc2lzYXJlZnJlc2h0b2tlbg==") // RefreshCustomerRequest | 
+	refreshRequest := *openapiclient.NewRefreshRequest("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...", "dGhpc2lzYXJlZnJlc2h0b2tlbg==") // RefreshRequest | 
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)
-	resp, r, err := apiClient.CustomersAPI.RefreshCustomer(context.Background()).RefreshCustomerRequest(refreshCustomerRequest).Execute()
+	resp, r, err := apiClient.CustomersAPI.RefreshCustomer(context.Background()).RefreshRequest(refreshRequest).Execute()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error when calling `CustomersAPI.RefreshCustomer``: %v\n", err)
 		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
 	}
-	// response from `RefreshCustomer`: RefreshCustomerResponse
+	// response from `RefreshCustomer`: RefreshResponse
 	fmt.Fprintf(os.Stdout, "Response from `CustomersAPI.RefreshCustomer`: %v\n", resp)
 }
 ```
@@ -122,11 +122,11 @@ Other parameters are passed through a pointer to a apiRefreshCustomerRequest str
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **refreshCustomerRequest** | [**RefreshCustomerRequest**](RefreshCustomerRequest.md) |  | 
+ **refreshRequest** | [**RefreshRequest**](RefreshRequest.md) |  | 
 
 ### Return type
 
-[**RefreshCustomerResponse**](RefreshCustomerResponse.md)
+[**RefreshResponse**](RefreshResponse.md)
 
 ### Authorization
 

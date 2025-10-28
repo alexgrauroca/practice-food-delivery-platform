@@ -167,15 +167,15 @@ func (a *CustomersAPIService) LoginCustomerExecute(r ApiLoginCustomerRequest) (*
 type ApiRefreshCustomerRequest struct {
 	ctx context.Context
 	ApiService *CustomersAPIService
-	refreshCustomerRequest *RefreshCustomerRequest
+	refreshRequest *RefreshRequest
 }
 
-func (r ApiRefreshCustomerRequest) RefreshCustomerRequest(refreshCustomerRequest RefreshCustomerRequest) ApiRefreshCustomerRequest {
-	r.refreshCustomerRequest = &refreshCustomerRequest
+func (r ApiRefreshCustomerRequest) RefreshRequest(refreshRequest RefreshRequest) ApiRefreshCustomerRequest {
+	r.refreshRequest = &refreshRequest
 	return r
 }
 
-func (r ApiRefreshCustomerRequest) Execute() (*RefreshCustomerResponse, *http.Response, error) {
+func (r ApiRefreshCustomerRequest) Execute() (*RefreshResponse, *http.Response, error) {
 	return r.ApiService.RefreshCustomerExecute(r)
 }
 
@@ -195,13 +195,13 @@ func (a *CustomersAPIService) RefreshCustomer(ctx context.Context) ApiRefreshCus
 }
 
 // Execute executes the request
-//  @return RefreshCustomerResponse
-func (a *CustomersAPIService) RefreshCustomerExecute(r ApiRefreshCustomerRequest) (*RefreshCustomerResponse, *http.Response, error) {
+//  @return RefreshResponse
+func (a *CustomersAPIService) RefreshCustomerExecute(r ApiRefreshCustomerRequest) (*RefreshResponse, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodPost
 		localVarPostBody     interface{}
 		formFiles            []formFile
-		localVarReturnValue  *RefreshCustomerResponse
+		localVarReturnValue  *RefreshResponse
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "CustomersAPIService.RefreshCustomer")
@@ -214,8 +214,8 @@ func (a *CustomersAPIService) RefreshCustomerExecute(r ApiRefreshCustomerRequest
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
-	if r.refreshCustomerRequest == nil {
-		return localVarReturnValue, nil, reportError("refreshCustomerRequest is required and must be specified")
+	if r.refreshRequest == nil {
+		return localVarReturnValue, nil, reportError("refreshRequest is required and must be specified")
 	}
 
 	// to determine the Content-Type header
@@ -236,7 +236,7 @@ func (a *CustomersAPIService) RefreshCustomerExecute(r ApiRefreshCustomerRequest
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	// body params
-	localVarPostBody = r.refreshCustomerRequest
+	localVarPostBody = r.refreshRequest
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
 	if err != nil {
 		return localVarReturnValue, nil, err
