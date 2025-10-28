@@ -1,9 +1,9 @@
 post:
   summary: Refresh access token
   description: Generates a new access token using a valid refresh token
-  operationId: refreshCustomer
+  operationId: refreshStaff
   tags:
-    - Customers
+    - Staff
   security: []
   requestBody:
     required: true

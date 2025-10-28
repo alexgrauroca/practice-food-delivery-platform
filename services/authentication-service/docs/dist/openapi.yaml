@@ -85,14 +85,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RefreshCustomerRequest'
+              $ref: '#/components/schemas/RefreshRequest'
       responses:
         '200':
           description: New access token generated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RefreshCustomerResponse'
+                $ref: '#/components/schemas/RefreshResponse'
         '400':
           description: Invalid input or validation error
           content:
@@ -229,6 +229,64 @@ paths:
               examples:
                 invalidCredentials:
                   $ref: '#/components/examples/InvalidCredentials'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /v1.0/staff/refresh:
+    post:
+      summary: Refresh access token
+      description: Generates a new access token using a valid refresh token
+      operationId: refreshStaff
+      tags:
+        - Staff
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: New access token generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshResponse'
+        '400':
+          description: Invalid input or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidRequest:
+                  $ref: '#/components/examples/InvalidRequest'
+                validationError:
+                  summary: Validation error
+                  value:
+                    code: VALIDATION_ERROR
+                    message: validation failed
+                    details:
+                      - access_token is required
+                      - refresh_token is required
+        '401':
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidRefreshToken:
+                  $ref: '#/components/examples/InvalidRefreshToken'
+        '403':
+          description: Token mismatch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                tokenMismatch:
+                  $ref: '#/components/examples/TokenMismatch'
         '500':
           $ref: '#/components/responses/InternalError'
   /v1.0/auth/staff:
@@ -400,7 +458,7 @@ components:
           example:
             - email is required
             - password is required
-    RefreshCustomerRequest:
+    RefreshRequest:
       type: object
       required:
         - access_token
@@ -416,7 +474,7 @@ components:
           description: The refresh token to use
           example: dGhpc2lzYXJlZnJlc2h0b2tlbg==
           minLength: 1
-    RefreshCustomerResponse:
+    RefreshResponse:
       type: object
       required:
         - access_token
