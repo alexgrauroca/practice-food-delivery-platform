@@ -2,8 +2,10 @@ package staff
 
 import (
 	"context"
+	"errors"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
@@ -89,5 +91,21 @@ func (r *repository) CreateStaff(ctx context.Context, params CreateStaffParams) 
 }
 
 func (r *repository) FindByEmail(ctx context.Context, email string) (Staff, error) {
-	panic("implement me")
+	logger := r.logger.WithContext(ctx)
+
+	var staff Staff
+	filter := bson.M{
+		FieldEmail:  email,
+		FieldActive: true,
+	}
+
+	if err := r.collection.FindOne(ctx, filter).Decode(&staff); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			logger.Warn("Staff not found", log.Field{Key: "email", Value: email})
+			return Staff{}, ErrStaffNotFound
+		}
+		logger.Error("Failed to find staff", err)
+		return Staff{}, err
+	}
+	return staff, nil
 }
