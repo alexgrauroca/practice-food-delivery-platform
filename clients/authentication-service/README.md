@@ -86,6 +86,7 @@ Class | Method | HTTP request | Description
 *CustomersAPI* | [**RefreshCustomer**](docs/CustomersAPI.md#refreshcustomer) | **Post** /v1.0/customers/refresh | Refresh access token
 *CustomersAPI* | [**RegisterCustomer**](docs/CustomersAPI.md#registercustomer) | **Post** /v1.0/auth/customers | Register a new customer
 *StaffAPI* | [**LoginStaff**](docs/StaffAPI.md#loginstaff) | **Post** /v1.0/staff/login | Login as staff user
+*StaffAPI* | [**RefreshStaff**](docs/StaffAPI.md#refreshstaff) | **Post** /v1.0/staff/refresh | Refresh access token
 *StaffAPI* | [**RegisterStaff**](docs/StaffAPI.md#registerstaff) | **Post** /v1.0/auth/staff | Register a new staff user
 
 
@@ -94,8 +95,8 @@ Class | Method | HTTP request | Description
  - [ErrorResponse](docs/ErrorResponse.md)
  - [LoginRequest](docs/LoginRequest.md)
  - [LoginResponse](docs/LoginResponse.md)
- - [RefreshCustomerRequest](docs/RefreshCustomerRequest.md)
- - [RefreshCustomerResponse](docs/RefreshCustomerResponse.md)
+ - [RefreshRequest](docs/RefreshRequest.md)
+ - [RefreshResponse](docs/RefreshResponse.md)
  - [RegisterCustomerRequest](docs/RegisterCustomerRequest.md)
  - [RegisterCustomerResponse](docs/RegisterCustomerResponse.md)
  - [RegisterStaffRequest](docs/RegisterStaffRequest.md)
