@@ -24,6 +24,7 @@ const (
 	FieldActive = "active"
 )
 
+// Staff represents a user in the system with associated details such as email, name, and account activation status.
 type Staff struct {
 	ID        string    `bson:"_id,omitempty"`
 	StaffID   string    `bson:"staff_id"`
