@@ -16,7 +16,6 @@ import (
 	customhttp "github.com/alexgrauroca/practice-food-delivery-platform/pkg/http"
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/authcore"
-	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/customers"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/staff"
 	staffmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/staff/mocks"
 )
@@ -260,7 +259,7 @@ func TestHandler_LoginStaff(t *testing.T) {
 					TokenPair: authcore.TokenPair{
 						AccessToken:  "fake-token",
 						RefreshToken: "fake-refresh-token",
-						ExpiresIn:    customers.DefaultTokenExpiration,
+						ExpiresIn:    staff.DefaultTokenExpiration,
 						TokenType:    auth.DefaultTokenType,
 					},
 				}, nil)
@@ -278,6 +277,111 @@ func TestHandler_LoginStaff(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			runStaffHandlerTestCase(t, logger, http.MethodPost, "/v1.0/staff/login", tt, "")
+		})
+	}
+}
+
+func TestHandler_RefreshStaff(t *testing.T) {
+	logger := customhttp.SetupTestEnv()
+
+	tests := []staffHandlerTestCase{
+		{
+			name:        "when invalid payload is provided, then it should return a 400 with invalid request error",
+			jsonPayload: `{"access_token": 1.2, "refresh_token": true}`,
+			wantJSON: `{
+				"code": "INVALID_REQUEST",
+				"message": "invalid request",
+				"details": []
+			}`,
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name:        "when empty payload is provided, then it should return a 400 with the validation error",
+			jsonPayload: `{}`,
+			wantJSON: `{
+				"code": "VALIDATION_ERROR",
+				"message": "validation failed",
+				"details": [
+					"refresh_token is required",
+					"access_token is required"
+				]
+			}`,
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name: "when invalid refresh token provided, " +
+				"then it should return a 401 with the invalid refresh token error",
+			jsonPayload: `{"access_token": "valid-access-token", "refresh_token": "invalid-refresh-token"}`,
+			mocksSetup: func(service *staffmocks.MockService, _ *authmocks.MockService) {
+				service.EXPECT().RefreshStaff(gomock.Any(), gomock.Any()).
+					Return(staff.RefreshStaffOutput{}, authcore.ErrInvalidRefreshToken)
+			},
+			wantJSON: `{
+				"code": "INVALID_REFRESH_TOKEN",
+				"message": "invalid or expired refresh token",
+				"details": []
+			}`,
+			wantStatus: http.StatusUnauthorized,
+		},
+		{
+			name: "when there is a token mismatch between the access token and the refresh token, " +
+				"then it should return a 403 with the token mismatch error",
+			jsonPayload: `{"access_token": "invalid-access-token", "refresh_token": "valid-refresh-token"}`,
+			mocksSetup: func(service *staffmocks.MockService, _ *authmocks.MockService) {
+				service.EXPECT().RefreshStaff(gomock.Any(), gomock.Any()).
+					Return(staff.RefreshStaffOutput{}, authcore.ErrTokenMismatch)
+			},
+			wantJSON: `{
+				"code": "TOKEN_MISMATCH",
+				"message": "token mismatch",
+				"details": []
+			}`,
+			wantStatus: http.StatusForbidden,
+		},
+		{
+			name: "when unexpected error when refreshing the customer token, " +
+				"then it should return a 500 with the internal error",
+			jsonPayload: `{"access_token": "valid-access-token", "refresh_token": "valid-refresh-token"}`,
+			mocksSetup: func(service *staffmocks.MockService, _ *authmocks.MockService) {
+				service.EXPECT().RefreshStaff(gomock.Any(), gomock.Any()).
+					Return(staff.RefreshStaffOutput{}, errUnexpected)
+			},
+			wantJSON: `{
+				"code": "INTERNAL_ERROR",
+				"message": "an unexpected error occurred",
+				"details": []
+			}`,
+			wantStatus: http.StatusInternalServerError,
+		},
+		{
+			name:        "when the customer token is refreshed, then it should return a 200 with the new token",
+			jsonPayload: `{"access_token": "valid-access-token", "refresh_token": "valid-refresh-token"}`,
+			mocksSetup: func(service *staffmocks.MockService, _ *authmocks.MockService) {
+				service.EXPECT().RefreshStaff(gomock.Any(), staff.RefreshStaffInput{
+					AccessToken:  "valid-access-token",
+					RefreshToken: "valid-refresh-token",
+				}).Return(staff.RefreshStaffOutput{
+					TokenPair: authcore.TokenPair{
+						AccessToken:  "fake-token",
+						RefreshToken: "fake-refresh-token",
+						ExpiresIn:    staff.DefaultTokenExpiration,
+						TokenType:    auth.DefaultTokenType,
+					},
+				}, nil)
+			},
+			wantJSON: `{
+			  "access_token": "fake-token",
+			  "refresh_token": "fake-refresh-token",
+			  "expires_in": 3600,
+			  "token_type": "Bearer"
+			}`,
+			wantStatus: http.StatusOK,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			runStaffHandlerTestCase(t, logger, http.MethodPost, "/v1.0/staff/refresh", tt, "")
 		})
 	}
 }
