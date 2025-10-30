@@ -44,7 +44,7 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 	}
 
 	router.POST("/v1.0/staff/login", h.LoginStaff)
-	router.POST("v1.0/staff/refresh", h.RefreshStaff)
+	router.POST("/v1.0/staff/refresh", h.RefreshStaff)
 }
 
 // RegisterStaffRequest represents the request payload for registering a new staff user.
