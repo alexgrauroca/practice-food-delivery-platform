@@ -147,6 +147,20 @@ type RefreshStaffOutput struct {
 }
 
 func (s *service) RefreshStaff(ctx context.Context, input RefreshStaffInput) (RefreshStaffOutput, error) {
-	//TODO implement me
-	panic("implement me")
+	logger := s.logger.WithContext(ctx)
+
+	logger.Info("refreshing staff token")
+
+	tokenPair, err := s.authCoreService.RefreshToken(ctx, authcore.RefreshTokenInput{
+		RefreshToken: input.RefreshToken,
+		AccessToken:  input.AccessToken,
+		Expiration:   DefaultTokenExpiration,
+		Role:         DefaultTokenRole,
+	})
+	if err != nil {
+		logger.Error("failed to refresh the staff token", err)
+		return RefreshStaffOutput{}, err
+	}
+
+	return RefreshStaffOutput{TokenPair: tokenPair}, nil
 }
