@@ -44,6 +44,7 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 	}
 
 	router.POST("/v1.0/staff/login", h.LoginStaff)
+	router.POST("/v1.0/staff/refresh", h.RefreshStaff)
 }
 
 // RegisterStaffRequest represents the request payload for registering a new staff user.
@@ -144,5 +145,63 @@ func (h *Handler) LoginStaff(c *gin.Context) {
 
 	resp := LoginStaffResponse{TokenPairResponse: authcore.TokenPairResponse(output.TokenPair)}
 	logger.Info("Staff logged in successfully")
+	c.JSON(http.StatusOK, resp)
+}
+
+// RefreshStaffRequest represents a request to refresh staff information using tokens.
+type RefreshStaffRequest struct {
+	RefreshToken string `json:"refresh_token" binding:"required"`
+	AccessToken  string `json:"access_token" binding:"required"`
+}
+
+// RefreshStaffResponse represents the response returned when refreshing a staff's token.
+type RefreshStaffResponse struct {
+	authcore.TokenPairResponse
+}
+
+// RefreshStaff handles the refreshing of a staff's authentication token.
+func (h *Handler) RefreshStaff(c *gin.Context) {
+	ctx := c.Request.Context()
+	logger := h.logger.WithContext(ctx)
+
+	logger.Info("RefreshStaff handler called")
+
+	var req RefreshStaffRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Warn("Failed to bind request", log.Field{Key: "error", Value: err.Error()})
+		errResp := customhttp.GetErrorResponseFromValidationErr(err)
+		c.JSON(http.StatusBadRequest, errResp)
+		return
+	}
+
+	input := RefreshStaffInput(req)
+	output, err := h.service.RefreshStaff(c.Request.Context(), input)
+	if err != nil {
+		if errors.Is(err, authcore.ErrInvalidRefreshToken) {
+			logger.Warn("Invalid refresh token provided")
+			c.JSON(http.StatusUnauthorized, customhttp.NewErrorResponse(
+				authcore.CodeInvalidRefreshToken,
+				authcore.MsgInvalidRefreshToken,
+			))
+			return
+		} else if errors.Is(err, authcore.ErrTokenMismatch) {
+			logger.Warn("Token mismatch")
+			c.JSON(http.StatusForbidden, customhttp.NewErrorResponse(
+				authcore.CodeTokenMismatch,
+				authcore.MsgTokenMismatch,
+			))
+			return
+		}
+
+		logger.Error("Failed to refresh staff", err)
+		c.JSON(http.StatusInternalServerError, customhttp.NewErrorResponse(
+			customhttp.CodeInternalError,
+			customhttp.MsgInternalError,
+		))
+		return
+	}
+
+	resp := RefreshStaffResponse{TokenPairResponse: authcore.TokenPairResponse(output.TokenPair)}
+	logger.Info("Staff refreshed successfully")
 	c.JSON(http.StatusOK, resp)
 }

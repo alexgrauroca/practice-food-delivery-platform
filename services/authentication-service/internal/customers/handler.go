@@ -18,16 +18,6 @@ const (
 	CodeCustomerAlreadyExists = "CUSTOMER_ALREADY_EXISTS"
 	// MsgCustomerAlreadyExists represents the error message indicating that the customer already exists in the system.
 	MsgCustomerAlreadyExists = "customer already exists"
-
-	// CodeInvalidRefreshToken represents the error code for an invalid or expired refresh token used in authentication processes.
-	CodeInvalidRefreshToken = "INVALID_REFRESH_TOKEN"
-	// MsgInvalidRefreshToken represents an error message indicating an invalid or expired refresh token.
-	MsgInvalidRefreshToken = "invalid or expired refresh token"
-
-	// CodeTokenMismatch represents an error code indicating a mismatch between the provided token and the expected value.
-	CodeTokenMismatch = "TOKEN_MISMATCH"
-	// MsgTokenMismatch represents the error message for a token mismatch scenario.
-	MsgTokenMismatch = "token mismatch"
 )
 
 // Handler manages HTTP requests for auth-customer-related operations.
@@ -189,11 +179,17 @@ func (h *Handler) RefreshCustomer(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, authcore.ErrInvalidRefreshToken) {
 			logger.Warn("Invalid refresh token provided")
-			c.JSON(http.StatusUnauthorized, customhttp.NewErrorResponse(CodeInvalidRefreshToken, MsgInvalidRefreshToken))
+			c.JSON(http.StatusUnauthorized, customhttp.NewErrorResponse(
+				authcore.CodeInvalidRefreshToken,
+				authcore.MsgInvalidRefreshToken,
+			))
 			return
 		} else if errors.Is(err, authcore.ErrTokenMismatch) {
 			logger.Warn("Token mismatch")
-			c.JSON(http.StatusForbidden, customhttp.NewErrorResponse(CodeTokenMismatch, MsgTokenMismatch))
+			c.JSON(http.StatusForbidden, customhttp.NewErrorResponse(
+				authcore.CodeTokenMismatch,
+				authcore.MsgTokenMismatch,
+			))
 			return
 		}
 

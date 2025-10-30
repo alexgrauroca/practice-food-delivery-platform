@@ -24,6 +24,7 @@ const (
 type Service interface {
 	RegisterStaff(ctx context.Context, input RegisterStaffInput) (RegisterStaffOutput, error)
 	LoginStaff(ctx context.Context, input LoginStaffInput) (LoginStaffOutput, error)
+	RefreshStaff(ctx context.Context, input RefreshStaffInput) (RefreshStaffOutput, error)
 }
 
 type service struct {
@@ -132,4 +133,20 @@ func (s *service) LoginStaff(ctx context.Context, input LoginStaffInput) (LoginS
 	}
 
 	return LoginStaffOutput{TokenPair: tokenPair}, nil
+}
+
+// RefreshStaffInput represents the input required to refresh a staff's authentication tokens.
+type RefreshStaffInput struct {
+	RefreshToken string
+	AccessToken  string
+}
+
+// RefreshStaffOutput wraps the response of a successful staff token refresh operation.
+type RefreshStaffOutput struct {
+	authcore.TokenPair
+}
+
+func (s *service) RefreshStaff(ctx context.Context, input RefreshStaffInput) (RefreshStaffOutput, error) {
+	//TODO implement me
+	panic("implement me")
 }
