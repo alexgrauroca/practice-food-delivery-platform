@@ -276,6 +276,68 @@ func TestService_LoginStaff(t *testing.T) {
 	}
 }
 
+func TestService_RefreshStaff(t *testing.T) {
+	logger, _ := log.NewTest()
+
+	tests := []staffServiceTestCase[staff.RefreshStaffInput, staff.RefreshStaffOutput]{
+		{
+			name: "when there is an error refreshing the token, then it should propagate the error",
+			input: staff.RefreshStaffInput{
+				RefreshToken: "InvalidRefreshToken",
+				AccessToken:  "ValidAccessToken",
+			},
+			mocksSetup: func(
+				_ *staffmocks.MockRepository,
+				authCoreService *authcoremocks.MockService,
+			) {
+				authCoreService.EXPECT().RefreshToken(gomock.Any(), gomock.Any()).
+					Return(authcore.TokenPair{}, errToken)
+			},
+			want:    staff.RefreshStaffOutput{},
+			wantErr: errToken,
+		},
+		{
+			name: "when the new access token is generated correctly, then it should return the new token",
+			input: staff.RefreshStaffInput{
+				RefreshToken: "ValidRefreshToken",
+				AccessToken:  "ValidAccessToken",
+			},
+			mocksSetup: func(
+				_ *staffmocks.MockRepository,
+				authCoreService *authcoremocks.MockService,
+			) {
+				authCoreService.EXPECT().RefreshToken(gomock.Any(), gomock.Any()).
+					Return(authcore.TokenPair{
+						AccessToken:  "fake-token",
+						RefreshToken: "fake-refresh-token",
+						ExpiresIn:    3600,
+						TokenType:    "Bearer",
+					}, nil)
+			},
+			want: staff.RefreshStaffOutput{
+				TokenPair: authcore.TokenPair{
+					AccessToken:  "fake-token",
+					RefreshToken: "fake-refresh-token",
+					ExpiresIn:    3600,
+					TokenType:    "Bearer",
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			service, cleanup := serviceSetup(t, logger, tt.mocksSetup)
+			defer cleanup()
+
+			got, err := service.RefreshStaff(context.Background(), tt.input)
+
+			assert.ErrorIs(t, err, tt.wantErr)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
 func serviceSetup(t *testing.T, logger log.Logger, mocksSetup func(
 	repo *staffmocks.MockRepository,
 	authCoreService *authcoremocks.MockService,
