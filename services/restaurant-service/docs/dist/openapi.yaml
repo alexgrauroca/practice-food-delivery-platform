@@ -157,7 +157,7 @@ components:
           minLength: 1
           maxLength: 4
           description: E.164 country/area prefix, leading '+' required
-          example: 1
+          example: '+1'
           pattern: ^\+\d{1,4}$
         phone_number:
           type: string
