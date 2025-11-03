@@ -11,7 +11,6 @@ properties:
       - legal_name
       - timezone_id
       - contact
-      - address
     properties:
       vat_code:
         type: string

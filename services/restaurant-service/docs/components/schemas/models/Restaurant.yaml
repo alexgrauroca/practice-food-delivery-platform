@@ -5,7 +5,6 @@ required:
   - legal_name
   - timezone_id
   - contact
-  - address
 properties:
   id:
     type: string

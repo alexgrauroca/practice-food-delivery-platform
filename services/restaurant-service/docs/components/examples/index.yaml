@@ -1,12 +1,4 @@
-Forbidden:
-  $ref: './Forbidden.yaml'
 InternalError:
   $ref: './InternalError.yaml'
 InvalidRequest:
   $ref: './InvalidRequest.yaml'
-NotFound:
-  $ref: './NotFound.yaml'
-TokenExpired:
-  $ref: './TokenExpired.yaml'
-Unauthorized:
-  $ref: './Unauthorized.yaml'
