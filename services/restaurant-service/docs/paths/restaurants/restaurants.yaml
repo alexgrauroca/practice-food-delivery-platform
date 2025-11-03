@@ -1,0 +1,42 @@
+post:
+  summary: Register a new restaurant
+  description: Creates a new restaurant with the provided information
+  operationId: registerRestaurant
+  tags:
+    - Customers
+  security: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: './../../components/schemas/requests/RegisterRestaurantRequest.yaml'
+  responses:
+    '201':
+      description: Restaurant registered successfully
+      content:
+        application/json:
+          schema:
+            $ref: './../../components/schemas/responses/RegisterRestaurantResponse.yaml'
+    '400':
+      description: Invalid input or validation error
+      content:
+        application/json:
+          schema:
+            $ref: './../../components/schemas/responses/ErrorResponse.yaml'
+          examples:
+            invalidRequest:
+              $ref: './../../components/examples/InvalidRequest.yaml'
+            validationError:
+              $ref: './../../components/examples/RegisterRestaurantValidationError.yaml'
+    '409':
+      description: Restaurant already exists
+      content:
+        application/json:
+          schema:
+            $ref: './../../components/schemas/responses/ErrorResponse.yaml'
+          examples:
+            customerExists:
+              $ref: './../../components/examples/RestaurantExists.yaml'
+    '500':
+      $ref: './../../components/responses/InternalError.yaml'

@@ -1,0 +1,13 @@
+# Models schemas
+Pagination:
+  $ref: './models/Pagination.yaml'
+
+# Request schemas
+RegisterRestaurantRequest:
+  $ref: './requests/RegisterRestaurantRequest.yaml'
+
+# Response schemas
+ErrorResponse:
+  $ref: './responses/ErrorResponse.yaml'
+RegisterRestaurantResponse:
+  $ref: './responses/RegisterRestaurantResponse.yaml'

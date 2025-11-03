@@ -1,0 +1,53 @@
+type: object
+required:
+  - email
+  - password
+  - name
+  - address
+  - city
+  - postal_code
+  - country_code
+properties:
+  email:
+    type: string
+    format: email
+    pattern: '^[\w\.-]+@[\w\.-]+\.\w{2,}$'
+    description: Customer's email address
+    example: user@example.com
+  password:
+    type: string
+    format: password
+    minLength: 8
+    description: Password must be at least 8 characters long
+    example: strongpassword123
+    writeOnly: true
+  name:
+    type: string
+    minLength: 1
+    maxLength: 100
+    description: Customer's full name
+    example: John Doe
+  address:
+    type: string
+    minLength: 1
+    maxLength: 100
+    description: Customer's address
+    example: 123 Main St
+  city:
+    type: string
+    minLength: 1
+    maxLength: 100
+    description: Customer's city
+    example: New York
+  postal_code:
+    type: string
+    minLength: 5
+    maxLength: 32
+    description: Customer's postal code
+    example: 10001
+  country_code:
+    type: string
+    minLength: 2
+    maxLength: 2
+    description: Customer's country code in ISO 3166-1 alpha-2 format
+    example: US
