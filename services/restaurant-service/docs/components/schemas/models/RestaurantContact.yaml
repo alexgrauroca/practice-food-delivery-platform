@@ -1,0 +1,54 @@
+type: object
+required:
+  - phone_prefix
+  - phone_number
+  - email
+  - address
+  - city
+  - postal_code
+  - country_code
+properties:
+  phone_prefix:
+    type: string
+    minLength: 1
+    maxLength: 4
+    description: E.164 country/area prefix, leading '+' required
+    example: +1
+    pattern: '^\+\d{1,4}$'
+  phone_number:
+    type: string
+    minLength: 4
+    maxLength: 14
+    description: Restaurant's phone number
+    example: 1234567890
+    pattern: '^\d{4,14}$'
+  email:
+    type: string
+    format: email
+    pattern: '^[\w\.-]+@[\w\.-]+\.\w{2,}$'
+    description: Restaurant's email address
+    example: restaurant@example.com
+  address:
+    type: string
+    minLength: 1
+    maxLength: 100
+    description: Restaurant's address
+    example: 123 Main St
+  city:
+    type: string
+    minLength: 1
+    maxLength: 100
+    description: Restaurant's city
+    example: New York
+  postal_code:
+    type: string
+    minLength: 5
+    maxLength: 32
+    description: Restaurant's postal code
+    example: 10001
+  country_code:
+    type: string
+    minLength: 2
+    maxLength: 2
+    description: Restaurant's country code in ISO 3166-1 alpha-2 format
+    example: US

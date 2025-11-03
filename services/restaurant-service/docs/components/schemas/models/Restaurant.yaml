@@ -1,0 +1,59 @@
+type: object
+required:
+  - vat_code
+  - name
+  - legal_name
+  - timezone_id
+  - contact
+  - address
+properties:
+  id:
+    type: string
+    pattern: '^[0-9a-fA-F]{24}$'
+    description: Unique restaurant identifier
+    example: 507f1f77bcf86cd799439011
+  vat_code:
+    type: string
+    minLength: 1
+    maxLength: 40
+    description: Restaurant's VAT code
+    example: GB123456789
+  name:
+    type: string
+    minLength: 1
+    maxLength: 100
+    description: Restaurant's commercial name
+    example: Acme Pizza
+  legal_name:
+    type: string
+    minLength: 1
+    maxLength: 100
+    description: Restaurant's legal name
+    example: Acme Pizza LLC
+  tax_id:
+    type: string
+    minLength: 1
+    maxLength: 40
+    description: Restaurant's tax identification number
+    example: 99-1234567
+  timezone_id:
+    type: string
+    minLength: 1
+    maxLength: 40
+    pattern: '^[A-Za-z_]+/[A-Za-z_]+$'
+    description: IANA Restaurant's timezone identifier
+    example: America/New_York
+  contact:
+    $ref: '../models/RestaurantContact.yaml'
+  created_at:
+    type: string
+    format: date-time
+    description: Restaurant creation timestamp
+    example: 2025-01-01T00:00:00Z
+    readOnly: true
+  updated_at:
+    type: string
+    format: date-time
+    description: Restaurant last update timestamp
+    example: 2025-01-01T00:00:00Z
+    readOnly: true

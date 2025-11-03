@@ -1,6 +1,12 @@
 # Models schemas
 Pagination:
   $ref: './models/Pagination.yaml'
+Restaurant:
+  $ref: './models/Restaurant.yaml'
+RestaurantContact:
+  $ref: './models/RestaurantContact.yaml'
+Staff:
+  $ref: './models/Staff.yaml'
 
 # Request schemas
 RegisterRestaurantRequest:
