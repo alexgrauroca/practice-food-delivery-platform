@@ -4,13 +4,13 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Email** | **string** | Customer&#39;s email address | 
+**Email** | **string** | Staff owner&#39;s email address | 
 **Password** | **string** | Password must be at least 8 characters long | 
-**Name** | **string** | Customer&#39;s full name | 
-**Address** | **string** | Customer&#39;s address | 
-**City** | **string** | Customer&#39;s city | 
-**PostalCode** | **string** | Customer&#39;s postal code | 
-**CountryCode** | **string** | Customer&#39;s country code in ISO 3166-1 alpha-2 format | 
+**Name** | **string** | Staff owner&#39;s full name | 
+**Address** | **string** | Staff owner&#39;s address | 
+**City** | **string** | Staff owner&#39;s city | 
+**PostalCode** | **string** | Staff owner&#39;s postal code | 
+**CountryCode** | **string** | Staff owner&#39;s country code in ISO 3166-1 alpha-2 format | 
 
 ## Methods
 

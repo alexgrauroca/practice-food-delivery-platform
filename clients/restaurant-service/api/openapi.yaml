@@ -531,7 +531,7 @@ components:
         email: user@example.com
       properties:
         email:
-          description: Customer's email address
+          description: Staff owner's email address
           example: user@example.com
           format: email
           pattern: "^[\\w\\.-]+@[\\w\\.-]+\\.\\w{2,}$"
@@ -544,31 +544,31 @@ components:
           type: string
           writeOnly: true
         name:
-          description: Customer's full name
+          description: Staff owner's full name
           example: John Doe
           maxLength: 100
           minLength: 1
           type: string
         address:
-          description: Customer's address
+          description: Staff owner's address
           example: 123 Main St
           maxLength: 100
           minLength: 1
           type: string
         city:
-          description: Customer's city
+          description: Staff owner's city
           example: New York
           maxLength: 100
           minLength: 1
           type: string
         postal_code:
-          description: Customer's postal code
+          description: Staff owner's postal code
           example: "10001"
           maxLength: 32
           minLength: 5
           type: string
         country_code:
-          description: Customer's country code in ISO 3166-1 alpha-2 format
+          description: Staff owner's country code in ISO 3166-1 alpha-2 format
           example: US
           maxLength: 2
           minLength: 2

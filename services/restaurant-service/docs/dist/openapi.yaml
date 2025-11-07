@@ -164,7 +164,7 @@ components:
           minLength: 4
           maxLength: 14
           description: Restaurant's phone number
-          example: 1234567890
+          example: '1234567890'
           pattern: ^\d{4,14}$
         email:
           type: string
@@ -189,7 +189,7 @@ components:
           minLength: 5
           maxLength: 32
           description: Restaurant's postal code
-          example: 10001
+          example: '10001'
         country_code:
           type: string
           minLength: 2
@@ -258,7 +258,7 @@ components:
               type: string
               format: email
               pattern: ^[\w\.-]+@[\w\.-]+\.\w{2,}$
-              description: Customer's email address
+              description: Staff owner's email address
               example: user@example.com
             password:
               type: string
@@ -271,31 +271,31 @@ components:
               type: string
               minLength: 1
               maxLength: 100
-              description: Customer's full name
+              description: Staff owner's full name
               example: John Doe
             address:
               type: string
               minLength: 1
               maxLength: 100
-              description: Customer's address
+              description: Staff owner's address
               example: 123 Main St
             city:
               type: string
               minLength: 1
               maxLength: 100
-              description: Customer's city
+              description: Staff owner's city
               example: New York
             postal_code:
               type: string
               minLength: 5
               maxLength: 32
-              description: Customer's postal code
-              example: 10001
+              description: Staff owner's postal code
+              example: '10001'
             country_code:
               type: string
               minLength: 2
               maxLength: 2
-              description: Customer's country code in ISO 3166-1 alpha-2 format
+              description: Staff owner's country code in ISO 3166-1 alpha-2 format
               example: US
     Restaurant:
       type: object
@@ -407,7 +407,7 @@ components:
           minLength: 5
           maxLength: 32
           description: Staff's postal code
-          example: 10001
+          example: '10001'
         country_code:
           type: string
           minLength: 2

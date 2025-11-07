@@ -1,5 +1,4 @@
 .gitignore
-.openapi-generator-ignore
 .travis.yml
 README.md
 api/openapi.yaml
@@ -27,5 +26,4 @@ model_restaurant.go
 model_restaurant_contact.go
 model_staff.go
 response.go
-test/api_customers_test.go
 utils.go

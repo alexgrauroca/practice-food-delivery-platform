@@ -21,19 +21,19 @@ var _ MappedNullable = &RegisterRestaurantRequestStaffOwner{}
 
 // RegisterRestaurantRequestStaffOwner struct for RegisterRestaurantRequestStaffOwner
 type RegisterRestaurantRequestStaffOwner struct {
-	// Customer's email address
+	// Staff owner's email address
 	Email string `json:"email" validate:"regexp=^[\\\\w\\\\.-]+@[\\\\w\\\\.-]+\\\\.\\\\w{2,}$"`
 	// Password must be at least 8 characters long
 	Password string `json:"password"`
-	// Customer's full name
+	// Staff owner's full name
 	Name string `json:"name"`
-	// Customer's address
+	// Staff owner's address
 	Address string `json:"address"`
-	// Customer's city
+	// Staff owner's city
 	City string `json:"city"`
-	// Customer's postal code
+	// Staff owner's postal code
 	PostalCode string `json:"postal_code"`
-	// Customer's country code in ISO 3166-1 alpha-2 format
+	// Staff owner's country code in ISO 3166-1 alpha-2 format
 	CountryCode string `json:"country_code"`
 }
 

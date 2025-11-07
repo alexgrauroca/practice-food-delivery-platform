@@ -48,7 +48,7 @@ properties:
     minLength: 5
     maxLength: 32
     description: Staff's postal code
-    example: 10001
+    example: "10001"
   country_code:
     type: string
     minLength: 2
