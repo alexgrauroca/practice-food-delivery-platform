@@ -1,6 +1,7 @@
 package restaurants
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -9,57 +10,30 @@ import (
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
 )
 
+const (
+	// CodeRestaurantAlreadyExists represents the error code indicating the customer already exists in the system.
+	CodeRestaurantAlreadyExists = "RESTAURANT_ALREADY_EXISTS"
+	// MsgRestaurantAlreadyExists represents the error message indicating that the customer already exists in the system.
+	MsgRestaurantAlreadyExists = "restaurant already exists"
+)
+
 // Handler manages HTTP requests for restaurant-related operations.
 type Handler struct {
-	logger log.Logger
+	logger  log.Logger
+	service Service
 }
 
 // NewHandler creates a new instance of Handler.
-func NewHandler(logger log.Logger) *Handler {
+func NewHandler(logger log.Logger, service Service) *Handler {
 	return &Handler{
-		logger: logger,
+		logger:  logger,
+		service: service,
 	}
 }
 
 // RegisterRoutes registers the restaurant-related HTTP routes.
 func (h *Handler) RegisterRoutes(router *gin.Engine) {
 	router.POST("/v1.0/restaurants", h.RegisterRestaurant)
-}
-
-// RegisterRestaurantRequest represents the request payload for registering a new restaurant.
-type RegisterRestaurantRequest struct {
-	Restaurant struct {
-		VatCode    string `json:"vat_code" binding:"required,max=40"`
-		Name       string `json:"name" binding:"required,max=100"`
-		LegalName  string `json:"legal_name" binding:"required,max=100"`
-		TaxID      string `json:"tax_id" binding:"max=40"`
-		TimezoneID string `json:"timezone_id" binding:"required,iana_tz"`
-		Contact    struct {
-			PhonePrefix string `json:"phone_prefix" binding:"required,phone_pref"`
-			PhoneNumber string `json:"phone_number" binding:"required,phone_num"`
-			Email       string `json:"email" binding:"required,email"`
-			Address     string `json:"address" binding:"required,max=100"`
-			City        string `json:"city" binding:"required,max=100"`
-			PostalCode  string `json:"postal_code" binding:"required,min=5,max=32"`
-			CountryCode string `json:"country_code" binding:"required,min=2,max=2"`
-		} `json:"contact" binding:"required"`
-	} `json:"restaurant" binding:"required"`
-	StaffOwner struct {
-		Email       string `json:"email" binding:"required,email"`
-		Password    string `json:"password" binding:"required,min=8"`
-		Name        string `json:"name" binding:"required,max=100"`
-		Address     string `json:"address" binding:"required,max=100"`
-		City        string `json:"city" binding:"required,max=100"`
-		PostalCode  string `json:"postal_code" binding:"required,min=5,max=32"`
-		CountryCode string `json:"country_code" binding:"required,min=2,max=2"`
-	} `json:"staff_owner" binding:"required"`
-}
-
-// RegisterRestaurantResponse represents the response returned after successfully registering a new restaurant.
-type RegisterRestaurantResponse struct {
-	ID      string `json:"id"`
-	Name    string `json:"name"`
-	Address string `json:"address"`
 }
 
 // RegisterRestaurant handles the registration of a new restaurant and staff owner.
@@ -76,4 +50,50 @@ func (h *Handler) RegisterRestaurant(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, errResp)
 		return
 	}
+
+	input := RegisterRestaurantInput{
+		Restaurant: RestaurantInput{
+			VatCode:    req.Restaurant.VatCode,
+			Name:       req.Restaurant.Name,
+			LegalName:  req.Restaurant.LegalName,
+			TaxID:      req.Restaurant.TaxID,
+			TimezoneID: req.Restaurant.TimezoneID,
+			Contact:    ContactInput(req.Restaurant.Contact),
+		},
+		StaffOwner: StaffOwnerInput(req.StaffOwner),
+	}
+	output, err := h.service.RegisterRestaurant(ctx, input)
+	if err != nil {
+		if errors.Is(err, ErrRestaurantAlreadyExists) {
+			logger.Warn("Restaurant already exists", log.Field{Key: "vat_code", Value: req.Restaurant.VatCode})
+			c.JSON(http.StatusConflict, customhttp.NewErrorResponse(
+				CodeRestaurantAlreadyExists,
+				MsgRestaurantAlreadyExists,
+			))
+			return
+		}
+		logger.Error("Failed to register restaurant", err)
+		c.JSON(http.StatusInternalServerError, customhttp.NewErrorResponse(
+			customhttp.CodeInternalError,
+			customhttp.MsgInternalError,
+		))
+		return
+	}
+
+	resp := RegisterRestaurantResponse{
+		Restaurant: RestaurantResponse{
+			ID:         output.Restaurant.ID,
+			VatCode:    output.Restaurant.VatCode,
+			Name:       output.Restaurant.Name,
+			LegalName:  output.Restaurant.LegalName,
+			TaxID:      output.Restaurant.TaxID,
+			TimezoneID: output.Restaurant.TimezoneID,
+			Contact:    ContactResponse(output.Restaurant.Contact),
+			CreatedAt:  output.Restaurant.CreatedAt,
+			UpdatedAt:  output.Restaurant.UpdatedAt,
+		},
+		StaffOwner: StaffOwnerResponse(output.StaffOwner),
+	}
+	logger.Info("Restaurant registered successfully", log.Field{Key: "restaurant", Value: resp})
+	c.JSON(http.StatusCreated, resp)
 }
