@@ -1,0 +1,5 @@
+summary: Restaurant already exists
+value:
+  code: RESTAURANT_ALREADY_EXISTS
+  message: restaurant already exists
+  details: [ ]

@@ -1,0 +1,9 @@
+type: object
+required:
+  - restaurant
+  - staff_owner
+properties:
+  restaurant:
+    $ref: '../models/Restaurant.yaml'
+  staff_owner:
+    $ref: '../models/Staff.yaml'

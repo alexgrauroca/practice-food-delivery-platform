@@ -1,0 +1,17 @@
+# Models schemas
+Restaurant:
+  $ref: './models/Restaurant.yaml'
+RestaurantContact:
+  $ref: './models/RestaurantContact.yaml'
+Staff:
+  $ref: './models/Staff.yaml'
+
+# Request schemas
+RegisterRestaurantRequest:
+  $ref: './requests/RegisterRestaurantRequest.yaml'
+
+# Response schemas
+ErrorResponse:
+  $ref: './responses/ErrorResponse.yaml'
+RegisterRestaurantResponse:
+  $ref: './responses/RegisterRestaurantResponse.yaml'

@@ -1,0 +1,4 @@
+InternalError:
+  $ref: './InternalError.yaml'
+InvalidRequest:
+  $ref: './InvalidRequest.yaml'
