@@ -52,6 +52,7 @@ func TestHandler_RegisterRestaurant(t *testing.T) {
 					"staff_owner is required"
 				]
 			}`,
+			wantStatus: http.StatusBadRequest,
 		},
 	}
 

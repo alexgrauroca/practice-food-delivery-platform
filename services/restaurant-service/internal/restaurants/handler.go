@@ -35,8 +35,8 @@ type RegisterRestaurantRequest struct {
 		TaxID      string `json:"tax_id" binding:"max=40"`
 		TimezoneID string `json:"timezone_id" binding:"required,iana_tz"`
 		Contact    struct {
-			PhonePrefix string `json:"phone_prefix" binding:"required,regex=^\\+\\d{1,4}$"`
-			PhoneNumber string `json:"phone_number" binding:"required,regex=^\\d{4,14}$"`
+			PhonePrefix string `json:"phone_prefix" binding:"required,phone_pref"`
+			PhoneNumber string `json:"phone_number" binding:"required,phone_num"`
 			Email       string `json:"email" binding:"required,email"`
 			Address     string `json:"address" binding:"required,max=100"`
 			City        string `json:"city" binding:"required,max=100"`
