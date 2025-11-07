@@ -41,25 +41,18 @@ func TestHandler_RegisterStaff(t *testing.T) {
 		{
 			name:        "when invalid payload is provided, then it should return a 400 with invalid request error",
 			jsonPayload: `{"password": 1.2, "email": true}`,
-			wantJSON: `{
-				"code": "INVALID_REQUEST",
-				"message": "invalid request",
-				"details": []
-			}`,
-			wantStatus: http.StatusBadRequest,
+			wantJSON:    customhttp.NewInvalidRequestRespBuilder().Build(),
+			wantStatus:  http.StatusBadRequest,
 		},
 		{
 			name:        "when empty payload is provided, then it should return a 400 with the validation error",
 			jsonPayload: `{}`,
-			wantJSON: `{
-				"code": "VALIDATION_ERROR",
-				"message": "validation failed",
-				"details": [
+			wantJSON: customhttp.NewValidationErrorRespBuilder().
+				WithDetails(
 					"staff_id is required",
 					"email is required",
-					"password is required"
-				]
-			}`,
+					"password is required",
+				).Build(),
 			wantStatus: http.StatusBadRequest,
 		},
 		{
@@ -69,13 +62,9 @@ func TestHandler_RegisterStaff(t *testing.T) {
 				"email": "invalid-email",
 				"password": "ValidPassword123"
 			}`,
-			wantJSON: `{
-				"code": "VALIDATION_ERROR",
-				"message": "validation failed",
-				"details": [
-					"email must be a valid email address"
-				]
-			}`,
+			wantJSON: customhttp.NewValidationErrorRespBuilder().
+				WithDetails("email must be a valid email address").
+				Build(),
 			wantStatus: http.StatusBadRequest,
 		},
 		{
@@ -85,13 +74,9 @@ func TestHandler_RegisterStaff(t *testing.T) {
 				"email": "test@example.com",
 				"password": "short"
 			}`,
-			wantJSON: `{
-				"code": "VALIDATION_ERROR",
-				"message": "validation failed",
-				"details": [
-					"password must be a valid password with at least 8 characters long"
-				]
-			}`,
+			wantJSON: customhttp.NewValidationErrorRespBuilder().
+				WithDetails("password must be a valid password with at least 8 characters long").
+				Build(),
 			wantStatus: http.StatusBadRequest,
 		},
 		{
@@ -124,11 +109,7 @@ func TestHandler_RegisterStaff(t *testing.T) {
 				service.EXPECT().RegisterStaff(gomock.Any(), gomock.Any()).
 					Return(staff.RegisterStaffOutput{}, errUnexpected)
 			},
-			wantJSON: `{
-				"code": "INTERNAL_ERROR",
-				"message": "an unexpected error occurred",
-				"details": []
-			}`,
+			wantJSON:   customhttp.NewInternalErrorRespBuilder().Build(),
 			wantStatus: http.StatusInternalServerError,
 		},
 		{
@@ -172,48 +153,33 @@ func TestHandler_LoginStaff(t *testing.T) {
 		{
 			name:        "when invalid payload is provided, then it should return a 400 with invalid request error",
 			jsonPayload: `{"name": 1.2, "email": true}`,
-			wantJSON: `{
-				"code": "INVALID_REQUEST",
-				"message": "invalid request",
-				"details": []
-			}`,
-			wantStatus: http.StatusBadRequest,
+			wantJSON:    customhttp.NewInvalidRequestRespBuilder().Build(),
+			wantStatus:  http.StatusBadRequest,
 		},
 		{
 			name:        "when empty payload is provided, then it should return a 400 with the validation error",
 			jsonPayload: `{}`,
-			wantJSON: `{
-				"code": "VALIDATION_ERROR",
-				"message": "validation failed",
-				"details": [
+			wantJSON: customhttp.NewValidationErrorRespBuilder().
+				WithDetails(
 					"email is required",
-					"password is required"
-				]
-			}`,
+					"password is required",
+				).Build(),
 			wantStatus: http.StatusBadRequest,
 		},
 		{
 			name:        "when invalid email is provided, then it should return a 400 with the email validation error",
 			jsonPayload: `{"email": "invalid-email", "password": "ValidPassword123"}`,
-			wantJSON: `{
-				"code": "VALIDATION_ERROR",
-				"message": "validation failed",
-				"details": [
-					"email must be a valid email address"
-				]
-			}`,
+			wantJSON: customhttp.NewValidationErrorRespBuilder().
+				WithDetails("email must be a valid email address").
+				Build(),
 			wantStatus: http.StatusBadRequest,
 		},
 		{
 			name:        "when invalid password is provided, then it should return a 400 with the pwd validation error",
 			jsonPayload: `{"email":"test@example.com", "password": "short"}`,
-			wantJSON: `{
-				"code": "VALIDATION_ERROR",
-				"message": "validation failed",
-				"details": [
-					"password must be a valid password with at least 8 characters long"
-				]
-			}`,
+			wantJSON: customhttp.NewValidationErrorRespBuilder().
+				WithDetails("password must be a valid password with at least 8 characters long").
+				Build(),
 			wantStatus: http.StatusBadRequest,
 		},
 
@@ -240,11 +206,7 @@ func TestHandler_LoginStaff(t *testing.T) {
 				service.EXPECT().LoginStaff(gomock.Any(), gomock.Any()).
 					Return(staff.LoginStaffOutput{}, errUnexpected)
 			},
-			wantJSON: `{
-				"code": "INTERNAL_ERROR",
-				"message": "an unexpected error occurred",
-				"details": []
-			}`,
+			wantJSON:   customhttp.NewInternalErrorRespBuilder().Build(),
 			wantStatus: http.StatusInternalServerError,
 		},
 		{
@@ -288,24 +250,17 @@ func TestHandler_RefreshStaff(t *testing.T) {
 		{
 			name:        "when invalid payload is provided, then it should return a 400 with invalid request error",
 			jsonPayload: `{"access_token": 1.2, "refresh_token": true}`,
-			wantJSON: `{
-				"code": "INVALID_REQUEST",
-				"message": "invalid request",
-				"details": []
-			}`,
-			wantStatus: http.StatusBadRequest,
+			wantJSON:    customhttp.NewInvalidRequestRespBuilder().Build(),
+			wantStatus:  http.StatusBadRequest,
 		},
 		{
 			name:        "when empty payload is provided, then it should return a 400 with the validation error",
 			jsonPayload: `{}`,
-			wantJSON: `{
-				"code": "VALIDATION_ERROR",
-				"message": "validation failed",
-				"details": [
+			wantJSON: customhttp.NewValidationErrorRespBuilder().
+				WithDetails(
 					"refresh_token is required",
-					"access_token is required"
-				]
-			}`,
+					"access_token is required",
+				).Build(),
 			wantStatus: http.StatusBadRequest,
 		},
 		{
@@ -346,11 +301,7 @@ func TestHandler_RefreshStaff(t *testing.T) {
 				service.EXPECT().RefreshStaff(gomock.Any(), gomock.Any()).
 					Return(staff.RefreshStaffOutput{}, errUnexpected)
 			},
-			wantJSON: `{
-				"code": "INTERNAL_ERROR",
-				"message": "an unexpected error occurred",
-				"details": []
-			}`,
+			wantJSON:   customhttp.NewInternalErrorRespBuilder().Build(),
 			wantStatus: http.StatusInternalServerError,
 		},
 		{
