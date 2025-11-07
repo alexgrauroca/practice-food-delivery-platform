@@ -8,6 +8,11 @@ type HandlerRegisterRestaurantBuilder struct {
 	jsonPayload string
 }
 
+// Build returns the current JSON string.
+func (b HandlerRegisterRestaurantBuilder) Build() string {
+	return b.jsonPayload
+}
+
 // NewValidRegisterRestaurantPayload creates a new instance with a valid REQUEST payload.
 func NewValidRegisterRestaurantPayload() HandlerRegisterRestaurantBuilder {
 	return HandlerRegisterRestaurantBuilder{
@@ -78,11 +83,6 @@ func NewRegisterRestaurantSuccessResponse() HandlerRegisterRestaurantBuilder {
 			}
 		}`,
 	}
-}
-
-// Build returns the current JSON string.
-func (b HandlerRegisterRestaurantBuilder) Build() string {
-	return b.jsonPayload
 }
 
 // WithContactEmail sets the restaurant contact email.
@@ -243,5 +243,3 @@ func (b HandlerRegisterRestaurantBuilder) WithCity(city string) HandlerRegisterR
 	)
 	return nb
 }
-
-

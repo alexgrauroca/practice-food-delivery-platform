@@ -45,10 +45,8 @@ func TestHandler_RegisterRestaurant(t *testing.T) {
 		{
 			name:        "when empty payload is provided, then it should return a 400 with the validation error",
 			jsonPayload: `{}`,
-			wantJSON: `{
-				"code": "VALIDATION_ERROR",
-				"message": "validation failed",
-				"details": [
+			wantJSON: customhttp.NewValidationErrorRespBuilder().
+				WithDetails(
 					"restaurant.vat_code is required",
 					"restaurant.name is required",
 					"restaurant.legal_name is required",
@@ -66,9 +64,8 @@ func TestHandler_RegisterRestaurant(t *testing.T) {
 					"staff_owner.address is required",
 					"staff_owner.city is required",
 					"staff_owner.postal_code is required",
-					"staff_owner.country_code is required"
-				]
-			}`,
+					"staff_owner.country_code is required",
+				).Build(),
 			wantStatus: http.StatusBadRequest,
 		},
 		{
@@ -77,14 +74,11 @@ func TestHandler_RegisterRestaurant(t *testing.T) {
 				WithContactEmail("invalid-email-1").
 				WithOwnerEmail("invalid-email-2").
 				Build(),
-			wantJSON: `{
-				"code": "VALIDATION_ERROR",
-				"message": "validation failed",
-				"details": [
+			wantJSON: customhttp.NewValidationErrorRespBuilder().
+				WithDetails(
 					"restaurant.contact.email must be a valid email address",
-					"staff_owner.email must be a valid email address"
-				]
-			}`,
+					"staff_owner.email must be a valid email address",
+				).Build(),
 			wantStatus: http.StatusBadRequest,
 		},
 		{
@@ -92,11 +86,9 @@ func TestHandler_RegisterRestaurant(t *testing.T) {
 			jsonPayload: testbuilder.NewValidRegisterRestaurantPayload().
 				WithRestaurantTimezone("Invalid/Timezone").
 				Build(),
-			wantJSON: `{
-				"code": "VALIDATION_ERROR",
-				"message": "validation failed",
-				"details": [ "restaurant.timezone_id is invalid" ]
-			}`,
+			wantJSON: customhttp.NewValidationErrorRespBuilder().
+				WithDetails("restaurant.timezone_id is invalid").
+				Build(),
 			wantStatus: http.StatusBadRequest,
 		},
 		{
@@ -104,14 +96,11 @@ func TestHandler_RegisterRestaurant(t *testing.T) {
 			jsonPayload: testbuilder.NewValidRegisterRestaurantPayload().
 				WithContactPhone("a", "bbbbbbb").
 				Build(),
-			wantJSON: `{
-				"code": "VALIDATION_ERROR",
-				"message": "validation failed",
-				"details": [
+			wantJSON: customhttp.NewValidationErrorRespBuilder().
+				WithDetails(
 					"restaurant.contact.phone_prefix is invalid",
-					"restaurant.contact.phone_number is invalid"
-				]
-			}`,
+					"restaurant.contact.phone_number is invalid",
+				).Build(),
 			wantStatus: http.StatusBadRequest,
 		},
 		{
@@ -122,17 +111,14 @@ func TestHandler_RegisterRestaurant(t *testing.T) {
 				WithCountryCode("U").
 				WithPassword("short").
 				Build(),
-			wantJSON: `{
-				"code": "VALIDATION_ERROR",
-				"message": "validation failed",
-				"details": [
+			wantJSON: customhttp.NewValidationErrorRespBuilder().
+				WithDetails(
 					"restaurant.contact.postal_code must be at least 5 characters long",
 					"restaurant.contact.country_code must be at least 2 characters long",
 					"staff_owner.password must be a valid password with at least 8 characters long",
 					"staff_owner.postal_code must be at least 5 characters long",
-					"staff_owner.country_code must be at least 2 characters long"
-				]
-			}`,
+					"staff_owner.country_code must be at least 2 characters long",
+				).Build(),
 			wantStatus: http.StatusBadRequest,
 		},
 		{
@@ -149,10 +135,8 @@ func TestHandler_RegisterRestaurant(t *testing.T) {
 				WithPostalCode(strings.Repeat("1", 33)).
 				WithCountryCode("USA").
 				Build(),
-			wantJSON: `{
-				"code": "VALIDATION_ERROR",
-				"message": "validation failed",
-				"details": [
+			wantJSON: customhttp.NewValidationErrorRespBuilder().
+				WithDetails(
 					"restaurant.vat_code must not exceed 40 characters long",
 					"restaurant.name must not exceed 100 characters long",
 					"restaurant.legal_name must not exceed 100 characters long",
@@ -165,9 +149,8 @@ func TestHandler_RegisterRestaurant(t *testing.T) {
 					"staff_owner.address must not exceed 100 characters long",
 					"staff_owner.city must not exceed 100 characters long",
 					"staff_owner.postal_code must not exceed 32 characters long",
-					"staff_owner.country_code must not exceed 2 characters long"
-				]
-			}`,
+					"staff_owner.country_code must not exceed 2 characters long",
+				).Build(),
 			wantStatus: http.StatusBadRequest,
 		},
 		{
