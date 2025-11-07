@@ -70,6 +70,163 @@ func TestHandler_RegisterRestaurant(t *testing.T) {
 			}`,
 			wantStatus: http.StatusBadRequest,
 		},
+		{
+			name: "when invalid email is provided, then it should return a 400 with the email validation error",
+			jsonPayload: `{
+				"restaurant": {
+					"vat_code": "GB123456789",
+					"name": "Acme Pizza",
+					"legal_name": "Acme Pizza LLC",
+					"tax_id": "99-1234567",
+					"timezone_id": "America/New_York",
+					"contact": {
+						"phone_prefix": "+1",
+						"phone_number": "1234567890",
+						"email": "invalid-email",
+						"address": "123 Main St",
+						"city": "New York",
+						"postal_code": "10001",
+						"country_code": "US"
+					}
+				},
+				"staff_owner": {
+					"email": "invalid-email-2",
+					"password": "strongpassword123",
+					"name": "John Doe",
+					"address": "123 Main St",
+					"city": "New York",
+					"postal_code": "10001",
+					"country_code": "US"
+				}
+			}`,
+			wantJSON: `{
+				"code": "VALIDATION_ERROR",
+				"message": "validation failed",
+				"details": [
+					"restaurant.contact.email must be a valid email address",
+					"staff_owner.email must be a valid email address"
+				]
+			}`,
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name: "when invalid timezone is provided, then it should return a 400 with the timezone validation error",
+			jsonPayload: `{
+				"restaurant": {
+					"vat_code": "GB123456789",
+					"name": "Acme Pizza",
+					"legal_name": "Acme Pizza LLC",
+					"tax_id": "99-1234567",
+					"timezone_id": "Invalid/Timezone",
+					"contact": {
+						"phone_prefix": "+1",
+						"phone_number": "1234567890",
+						"email": "restaurant@example.com",
+						"address": "123 Main St",
+						"city": "New York",
+						"postal_code": "10001",
+						"country_code": "US"
+					}
+				},
+				"staff_owner": {
+					"email": "user@example.com",
+					"password": "strongpassword123",
+					"name": "John Doe",
+					"address": "123 Main St",
+					"city": "New York",
+					"postal_code": "10001",
+					"country_code": "US"
+				}
+			}`,
+			wantJSON: `{
+				"code": "VALIDATION_ERROR",
+				"message": "validation failed",
+				"details": [ "restaurant.timezone_id is invalid" ]
+			}`,
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name: "when invalid phone data is provided, then it should return a 400 with the phone validation error",
+			jsonPayload: `{
+				"restaurant": {
+					"vat_code": "GB123456789",
+					"name": "Acme Pizza",
+					"legal_name": "Acme Pizza LLC",
+					"tax_id": "99-1234567",
+					"timezone_id": "America/New_York",
+					"contact": {
+						"phone_prefix": "a",
+						"phone_number": "bbbbbbb",
+						"email": "restaurant@example.com",
+						"address": "123 Main St",
+						"city": "New York",
+						"postal_code": "10001",
+						"country_code": "US"
+					}
+				},
+				"staff_owner": {
+					"email": "user@example.com",
+					"password": "strongpassword123",
+					"name": "John Doe",
+					"address": "123 Main St",
+					"city": "New York",
+					"postal_code": "10001",
+					"country_code": "US"
+				}
+			}`,
+			wantJSON: `{
+				"code": "VALIDATION_ERROR",
+				"message": "validation failed",
+				"details": [
+					"restaurant.contact.phone_prefix is invalid",
+					"restaurant.contact.phone_number is invalid"
+				]
+			}`,
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name: "when fields length are shorten than minimum required, " +
+				"then it should return a 400 with the short length validation errors",
+			jsonPayload: `{
+				"restaurant": {
+					"vat_code": "GB123456789",
+					"name": "Acme Pizza",
+					"legal_name": "Acme Pizza LLC",
+					"tax_id": "99-1234567",
+					"timezone_id": "America/New_York",
+					"contact": {
+						"phone_prefix": "+1",
+						"phone_number": "1234567890",
+						"email": "restaurant@example.com",
+						"address": "123 Main St",
+						"city": "New York",
+						"postal_code": "1",
+						"country_code": "U"
+					}
+				},
+				"staff_owner": {
+					"email": "user@example.com",
+					"password": "short",
+					"name": "John Doe",
+					"address": "123 Main St",
+					"city": "New York",
+					"postal_code": "1",
+					"country_code": "U"
+				}
+			}`,
+			wantJSON: `{
+				"code": "VALIDATION_ERROR",
+				"message": "validation failed",
+				"details": [
+					"restaurant.contact.postal_code must be at least 5 characters long",
+					"restaurant.contact.country_code must be at least 2 characters long",
+					"staff_owner.password must be a valid password with at least 8 characters long",
+					"staff_owner.postal_code must be at least 5 characters long",
+					"staff_owner.country_code must be at least 2 characters long"
+				]
+			}`,
+			wantStatus: http.StatusBadRequest,
+		},
 	}
 
 	for _, tt := range tests {
