@@ -2,7 +2,6 @@ package restaurants_test
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 	"testing"
@@ -10,6 +9,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
+
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/restaurant-service/internal/restaurants/testbuilder"
 
 	customhttp "github.com/alexgrauroca/practice-food-delivery-platform/pkg/http"
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
@@ -76,33 +77,10 @@ func TestHandler_RegisterRestaurant(t *testing.T) {
 		},
 		{
 			name: "when invalid email is provided, then it should return a 400 with the email validation error",
-			jsonPayload: `{
-				"restaurant": {
-					"vat_code": "GB123456789",
-					"name": "Acme Pizza",
-					"legal_name": "Acme Pizza LLC",
-					"tax_id": "99-1234567",
-					"timezone_id": "America/New_York",
-					"contact": {
-						"phone_prefix": "+1",
-						"phone_number": "1234567890",
-						"email": "invalid-email",
-						"address": "123 Main St",
-						"city": "New York",
-						"postal_code": "10001",
-						"country_code": "US"
-					}
-				},
-				"staff_owner": {
-					"email": "invalid-email-2",
-					"password": "strongpassword123",
-					"name": "John Doe",
-					"address": "123 Main St",
-					"city": "New York",
-					"postal_code": "10001",
-					"country_code": "US"
-				}
-			}`,
+			jsonPayload: testbuilder.NewValidRegisterRestaurantPayload().
+				WithContactEmail("invalid-email-1").
+				WithOwnerEmail("invalid-email-2").
+				Build(),
 			wantJSON: `{
 				"code": "VALIDATION_ERROR",
 				"message": "validation failed",
@@ -115,33 +93,9 @@ func TestHandler_RegisterRestaurant(t *testing.T) {
 		},
 		{
 			name: "when invalid timezone is provided, then it should return a 400 with the timezone validation error",
-			jsonPayload: `{
-				"restaurant": {
-					"vat_code": "GB123456789",
-					"name": "Acme Pizza",
-					"legal_name": "Acme Pizza LLC",
-					"tax_id": "99-1234567",
-					"timezone_id": "Invalid/Timezone",
-					"contact": {
-						"phone_prefix": "+1",
-						"phone_number": "1234567890",
-						"email": "restaurant@example.com",
-						"address": "123 Main St",
-						"city": "New York",
-						"postal_code": "10001",
-						"country_code": "US"
-					}
-				},
-				"staff_owner": {
-					"email": "user@example.com",
-					"password": "strongpassword123",
-					"name": "John Doe",
-					"address": "123 Main St",
-					"city": "New York",
-					"postal_code": "10001",
-					"country_code": "US"
-				}
-			}`,
+			jsonPayload: testbuilder.NewValidRegisterRestaurantPayload().
+				WithRestaurantTimezone("Invalid/Timezone").
+				Build(),
 			wantJSON: `{
 				"code": "VALIDATION_ERROR",
 				"message": "validation failed",
@@ -151,33 +105,9 @@ func TestHandler_RegisterRestaurant(t *testing.T) {
 		},
 		{
 			name: "when invalid phone data is provided, then it should return a 400 with the phone validation error",
-			jsonPayload: `{
-				"restaurant": {
-					"vat_code": "GB123456789",
-					"name": "Acme Pizza",
-					"legal_name": "Acme Pizza LLC",
-					"tax_id": "99-1234567",
-					"timezone_id": "America/New_York",
-					"contact": {
-						"phone_prefix": "a",
-						"phone_number": "bbbbbbb",
-						"email": "restaurant@example.com",
-						"address": "123 Main St",
-						"city": "New York",
-						"postal_code": "10001",
-						"country_code": "US"
-					}
-				},
-				"staff_owner": {
-					"email": "user@example.com",
-					"password": "strongpassword123",
-					"name": "John Doe",
-					"address": "123 Main St",
-					"city": "New York",
-					"postal_code": "10001",
-					"country_code": "US"
-				}
-			}`,
+			jsonPayload: testbuilder.NewValidRegisterRestaurantPayload().
+				WithContactPhone("a", "bbbbbbb").
+				Build(),
 			wantJSON: `{
 				"code": "VALIDATION_ERROR",
 				"message": "validation failed",
@@ -191,33 +121,11 @@ func TestHandler_RegisterRestaurant(t *testing.T) {
 		{
 			name: "when fields length are shorten than minimum required, " +
 				"then it should return a 400 with the short length validation errors",
-			jsonPayload: `{
-				"restaurant": {
-					"vat_code": "GB123456789",
-					"name": "Acme Pizza",
-					"legal_name": "Acme Pizza LLC",
-					"tax_id": "99-1234567",
-					"timezone_id": "America/New_York",
-					"contact": {
-						"phone_prefix": "+1",
-						"phone_number": "1234567890",
-						"email": "restaurant@example.com",
-						"address": "123 Main St",
-						"city": "New York",
-						"postal_code": "1",
-						"country_code": "U"
-					}
-				},
-				"staff_owner": {
-					"email": "user@example.com",
-					"password": "short",
-					"name": "John Doe",
-					"address": "123 Main St",
-					"city": "New York",
-					"postal_code": "1",
-					"country_code": "U"
-				}
-			}`,
+			jsonPayload: testbuilder.NewValidRegisterRestaurantPayload().
+				WithPostalCode("1").
+				WithCountryCode("U").
+				WithPassword("short").
+				Build(),
 			wantJSON: `{
 				"code": "VALIDATION_ERROR",
 				"message": "validation failed",
@@ -234,45 +142,17 @@ func TestHandler_RegisterRestaurant(t *testing.T) {
 		{
 			name: "when fields length are longer than maximum required, " +
 				"then it should return a 400 with the long length validation errors",
-			jsonPayload: fmt.Sprintf(`{
-					"restaurant": {
-						"vat_code": "%s",
-						"name": "%s",
-						"legal_name": "%s",
-						"tax_id": "%s",
-						"timezone_id": "America/New_York",
-						"contact": {
-							"phone_prefix": "+1",
-							"phone_number": "1234567890",
-							"email": "restaurant@example.com",
-							"address": "%s",
-							"city": "%s",
-							"postal_code": "%s",
-							"country_code": "USA"
-						}
-					},
-					"staff_owner": {
-						"email": "user@example.com",
-						"password": "strongpassword123",
-						"name": "%s",
-						"address": "%s",
-						"city": "%s",
-						"postal_code": "%s",
-						"country_code": "USA"
-					}
-				}`,
-				strings.Repeat("a", 41),
-				strings.Repeat("a", 101),
-				strings.Repeat("a", 101),
-				strings.Repeat("a", 41),
-				strings.Repeat("a", 101),
-				strings.Repeat("a", 101),
-				strings.Repeat("1", 33),
-				strings.Repeat("a", 101),
-				strings.Repeat("a", 101),
-				strings.Repeat("a", 101),
-				strings.Repeat("1", 33),
-			),
+			jsonPayload: testbuilder.NewValidRegisterRestaurantPayload().
+				WithVatCode(strings.Repeat("a", 41)).
+				WithRestaurantName(strings.Repeat("a", 101)).
+				WithLegalName(strings.Repeat("a", 101)).
+				WithTaxID(strings.Repeat("a", 41)).
+				WithOwnerName(strings.Repeat("a", 101)).
+				WithAddress(strings.Repeat("a", 101)).
+				WithCity(strings.Repeat("a", 101)).
+				WithPostalCode(strings.Repeat("1", 33)).
+				WithCountryCode("USA").
+				Build(),
 			wantJSON: `{
 				"code": "VALIDATION_ERROR",
 				"message": "validation failed",
@@ -297,33 +177,7 @@ func TestHandler_RegisterRestaurant(t *testing.T) {
 		{
 			name: "when the restaurant already exists, " +
 				"then it should return a 409 with the restaurant already exists error",
-			jsonPayload: `{
-				"restaurant": {
-					"vat_code": "duplicated-restaurant",
-					"name": "Acme Pizza",
-					"legal_name": "Acme Pizza LLC",
-					"tax_id": "99-1234567",
-					"timezone_id": "America/New_York",
-					"contact": {
-						"phone_prefix": "+1",
-						"phone_number": "1234567890",
-						"email": "restaurant@example.com",
-						"address": "123 Main St",
-						"city": "New York",
-						"postal_code": "10001",
-						"country_code": "US"
-					}
-				},
-				"staff_owner": {
-					"email": "user@example.com",
-					"password": "strongpassword123",
-					"name": "John Doe",
-					"address": "123 Main St",
-					"city": "New York",
-					"postal_code": "10001",
-					"country_code": "US"
-				}
-			}`,
+			jsonPayload: testbuilder.NewValidRegisterRestaurantPayload().Build(),
 			mocksSetup: func(service *restaurantsmocks.MockService) {
 				service.EXPECT().RegisterRestaurant(gomock.Any(), gomock.Any()).
 					Return(restaurants.RegisterRestaurantOutput{}, restaurants.ErrRestaurantAlreadyExists)
@@ -338,33 +192,7 @@ func TestHandler_RegisterRestaurant(t *testing.T) {
 		{
 			name: "when unexpected error when registering the restaurant, " +
 				"then it should return a 500 with the internal error",
-			jsonPayload: `{
-				"restaurant": {
-					"vat_code": "GB123456789",
-					"name": "Acme Pizza",
-					"legal_name": "Acme Pizza LLC",
-					"tax_id": "99-1234567",
-					"timezone_id": "America/New_York",
-					"contact": {
-						"phone_prefix": "+1",
-						"phone_number": "1234567890",
-						"email": "restaurant@example.com",
-						"address": "123 Main St",
-						"city": "New York",
-						"postal_code": "10001",
-						"country_code": "US"
-					}
-				},
-				"staff_owner": {
-					"email": "user@example.com",
-					"password": "strongpassword123",
-					"name": "John Doe",
-					"address": "123 Main St",
-					"city": "New York",
-					"postal_code": "10001",
-					"country_code": "US"
-				}
-			}`,
+			jsonPayload: testbuilder.NewValidRegisterRestaurantPayload().Build(),
 			mocksSetup: func(service *restaurantsmocks.MockService) {
 				service.EXPECT().RegisterRestaurant(gomock.Any(), gomock.Any()).
 					Return(restaurants.RegisterRestaurantOutput{}, errUnexpected)
@@ -379,33 +207,7 @@ func TestHandler_RegisterRestaurant(t *testing.T) {
 		{
 			name: "when the restaurant is registered successfully, " +
 				"then it should return a 201 with the restaurant and staff owner details",
-			jsonPayload: `{
-				"restaurant": {
-					"vat_code": "GB123456789",
-					"name": "Acme Pizza",
-					"legal_name": "Acme Pizza LLC",
-					"tax_id": "99-1234567",
-					"timezone_id": "America/New_York",
-					"contact": {
-						"phone_prefix": "+1",
-						"phone_number": "1234567890",
-						"email": "restaurant@example.com",
-						"address": "123 Main St",
-						"city": "New York",
-						"postal_code": "10001",
-						"country_code": "US"
-					}
-				},
-				"staff_owner": {
-					"email": "user@example.com",
-					"password": "strongpassword123",
-					"name": "John Doe",
-					"address": "123 Main St",
-					"city": "New York",
-					"postal_code": "10001",
-					"country_code": "US"
-				}
-			}`,
+			jsonPayload: testbuilder.NewValidRegisterRestaurantPayload().Build(),
 			mocksSetup: func(service *restaurantsmocks.MockService) {
 				service.EXPECT().RegisterRestaurant(gomock.Any(), restaurants.RegisterRestaurantInput{
 					Restaurant: restaurants.RestaurantInput{
@@ -467,39 +269,7 @@ func TestHandler_RegisterRestaurant(t *testing.T) {
 					},
 				}, nil)
 			},
-			wantJSON: `{
-				"restaurant": {
-					"id": "fake-restaurant-id",
-					"vat_code": "GB123456789",
-					"name": "Acme Pizza",
-					"legal_name": "Acme Pizza LLC",
-					"tax_id": "99-1234567",
-					"timezone_id": "America/New_York",
-					"contact": {
-						"phone_prefix": "+1",
-						"phone_number": "1234567890",
-						"email": "restaurant@example.com",
-						"address": "123 Main St",
-						"city": "New York",
-						"postal_code": "10001",
-						"country_code": "US"
-					},
-					"created_at": "2025-01-01T00:00:00Z",
-					"updated_at": "2025-01-01T00:00:00Z"
-				},
-				"staff_owner": {
-					"id": "fake-owner-id",
-					"owner": true,
-					"email": "user@example.com",
-					"name": "John Doe",
-					"address": "123 Main St",
-					"city": "New York",
-					"postal_code": "10001",
-					"country_code": "US",
-					"created_at": "2025-01-01T00:00:00Z",
-					"updated_at": "2025-01-01T00:00:00Z"
-				}
-			}`,
+			wantJSON:   testbuilder.NewRegisterRestaurantSuccessResponse().Build(),
 			wantStatus: http.StatusCreated,
 		},
 	}
