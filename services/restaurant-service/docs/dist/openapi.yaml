@@ -84,7 +84,6 @@ components:
         code: VALIDATION_ERROR
         message: validation failed
         details:
-          - restaurant is required
           - restaurant.vat_code is required
           - restaurant.vat_code must not exceed 40 characters long
           - restaurant.name is required
@@ -94,7 +93,6 @@ components:
           - restaurant.tax_id must not exceed 40 characters long
           - restaurant.timezone_id is required
           - restaurant.timezone_id is invalid
-          - restaurant.contact is required
           - restaurant.contact.phone_prefix is required
           - restaurant.contact.phone_prefix is invalid
           - restaurant.contact.phone_number is required
@@ -111,7 +109,6 @@ components:
           - restaurant.contact.country_code is required
           - restaurant.contact.country_code must be at least 2 character long
           - restaurant.contact.country_code must not exceed 2 characters long
-          - staff_owner is required
           - staff_owner.email is required
           - staff_owner.email must be a valid email address
           - staff_owner.password is required

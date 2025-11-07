@@ -2,6 +2,7 @@ package http
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/iancoleman/strcase"
@@ -65,20 +66,47 @@ func GetErrorResponseFromValidationErr(err error) ErrorResponse {
 
 // getValidationErrorDetail returns a detailed error message based on the field error
 func getValidationErrorDetail(fe validator.FieldError) string {
-	field := strcase.ToSnake(fe.Field())
+	fieldPath := toSnakeNamespace(fe.StructNamespace())
 	switch fe.Tag() {
 	case "required":
-		return field + " is required"
+		return fieldPath + " is required"
 	case "email":
-		return field + " must be a valid email address"
+		return fieldPath + " must be a valid email address"
 	case "min":
-		if field == "password" {
-			return field + " must be a valid password with at least 8 characters long"
+		// Special-case password phrasing
+		if strings.HasSuffix(fieldPath, ".password") || fieldPath == "password" {
+			return fieldPath + " must be a valid password with at least 8 characters long"
 		}
-		return field + " must be at least " + fe.Param() + " characters long"
+		return fieldPath + " must be at least " + fe.Param() + " characters long"
 	case "max":
-		return field + " must not exceed " + fe.Param() + " characters long"
+		return fieldPath + " must not exceed " + fe.Param() + " characters long"
 	default:
-		return field + " is invalid"
+		return fieldPath + " is invalid"
 	}
+}
+
+// toSnakeNamespace converts a validator struct namespace like
+// "RegisterRestaurantRequest.Restaurant.Contact.PhonePrefix"
+// into "restaurant.contact.phone_prefix". It removes the root type name and
+// converts each segment to snake_case, preserving any index suffixes like [0].
+func toSnakeNamespace(ns string) string {
+	if ns == "" {
+		return ""
+	}
+	// Trim root type prefix up to the first dot.
+	if i := strings.Index(ns, "."); i >= 0 {
+		ns = ns[i+1:]
+	}
+	parts := strings.Split(ns, ".")
+	for i, p := range parts {
+		// Preserve any index suffix, e.g., "Items[0]"
+		name := p
+		index := ""
+		if idx := strings.Index(p, "["); idx >= 0 {
+			name = p[:idx]
+			index = p[idx:]
+		}
+		parts[i] = strcase.ToSnake(name) + index
+	}
+	return strings.Join(parts, ".")
 }

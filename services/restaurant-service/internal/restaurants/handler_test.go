@@ -48,8 +48,24 @@ func TestHandler_RegisterRestaurant(t *testing.T) {
 				"code": "VALIDATION_ERROR",
 				"message": "validation failed",
 				"details": [
-					"restaurant is required",
-					"staff_owner is required"
+					"restaurant.vat_code is required",
+					"restaurant.name is required",
+					"restaurant.legal_name is required",
+					"restaurant.timezone_id is required",
+					"restaurant.contact.phone_prefix is required",
+					"restaurant.contact.phone_number is required",
+					"restaurant.contact.email is required",
+					"restaurant.contact.address is required",
+					"restaurant.contact.city is required",
+					"restaurant.contact.postal_code is required",
+					"restaurant.contact.country_code is required",
+					"staff_owner.email is required",
+					"staff_owner.password is required",
+					"staff_owner.name is required",
+					"staff_owner.address is required",
+					"staff_owner.city is required",
+					"staff_owner.postal_code is required",
+					"staff_owner.country_code is required"
 				]
 			}`,
 			wantStatus: http.StatusBadRequest,
