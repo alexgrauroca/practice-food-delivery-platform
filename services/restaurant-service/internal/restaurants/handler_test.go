@@ -39,12 +39,8 @@ func TestHandler_RegisterRestaurant(t *testing.T) {
 		{
 			name:        "when invalid payload is provided, then it should return a 400 with invalid request error",
 			jsonPayload: `{"restaurant": 1.2, "staff_owner": true}`,
-			wantJSON: `{
-				"code": "INVALID_REQUEST",
-				"message": "invalid request",
-				"details": []
-			}`,
-			wantStatus: http.StatusBadRequest,
+			wantJSON:    customhttp.NewInvalidRequestRespBuilder().Build(),
+			wantStatus:  http.StatusBadRequest,
 		},
 		{
 			name:        "when empty payload is provided, then it should return a 400 with the validation error",
@@ -197,11 +193,7 @@ func TestHandler_RegisterRestaurant(t *testing.T) {
 				service.EXPECT().RegisterRestaurant(gomock.Any(), gomock.Any()).
 					Return(restaurants.RegisterRestaurantOutput{}, errUnexpected)
 			},
-			wantJSON: `{
-				"code": "INTERNAL_ERROR",
-				"message": "an unexpected error occurred",
-				"details": []
-			}`,
+			wantJSON:   customhttp.NewInternalErrorRespBuilder().Build(),
 			wantStatus: http.StatusInternalServerError,
 		},
 		{
