@@ -158,15 +158,11 @@ components:
         phone_prefix:
           description: "E.164 country/area prefix, leading '+' required"
           example: "+1"
-          maxLength: 4
-          minLength: 1
           pattern: "^\\+\\d{1,4}$"
           type: string
         phone_number:
           description: Restaurant's phone number
           example: "1234567890"
-          maxLength: 14
-          minLength: 4
           pattern: "^\\d{4,14}$"
           type: string
         email:
