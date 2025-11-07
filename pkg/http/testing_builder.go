@@ -62,3 +62,14 @@ func NewValidationErrorRespBuilder() HttpResponseBuilder {
 		}`,
 	}
 }
+
+// NewNotFoundRespBuilder creates a builder for the NOT_FOUND JSON used in tests.
+func NewNotFoundRespBuilder() HttpResponseBuilder {
+	return HttpResponseBuilder{
+		json: `{
+			"code": "NOT_FOUND",
+			"message": "resource not found",
+			"details": []
+		}`,
+	}
+}

@@ -43,29 +43,22 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 		{
 			name:        "when invalid payload is provided, then it should return a 400 with invalid request error",
 			jsonPayload: `{"name": 1.2, "email": true}`,
-			wantJSON: `{
-				"code": "INVALID_REQUEST",
-				"message": "invalid request",
-				"details": []
-			}`,
-			wantStatus: http.StatusBadRequest,
+			wantJSON:    customhttp.NewInvalidRequestRespBuilder().Build(),
+			wantStatus:  http.StatusBadRequest,
 		},
 		{
 			name:        "when empty payload is provided, then it should return a 400 with the validation error",
 			jsonPayload: `{}`,
-			wantJSON: `{
-				"code": "VALIDATION_ERROR",
-				"message": "validation failed",
-				"details": [
+			wantJSON: customhttp.NewValidationErrorRespBuilder().
+				WithDetails(
 					"email is required",
 					"password is required",
 					"name is required",
 					"address is required",
 					"city is required",
 					"postal_code is required",
-					"country_code is required"
-				]
-			}`,
+					"country_code is required",
+				).Build(),
 			wantStatus: http.StatusBadRequest,
 		},
 		{
@@ -79,13 +72,9 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 				"postal_code": "12345",
 				"country_code": "US"
 			}`,
-			wantJSON: `{
-				"code": "VALIDATION_ERROR",
-				"message": "validation failed",
-				"details": [
-					"email must be a valid email address"
-				]
-			}`,
+			wantJSON: customhttp.NewValidationErrorRespBuilder().
+				WithDetails("email must be a valid email address").
+				Build(),
 			wantStatus: http.StatusBadRequest,
 		},
 		{
@@ -100,15 +89,12 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 				"postal_code": "1",
 				"country_code": "U"
 			}`,
-			wantJSON: `{
-				"code": "VALIDATION_ERROR",
-				"message": "validation failed",
-				"details": [
+			wantJSON: customhttp.NewValidationErrorRespBuilder().
+				WithDetails(
 					"password must be a valid password with at least 8 characters long",
 					"postal_code must be at least 5 characters long",
-					"country_code must be at least 2 characters long"
-				]
-			}`,
+					"country_code must be at least 2 characters long",
+				).Build(),
 			wantStatus: http.StatusBadRequest,
 		},
 		{
@@ -128,17 +114,14 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 				strings.Repeat("a", 101),
 				strings.Repeat("a", 33),
 			),
-			wantJSON: `{
-				"code": "VALIDATION_ERROR",
-				"message": "validation failed",
-				"details": [
+			wantJSON: customhttp.NewValidationErrorRespBuilder().
+				WithDetails(
 					"name must not exceed 100 characters long",
 					"address must not exceed 100 characters long",
 					"city must not exceed 100 characters long",
 					"postal_code must not exceed 32 characters long",
-					"country_code must not exceed 2 characters long"
-				]
-			}`,
+					"country_code must not exceed 2 characters long",
+				).Build(),
 			wantStatus: http.StatusBadRequest,
 		},
 		{
@@ -180,11 +163,7 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 				service.EXPECT().RegisterCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.RegisterCustomerOutput{}, errUnexpected)
 			},
-			wantJSON: `{
-				"code": "INTERNAL_ERROR",
-				"message": "an unexpected error occurred",
-				"details": []
-			}`,
+			wantJSON:   customhttp.NewInternalErrorRespBuilder().Build(),
 			wantStatus: http.StatusInternalServerError,
 		},
 		{
@@ -251,11 +230,7 @@ func TestHandler_GetCustomer(t *testing.T) {
 			pathParams: map[string]string{
 				"customerID": "fakeID",
 			},
-			wantJSON: `{
-				"code": "UNAUTHORIZED",
-				"message": "Authentication is required to access this resource",
-				"details": []
-			}`,
+			wantJSON:   auth.NewUnauthorizedRespBuilder().Build(),
 			wantStatus: http.StatusUnauthorized,
 		},
 		{
@@ -268,11 +243,7 @@ func TestHandler_GetCustomer(t *testing.T) {
 				authService.EXPECT().GetClaims(gomock.Any(), gomock.Any()).
 					Return(auth.GetClaimsOutput{}, auth.ErrInvalidToken)
 			},
-			wantJSON: `{
-				"code": "UNAUTHORIZED",
-				"message": "Authentication is required to access this resource",
-				"details": []
-			}`,
+			wantJSON:   auth.NewUnauthorizedRespBuilder().Build(),
 			wantStatus: http.StatusUnauthorized,
 		},
 		{
@@ -289,11 +260,7 @@ func TestHandler_GetCustomer(t *testing.T) {
 						},
 					}, nil)
 			},
-			wantJSON: `{
-				"code": "FORBIDDEN",
-				"message": "You do not have permission to access this resource",
-				"details": []
-			}`,
+			wantJSON:   auth.NewForbiddenRespBuilder().Build(),
 			wantStatus: http.StatusForbidden,
 		},
 		{
@@ -314,11 +281,7 @@ func TestHandler_GetCustomer(t *testing.T) {
 				service.EXPECT().GetCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.GetCustomerOutput{}, customers.ErrCustomerIDMismatch)
 			},
-			wantJSON: `{
-				"code": "FORBIDDEN",
-				"message": "You do not have permission to access this resource",
-				"details": []
-			}`,
+			wantJSON:   auth.NewForbiddenRespBuilder().Build(),
 			wantStatus: http.StatusForbidden,
 		},
 		{
@@ -338,11 +301,7 @@ func TestHandler_GetCustomer(t *testing.T) {
 				service.EXPECT().GetCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.GetCustomerOutput{}, customers.ErrCustomerNotFound)
 			},
-			wantJSON: `{
-				"code": "NOT_FOUND",
-				"message": "resource not found",
-				"details": []
-			}`,
+			wantJSON:   customhttp.NewNotFoundRespBuilder().Build(),
 			wantStatus: http.StatusNotFound,
 		},
 		{
@@ -363,11 +322,7 @@ func TestHandler_GetCustomer(t *testing.T) {
 				service.EXPECT().GetCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.GetCustomerOutput{}, errUnexpected)
 			},
-			wantJSON: `{
-				"code": "INTERNAL_ERROR",
-				"message": "an unexpected error occurred",
-				"details": []
-			}`,
+			wantJSON:   customhttp.NewInternalErrorRespBuilder().Build(),
 			wantStatus: http.StatusInternalServerError,
 		},
 		{
@@ -496,11 +451,7 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 						},
 					}, nil)
 			},
-			wantJSON: `{
-				"code": "INVALID_REQUEST",
-				"message": "invalid request",
-				"details": []
-			}`,
+			wantJSON:   customhttp.NewInvalidRequestRespBuilder().Build(),
 			wantStatus: http.StatusBadRequest,
 		},
 		{
@@ -519,17 +470,14 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 						},
 					}, nil)
 			},
-			wantJSON: `{
-				"code": "VALIDATION_ERROR",
-				"message": "validation failed",
-				"details": [
+			wantJSON: customhttp.NewValidationErrorRespBuilder().
+				WithDetails(
 					"name is required",
 					"address is required",
 					"city is required",
 					"postal_code is required",
-					"country_code is required"
-				]
-			}`,
+					"country_code is required",
+				).Build(),
 			wantStatus: http.StatusBadRequest,
 		},
 		{
@@ -554,14 +502,11 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 						},
 					}, nil)
 			},
-			wantJSON: `{
-				"code": "VALIDATION_ERROR",
-				"message": "validation failed",
-				"details": [
+			wantJSON: customhttp.NewValidationErrorRespBuilder().
+				WithDetails(
 					"postal_code must be at least 5 characters long",
-					"country_code must be at least 2 characters long"
-				]
-			}`,
+					"country_code must be at least 2 characters long",
+				).Build(),
 			wantStatus: http.StatusBadRequest,
 		},
 		{
@@ -591,17 +536,14 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 						},
 					}, nil)
 			},
-			wantJSON: `{
-				"code": "VALIDATION_ERROR",
-				"message": "validation failed",
-				"details": [
+			wantJSON: customhttp.NewValidationErrorRespBuilder().
+				WithDetails(
 					"name must not exceed 100 characters long",
 					"address must not exceed 100 characters long",
 					"city must not exceed 100 characters long",
 					"postal_code must not exceed 32 characters long",
-					"country_code must not exceed 2 characters long"
-				]
-			}`,
+					"country_code must not exceed 2 characters long",
+				).Build(),
 			wantStatus: http.StatusBadRequest,
 		},
 		{
@@ -692,11 +634,7 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 				service.EXPECT().UpdateCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.UpdateCustomerOutput{}, errUnexpected)
 			},
-			wantJSON: `{
-				"code": "INTERNAL_ERROR",
-				"message": "an unexpected error occurred",
-				"details": []
-			}`,
+			wantJSON:   customhttp.NewInternalErrorRespBuilder().Build(),
 			wantStatus: http.StatusInternalServerError,
 		},
 		{
