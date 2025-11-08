@@ -1,5 +1,70 @@
 name: Service CI (reusable)
+name: Service CI (reusable)
 
+on:
+  workflow_call:
+    inputs:
+      service:
+        required: true
+        type: string
+      run_unit:
+        required: false
+        type: boolean
+        default: false
+      run_integration:
+        required: false
+        type: boolean
+        default: false
+      run_docs:
+        required: false
+        type: boolean
+        default: false
+    secrets: {}
+
+env:
+  GO_VERSION: '1.25'
+
+jobs:
+  unit-tests:
+    if: ${{ inputs.run_unit }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/${{ inputs.service }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: Run Unit Tests
+        run: make run-unit-tests
+
+  integration-tests:
+    if: ${{ inputs.run_integration }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/${{ inputs.service }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: Run Integration Tests
+        run: make run-integration-tests
+
+  validate-openapi-docs:
+    if: ${{ inputs.run_docs }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/${{ inputs.service }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Validate OpenAPI sync
+        run: make openapi-validate-sync
+      - name: Validate OpenAPI documentation
+        run: make openapi-validate-docs
 on:
   workflow_call:
     inputs:
