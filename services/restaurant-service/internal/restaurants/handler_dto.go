@@ -63,14 +63,15 @@ type ContactResponse struct {
 
 // StaffOwnerResponse represents the response returned after successfully retrieving a restaurant's staff owner.
 type StaffOwnerResponse struct {
-	ID          string    `json:"id"`
-	Owner       bool      `json:"owner"`
-	Email       string    `json:"email"`
-	Name        string    `json:"name"`
-	Address     string    `json:"address"`
-	City        string    `json:"city"`
-	PostalCode  string    `json:"postal_code"`
-	CountryCode string    `json:"country_code"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID           string    `json:"id"`
+	Email        string    `json:"email"`
+	RestaurantID string    `json:"restaurant_id"`
+	Owner        bool      `json:"owner"`
+	Name         string    `json:"name"`
+	Address      string    `json:"address"`
+	City         string    `json:"city"`
+	PostalCode   string    `json:"postal_code"`
+	CountryCode  string    `json:"country_code"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }

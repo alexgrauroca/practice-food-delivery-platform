@@ -317,6 +317,7 @@ components:
         address: 123 Main St
         updated_at: 2024-01-01T12:00:00Z
         city: New York
+        restaurant_id: 507f1f77bcf86cd799439011
         name: John Doe
         created_at: 2024-01-01T12:00:00Z
         id: 507f1f77bcf86cd799439011
@@ -329,6 +330,17 @@ components:
           pattern: "^[0-9a-fA-F]{24}$"
           readOnly: true
           type: string
+        email:
+          description: The email address of the staff
+          example: john.doe@example.com
+          format: email
+          type: string
+        restaurant_id:
+          description: Unique restaurant identifier
+          example: 507f1f77bcf86cd799439011
+          pattern: "^[0-9a-fA-F]{24}$"
+          readOnly: true
+          type: string
         owner:
           description: Whether the staff is the restaurant owner
           example: true
@@ -337,11 +349,6 @@ components:
         name:
           description: The full name of the staff
           example: John Doe
-          type: string
-        email:
-          description: The email address of the staff
-          example: john.doe@example.com
-          format: email
           type: string
         address:
           description: Staff's address
@@ -389,6 +396,7 @@ components:
       - name
       - owner
       - postal_code
+      - restaurant_id
       - updated_at
       type: object
     RegisterRestaurantResponse:
@@ -399,6 +407,7 @@ components:
           address: 123 Main St
           updated_at: 2024-01-01T12:00:00Z
           city: New York
+          restaurant_id: 507f1f77bcf86cd799439011
           name: John Doe
           created_at: 2024-01-01T12:00:00Z
           id: 507f1f77bcf86cd799439011

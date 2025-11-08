@@ -2,6 +2,9 @@ package restaurants
 
 import (
 	"context"
+
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/restaurant-service/internal/staff"
 )
 
 // Service represents the interface for operations related to restaurant management.
@@ -9,4 +12,76 @@ import (
 //go:generate mockgen -destination=./mocks/service_mock.go -package=restaurants_mocks github.com/alexgrauroca/practice-food-delivery-platform/services/restaurant-service/internal/restaurants Service
 type Service interface {
 	RegisterRestaurant(ctx context.Context, input RegisterRestaurantInput) (RegisterRestaurantOutput, error)
+}
+
+type service struct {
+	logger    log.Logger
+	repo      Repository
+	staffServ staff.Service
+}
+
+func NewService(logger log.Logger, repo Repository, staffServ staff.Service) Service {
+	return &service{
+		logger:    logger,
+		repo:      repo,
+		staffServ: staffServ,
+	}
+}
+
+func (s service) RegisterRestaurant(ctx context.Context, input RegisterRestaurantInput) (RegisterRestaurantOutput, error) {
+	logger := s.logger.WithContext(ctx)
+	logger.Info(
+		"registering restaurant",
+		log.Field{Key: "vat_code", Value: input.Restaurant.VatCode},
+		log.Field{Key: "name", Value: input.Restaurant.Name},
+	)
+
+	params := CreateRestaurantParams{
+		VatCode:    input.Restaurant.VatCode,
+		Name:       input.Restaurant.Name,
+		LegalName:  input.Restaurant.LegalName,
+		TaxID:      input.Restaurant.TaxID,
+		TimezoneID: input.Restaurant.TimezoneID,
+		Contact:    CreateContactParams(input.Restaurant.Contact),
+	}
+	restaurant, err := s.repo.CreateRestaurant(ctx, params)
+	if err != nil {
+		logger.Error("failed to create restaurant", err)
+		return RegisterRestaurantOutput{}, err
+	}
+
+	staffInput := staff.RegisterStaffOwnerInput{
+		Email:        input.StaffOwner.Email,
+		Password:     input.StaffOwner.Password,
+		RestaurantID: restaurant.ID,
+		Name:         input.StaffOwner.Name,
+		Address:      input.StaffOwner.Address,
+		City:         input.StaffOwner.City,
+		PostalCode:   input.StaffOwner.PostalCode,
+		CountryCode:  input.StaffOwner.CountryCode,
+	}
+	owner, err := s.staffServ.RegisterStaffOwner(ctx, staffInput)
+	if err != nil {
+		logger.Error("failed to create staff owner", err)
+
+		if err := s.repo.PurgeRestaurant(ctx, input.Restaurant.VatCode); err != nil {
+			logger.Error("failed to purge restaurant", err)
+		}
+		return RegisterRestaurantOutput{}, err
+	}
+
+	return RegisterRestaurantOutput{
+		Restaurant: RestaurantOutput{
+			ID:         restaurant.ID,
+			VatCode:    restaurant.VatCode,
+			Name:       restaurant.Name,
+			LegalName:  restaurant.LegalName,
+			TaxID:      restaurant.TaxID,
+			TimezoneID: restaurant.TimezoneID,
+			Contact:    ContactOutput(restaurant.Contact),
+			CreatedAt:  restaurant.CreatedAt,
+			UpdatedAt:  restaurant.UpdatedAt,
+		},
+		StaffOwner: StaffOwnerOutput(owner),
+	}, nil
 }

@@ -22,6 +22,8 @@ jobs:
       auth_service_docs: ${{ steps.filter.outputs.auth_service_docs }}
       customer_service_internal: ${{ steps.filter.outputs.customer_service_internal }}
       customer_service_docs: ${{ steps.filter.outputs.customer_service_docs }}
+      restaurant_service_internal: ${{ steps.filter.outputs.restaurant_service_internal }}
+      restaurant_service_docs: ${{ steps.filter.outputs.restaurant_service_docs }}
     steps:
       - uses: actions/checkout@v5
       - uses: dorny/paths-filter@v3
@@ -59,7 +61,13 @@ jobs:
               - 'pkg/**'
             customer_service_docs:
               - 'services/customer-service/docs/**'
-
+            restaurant_service_internal:
+              - 'services/restaurant-service/internal/**'
+              - 'services/restaurant-service/go.mod'
+              - 'services/restaurant-service/go.sum'
+              - 'pkg/**'
+            restaurant_service_docs:
+              - 'services/restaurant-service/docs/**'
   validate-service-clients:
     needs: changes
     if: ${{ needs.changes.outputs.openapi_specs_changed == 'true' }}
@@ -70,17 +78,17 @@ jobs:
           ref: ${{ github.head_ref }}
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
 
       - name: Set up Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '17'
@@ -104,7 +112,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Run Unit Tests
@@ -120,7 +128,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Run Integration Tests
@@ -150,7 +158,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Run Unit Tests
@@ -164,9 +172,9 @@ jobs:
       run:
         working-directory: services/customer-service
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Run Integration Tests
@@ -186,6 +194,52 @@ jobs:
       - name: Validate OpenAPI documentation
         run: make openapi-validate-docs
 
+  restaurant-service-unit-tests:
+    needs: changes
+    if: ${{ needs.changes.outputs.restaurant_service_internal == 'true' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/restaurant-service
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: Run Unit Tests
+        run: make run-unit-tests
+
+  restaurant-service-integration-tests:
+    needs: changes
+    if: ${{ needs.changes.outputs.restaurant_service_internal == 'true' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/restaurant-service
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: Run Integration Tests
+        run: make run-integration-tests
+
+  restaurant-service-validate-openapi-docs:
+    needs: changes
+    if: ${{ needs.changes.outputs.restaurant_service_docs == 'true' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/restaurant-service
+    steps:
+      - uses: actions/checkout@v5
+      - name: Validate OpenAPI sync
+        run: make openapi-validate-sync
+      - name: Validate OpenAPI documentation
+        run: make openapi-validate-docs
+
   e2e-tests:
     needs: changes
     if: ${{ needs.changes.outputs.run_e2e == 'true' }}
@@ -196,7 +250,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Run E2E Tests

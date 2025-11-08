@@ -71,8 +71,9 @@ func NewRegisterRestaurantSuccessResponse() HandlerRegisterRestaurantBuilder {
 			},
 			"staff_owner": {
 				"id": "fake-owner-id",
-				"owner": true,
 				"email": "user@example.com",
+				"restaurant_id": "fake-restaurant-id",
+				"owner": true,
 				"name": "John Doe",
 				"address": "123 Main St",
 				"city": "New York",
