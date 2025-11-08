@@ -9,7 +9,7 @@ inputs:
     required: false
     default: '1.25'
   task:
-    description: One of: unit | integration | docs
+    description: "One of: unit | integration | docs"
     required: true
 runs:
   using: composite
