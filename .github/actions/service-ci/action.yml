@@ -1,0 +1,47 @@
+name: Service CI steps
+description: Run unit, integration, or OpenAPI validations for a service
+inputs:
+  service:
+    description: Service directory name under services/
+    required: true
+  go-version:
+    description: Go version to setup
+    required: false
+    default: '1.25'
+  task:
+    description: One of: unit | integration | docs
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v5
+
+    - name: Set up Go
+      uses: actions/setup-go@v6
+      with:
+        go-version: ${{ inputs.go-version }}
+
+    - name: Run Unit Tests
+      if: ${{ inputs.task == 'unit' }}
+      shell: bash
+      working-directory: services/${{ inputs.service }}
+      run: make run-unit-tests
+
+    - name: Run Integration Tests
+      if: ${{ inputs.task == 'integration' }}
+      shell: bash
+      working-directory: services/${{ inputs.service }}
+      run: make run-integration-tests
+
+    - name: Validate OpenAPI sync
+      if: ${{ inputs.task == 'docs' }}
+      shell: bash
+      working-directory: services/${{ inputs.service }}
+      run: make openapi-validate-sync
+
+    - name: Validate OpenAPI documentation
+      if: ${{ inputs.task == 'docs' }}
+      shell: bash
+      working-directory: services/${{ inputs.service }}
+      run: make openapi-validate-docs
