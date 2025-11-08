@@ -43,15 +43,18 @@ jobs:
               - 'services/*/go.mod'
               - 'services/*/go.sum'
               - 'services/*/Makefile'
+              - '.github/workflows/**
             openapi_specs_changed:
               - 'services/*/docs/dist/openapi.yaml'
               - 'services/*/client-gen-config.yaml'
               - 'scripts/validate-service-clients.sh'
+              - '.github/workflows/**
             auth_service_internal:
               - 'services/authentication-service/internal/**'
               - 'services/authentication-service/go.mod'
               - 'services/authentication-service/go.sum'
               - 'pkg/**'
+              - '.github/workflows/**
             auth_service_docs:
               - 'services/authentication-service/docs/**'
             customer_service_internal:
@@ -59,15 +62,19 @@ jobs:
               - 'services/customer-service/go.mod'
               - 'services/customer-service/go.sum'
               - 'pkg/**'
+              - '.github/workflows/**
             customer_service_docs:
               - 'services/customer-service/docs/**'
+              - '.github/workflows/**
             restaurant_service_internal:
               - 'services/restaurant-service/internal/**'
               - 'services/restaurant-service/go.mod'
               - 'services/restaurant-service/go.sum'
               - 'pkg/**'
+              - '.github/workflows/**
             restaurant_service_docs:
               - 'services/restaurant-service/docs/**'
+              - '.github/workflows/**
   validate-service-clients:
     needs: changes
     if: ${{ needs.changes.outputs.openapi_specs_changed == 'true' }}
@@ -102,143 +109,30 @@ jobs:
       - name: Validate clients
         run: ./scripts/validate-service-clients.sh
 
-  authentication-service-unit-tests:
+  service-ci:
     needs: changes
-    if: ${{ needs.changes.outputs.auth_service_internal == 'true' }}
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: services/authentication-service
-    steps:
-      - uses: actions/checkout@v5
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version: ${{ env.GO_VERSION }}
-      - name: Run Unit Tests
-        run: make run-unit-tests
-
-  authentication-service-integration-tests:
-    needs: changes
-    if: ${{ needs.changes.outputs.auth_service_internal == 'true' }}
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: services/authentication-service
-    steps:
-      - uses: actions/checkout@v5
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version: ${{ env.GO_VERSION }}
-      - name: Run Integration Tests
-        run: make run-integration-tests
-
-  authentication-service-validate-openapi-docs:
-    needs: changes
-    if: ${{ needs.changes.outputs.auth_service_docs == 'true' }}
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: services/authentication-service
-    steps:
-      - uses: actions/checkout@v5
-      - name: Validate OpenAPI sync
-        run: make openapi-validate-sync
-      - name: Validate OpenAPI documentation
-        run: make openapi-validate-docs
-
-  customer-service-unit-tests:
-    needs: changes
-    if: ${{ needs.changes.outputs.customer_service_internal == 'true' }}
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: services/customer-service
-    steps:
-      - uses: actions/checkout@v5
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version: ${{ env.GO_VERSION }}
-      - name: Run Unit Tests
-        run: make run-unit-tests
-
-  customer-service-integration-tests:
-    needs: changes
-    if: ${{ needs.changes.outputs.customer_service_internal == 'true' }}
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: services/customer-service
-    steps:
-      - uses: actions/checkout@v5
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version: ${{ env.GO_VERSION }}
-      - name: Run Integration Tests
-        run: make run-integration-tests
-
-  customer-service-validate-openapi-docs:
-    needs: changes
-    if: ${{ needs.changes.outputs.customer_service_docs == 'true' }}
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: services/customer-service
-    steps:
-      - uses: actions/checkout@v5
-      - name: Validate OpenAPI sync
-        run: make openapi-validate-sync
-      - name: Validate OpenAPI documentation
-        run: make openapi-validate-docs
-
-  restaurant-service-unit-tests:
-    needs: changes
-    if: ${{ needs.changes.outputs.restaurant_service_internal == 'true' }}
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: services/restaurant-service
-    steps:
-      - uses: actions/checkout@v5
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version: ${{ env.GO_VERSION }}
-      - name: Run Unit Tests
-        run: make run-unit-tests
-
-  restaurant-service-integration-tests:
-    needs: changes
-    if: ${{ needs.changes.outputs.restaurant_service_internal == 'true' }}
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: services/restaurant-service
-    steps:
-      - uses: actions/checkout@v5
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version: ${{ env.GO_VERSION }}
-      - name: Run Integration Tests
-        run: make run-integration-tests
-
-  restaurant-service-validate-openapi-docs:
-    needs: changes
-    if: ${{ needs.changes.outputs.restaurant_service_docs == 'true' }}
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: services/restaurant-service
-    steps:
-      - uses: actions/checkout@v5
-      - name: Validate OpenAPI sync
-        run: make openapi-validate-sync
-      - name: Validate OpenAPI documentation
-        run: make openapi-validate-docs
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: authentication-service
+            run_unit: ${{ needs.changes.outputs.auth_service_internal == 'true' }}
+            run_integration: ${{ needs.changes.outputs.auth_service_internal == 'true' }}
+            run_docs: ${{ needs.changes.outputs.auth_service_docs == 'true' }}
+          - service: customer-service
+            run_unit: ${{ needs.changes.outputs.customer_service_internal == 'true' }}
+            run_integration: ${{ needs.changes.outputs.customer_service_internal == 'true' }}
+            run_docs: ${{ needs.changes.outputs.customer_service_docs == 'true' }}
+          - service: restaurant-service
+            run_unit: ${{ needs.changes.outputs.restaurant_service_internal == 'true' }}
+            run_integration: ${{ needs.changes.outputs.restaurant_service_internal == 'true' }}
+            run_docs: ${{ needs.changes.outputs.restaurant_service_docs == 'true' }}
+    uses: service-ci.yml
+    with:
+      service: ${{ matrix.service }}
+      run_unit: ${{ matrix.run_unit }}
+      run_integration: ${{ matrix.run_integration }}
+      run_docs: ${{ matrix.run_docs }}
 
   e2e-tests:
     needs: changes
