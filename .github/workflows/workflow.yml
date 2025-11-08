@@ -57,6 +57,7 @@ jobs:
               - '.github/workflows/**'
             auth_service_docs:
               - 'services/authentication-service/docs/**'
+              - '.github/workflows/**'
             customer_service_internal:
               - 'services/customer-service/internal/**'
               - 'services/customer-service/go.mod'
@@ -114,6 +115,7 @@ jobs:
     if: ${{ needs.changes.outputs.auth_service_internal == 'true' }}
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/service-ci
         with:
           service: authentication-service
@@ -125,6 +127,7 @@ jobs:
     if: ${{ needs.changes.outputs.auth_service_internal == 'true' }}
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/service-ci
         with:
           service: authentication-service
@@ -136,6 +139,7 @@ jobs:
     if: ${{ needs.changes.outputs.auth_service_docs == 'true' }}
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/service-ci
         with:
           service: authentication-service
@@ -147,6 +151,7 @@ jobs:
     if: ${{ needs.changes.outputs.customer_service_internal == 'true' }}
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/service-ci
         with:
           service: customer-service
@@ -158,6 +163,7 @@ jobs:
     if: ${{ needs.changes.outputs.customer_service_internal == 'true' }}
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/service-ci
         with:
           service: customer-service
@@ -169,6 +175,7 @@ jobs:
     if: ${{ needs.changes.outputs.customer_service_docs == 'true' }}
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/service-ci
         with:
           service: customer-service
@@ -180,6 +187,7 @@ jobs:
     if: ${{ needs.changes.outputs.restaurant_service_internal == 'true' }}
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/service-ci
         with:
           service: restaurant-service
@@ -191,6 +199,7 @@ jobs:
     if: ${{ needs.changes.outputs.restaurant_service_internal == 'true' }}
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/service-ci
         with:
           service: restaurant-service
@@ -202,6 +211,7 @@ jobs:
     if: ${{ needs.changes.outputs.restaurant_service_docs == 'true' }}
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/service-ci
         with:
           service: restaurant-service
