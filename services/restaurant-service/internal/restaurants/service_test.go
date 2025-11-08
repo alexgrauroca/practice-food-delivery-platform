@@ -13,6 +13,7 @@ import (
 	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/restaurant-service/internal/restaurants"
 	restaurantsmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/restaurant-service/internal/restaurants/mocks"
+	"github.com/alexgrauroca/practice-food-delivery-platform/services/restaurant-service/internal/staff"
 	staffmocks "github.com/alexgrauroca/practice-food-delivery-platform/services/restaurant-service/internal/staff/mocks"
 )
 
@@ -67,9 +68,15 @@ func TestService_RegisterRestaurant(t *testing.T) {
 				Restaurant: restaurants.RestaurantInput{VatCode: "valid-vat-code"},
 				StaffOwner: restaurants.StaffOwnerInput{Email: "user@example.com"},
 			},
-			mocksSetup: func(repo *restaurantsmocks.MockRepository, _ *staffmocks.MockService) {
+			mocksSetup: func(repo *restaurantsmocks.MockRepository, staffServ *staffmocks.MockService) {
 				repo.EXPECT().CreateRestaurant(gomock.Any(), gomock.Any()).
-					Return(restaurants.Restaurant{}, restaurants.ErrRestaurantAlreadyExists)
+					Return(restaurants.Restaurant{ID: "fake-restaurant-id"}, nil)
+
+				staffServ.EXPECT().RegisterStaffOwner(gomock.Any(), gomock.Any()).
+					Return(staff.RegisterStaffOwnerOutput{}, errStaff)
+
+				repo.EXPECT().PurgeRestaurant(gomock.Any(), "valid-vat-code").
+					Return(errRepo)
 			},
 			want:    restaurants.RegisterRestaurantOutput{},
 			wantErr: errStaff,
