@@ -72,14 +72,15 @@ type ContactOutput struct {
 
 // StaffOwnerOutput represents the output payload for retrieving a restaurant's staff owner.
 type StaffOwnerOutput struct {
-	ID          string
-	Owner       bool
-	Email       string
-	Name        string
-	Address     string
-	City        string
-	PostalCode  string
-	CountryCode string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID           string
+	Email        string
+	RestaurantID string
+	Owner        bool
+	Name         string
+	Address      string
+	City         string
+	PostalCode   string
+	CountryCode  string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }

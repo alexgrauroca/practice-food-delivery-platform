@@ -60,7 +60,7 @@ func (s service) RegisterRestaurant(ctx context.Context, input RegisterRestauran
 		PostalCode:   input.StaffOwner.PostalCode,
 		CountryCode:  input.StaffOwner.CountryCode,
 	}
-	_, err = s.staffServ.RegisterStaffOwner(ctx, staffInput)
+	owner, err := s.staffServ.RegisterStaffOwner(ctx, staffInput)
 	if err != nil {
 		logger.Error("failed to create staff owner", err)
 
@@ -70,5 +70,18 @@ func (s service) RegisterRestaurant(ctx context.Context, input RegisterRestauran
 		return RegisterRestaurantOutput{}, err
 	}
 
-	return RegisterRestaurantOutput{}, nil
+	return RegisterRestaurantOutput{
+		Restaurant: RestaurantOutput{
+			ID:         restaurant.ID,
+			VatCode:    restaurant.VatCode,
+			Name:       restaurant.Name,
+			LegalName:  restaurant.LegalName,
+			TaxID:      restaurant.TaxID,
+			TimezoneID: restaurant.TimezoneID,
+			Contact:    ContactOutput(restaurant.Contact),
+			CreatedAt:  restaurant.CreatedAt,
+			UpdatedAt:  restaurant.UpdatedAt,
+		},
+		StaffOwner: StaffOwnerOutput(owner),
+	}, nil
 }

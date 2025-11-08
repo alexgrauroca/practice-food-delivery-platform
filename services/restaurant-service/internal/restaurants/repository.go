@@ -1,16 +1,21 @@
 package restaurants
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 // Restaurant represents a restaurant.
 type Restaurant struct {
-	ID         string  `bson:"_id,omitempty"`
-	VatCode    string  `bson:"vat_code"`
-	Name       string  `bson:"name"`
-	LegalName  string  `bson:"legal_name"`
-	TaxID      string  `bson:"tax_id"`
-	TimezoneID string  `bson:"timezone_id"`
-	Contact    Contact `bson:"contact"`
+	ID         string    `bson:"_id,omitempty"`
+	VatCode    string    `bson:"vat_code"`
+	Name       string    `bson:"name"`
+	LegalName  string    `bson:"legal_name"`
+	TaxID      string    `bson:"tax_id"`
+	TimezoneID string    `bson:"timezone_id"`
+	Contact    Contact   `bson:"contact"`
+	CreatedAt  time.Time `bson:"created_at"`
+	UpdatedAt  time.Time `bson:"updated_at"`
 }
 
 // Contact represents the contact details of a restaurant.
