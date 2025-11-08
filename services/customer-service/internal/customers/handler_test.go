@@ -225,20 +225,16 @@ func TestHandler_GetCustomer(t *testing.T) {
 
 	tests := []customerHandlerTestCase{
 		{
-			name:  "when any token is provided, then it should return a 401 with the unauthorized error",
-			token: "",
-			pathParams: map[string]string{
-				"customerID": "fakeID",
-			},
+			name:       "when any token is provided, then it should return a 401 with the unauthorized error",
+			token:      "",
+			pathParams: map[string]string{"customerID": "fakeID"},
 			wantJSON:   auth.NewUnauthorizedRespBuilder().Build(),
 			wantStatus: http.StatusUnauthorized,
 		},
 		{
-			name:  "when invalid token is provided, then it should return a 401 with the unauthorized error",
-			token: "invalid-token",
-			pathParams: map[string]string{
-				"customerID": "fakeID",
-			},
+			name:       "when invalid token is provided, then it should return a 401 with the unauthorized error",
+			token:      "invalid-token",
+			pathParams: map[string]string{"customerID": "fakeID"},
 			mocksSetup: func(_ *customersmocks.MockService, authService *authmocks.MockService) {
 				authService.EXPECT().GetClaims(gomock.Any(), gomock.Any()).
 					Return(auth.GetClaimsOutput{}, auth.ErrInvalidToken)
@@ -247,11 +243,9 @@ func TestHandler_GetCustomer(t *testing.T) {
 			wantStatus: http.StatusUnauthorized,
 		},
 		{
-			name:  "when authenticated user is not a customer, then it should return a 403 with the forbidden error",
-			token: "none-customer-token",
-			pathParams: map[string]string{
-				"customerID": "fakeID",
-			},
+			name:       "when authenticated user is not a customer, then it should return a 403 with the forbidden error",
+			token:      "none-customer-token",
+			pathParams: map[string]string{"customerID": "fakeID"},
 			mocksSetup: func(_ *customersmocks.MockService, authService *authmocks.MockService) {
 				authService.EXPECT().GetClaims(gomock.Any(), gomock.Any()).
 					Return(auth.GetClaimsOutput{
@@ -266,10 +260,8 @@ func TestHandler_GetCustomer(t *testing.T) {
 		{
 			name: "when authenticated customer is not the same as the one requested, " +
 				"then it should return a 403 with the forbidden error",
-			token: "none-customer-token",
-			pathParams: map[string]string{
-				"customerID": "fakeID",
-			},
+			token:      "none-customer-token",
+			pathParams: map[string]string{"customerID": "fakeID"},
 			mocksSetup: func(service *customersmocks.MockService, authService *authmocks.MockService) {
 				authService.EXPECT().GetClaims(gomock.Any(), gomock.Any()).
 					Return(auth.GetClaimsOutput{
@@ -285,11 +277,9 @@ func TestHandler_GetCustomer(t *testing.T) {
 			wantStatus: http.StatusForbidden,
 		},
 		{
-			name:  "when the customer is not found, then it should return a 404 with the not found error",
-			token: "valid-token",
-			pathParams: map[string]string{
-				"customerID": "unexistingID",
-			},
+			name:       "when the customer is not found, then it should return a 404 with the not found error",
+			token:      "valid-token",
+			pathParams: map[string]string{"customerID": "unexistingID"},
 			mocksSetup: func(service *customersmocks.MockService, authService *authmocks.MockService) {
 				authService.EXPECT().GetClaims(gomock.Any(), gomock.Any()).
 					Return(auth.GetClaimsOutput{
@@ -307,10 +297,8 @@ func TestHandler_GetCustomer(t *testing.T) {
 		{
 			name: "when unexpected error when getting the customer, " +
 				"then it should return a 500 with the internal error",
-			token: "valid-token",
-			pathParams: map[string]string{
-				"customerID": "fakeID",
-			},
+			token:      "valid-token",
+			pathParams: map[string]string{"customerID": "fakeID"},
 			mocksSetup: func(service *customersmocks.MockService, authService *authmocks.MockService) {
 				authService.EXPECT().GetClaims(gomock.Any(), gomock.Any()).
 					Return(auth.GetClaimsOutput{
@@ -326,11 +314,9 @@ func TestHandler_GetCustomer(t *testing.T) {
 			wantStatus: http.StatusInternalServerError,
 		},
 		{
-			name:  "when a valid customerID is provided, then it should return a 200 with the customer details",
-			token: "valid-token",
-			pathParams: map[string]string{
-				"customerID": "fakeID",
-			},
+			name:       "when a valid customerID is provided, then it should return a 200 with the customer details",
+			token:      "valid-token",
+			pathParams: map[string]string{"customerID": "fakeID"},
 			mocksSetup: func(service *customersmocks.MockService, authService *authmocks.MockService) {
 				authService.EXPECT().GetClaims(gomock.Any(), auth.GetClaimsInput{
 					AccessToken: "valid-token",
@@ -383,43 +369,29 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 
 	tests := []customerHandlerTestCase{
 		{
-			name:  "when any token is provided, then it should return a 401 with the unauthorized error",
-			token: "",
-			pathParams: map[string]string{
-				"customerID": "fakeID",
-			},
+			name:        "when any token is provided, then it should return a 401 with the unauthorized error",
+			token:       "",
+			pathParams:  map[string]string{"customerID": "fakeID"},
 			jsonPayload: `{}`,
-			wantJSON: `{
-				"code": "UNAUTHORIZED",
-				"message": "Authentication is required to access this resource",
-				"details": []
-			}`,
-			wantStatus: http.StatusUnauthorized,
+			wantJSON:    auth.NewUnauthorizedRespBuilder().Build(),
+			wantStatus:  http.StatusUnauthorized,
 		},
 		{
-			name:  "when invalid token is provided, then it should return a 401 with the unauthorized error",
-			token: "invalid-token",
-			pathParams: map[string]string{
-				"customerID": "fakeID",
-			},
+			name:        "when invalid token is provided, then it should return a 401 with the unauthorized error",
+			token:       "invalid-token",
+			pathParams:  map[string]string{"customerID": "fakeID"},
 			jsonPayload: `{}`,
 			mocksSetup: func(_ *customersmocks.MockService, authService *authmocks.MockService) {
 				authService.EXPECT().GetClaims(gomock.Any(), gomock.Any()).
 					Return(auth.GetClaimsOutput{}, auth.ErrInvalidToken)
 			},
-			wantJSON: `{
-				"code": "UNAUTHORIZED",
-				"message": "Authentication is required to access this resource",
-				"details": []
-			}`,
+			wantJSON:   auth.NewUnauthorizedRespBuilder().Build(),
 			wantStatus: http.StatusUnauthorized,
 		},
 		{
-			name:  "when authenticated user is not a customer, then it should return a 403 with the forbidden error",
-			token: "none-customer-token",
-			pathParams: map[string]string{
-				"customerID": "fakeID",
-			},
+			name:        "when authenticated user is not a customer, then it should return a 403 with the forbidden error",
+			token:       "none-customer-token",
+			pathParams:  map[string]string{"customerID": "fakeID"},
 			jsonPayload: `{}`,
 			mocksSetup: func(_ *customersmocks.MockService, authService *authmocks.MockService) {
 				authService.EXPECT().GetClaims(gomock.Any(), gomock.Any()).
@@ -429,19 +401,13 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 						},
 					}, nil)
 			},
-			wantJSON: `{
-				"code": "FORBIDDEN",
-				"message": "You do not have permission to access this resource",
-				"details": []
-			}`,
+			wantJSON:   auth.NewForbiddenRespBuilder().Build(),
 			wantStatus: http.StatusForbidden,
 		},
 		{
-			name:  "when invalid payload is provided, then it should return a 400 with invalid request error",
-			token: "valid-token",
-			pathParams: map[string]string{
-				"customerID": "fakeID",
-			},
+			name:        "when invalid payload is provided, then it should return a 400 with invalid request error",
+			token:       "valid-token",
+			pathParams:  map[string]string{"customerID": "fakeID"},
 			jsonPayload: `{"name": 1.2, "address": true}`,
 			mocksSetup: func(_ *customersmocks.MockService, authService *authmocks.MockService) {
 				authService.EXPECT().GetClaims(gomock.Any(), gomock.Any()).
@@ -457,10 +423,8 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 		{
 			name: "when required fields are not provided payload, " +
 				"then it should return a 400 with the required validation errors",
-			token: "valid-token",
-			pathParams: map[string]string{
-				"customerID": "fakeID",
-			},
+			token:       "valid-token",
+			pathParams:  map[string]string{"customerID": "fakeID"},
 			jsonPayload: `{}`,
 			mocksSetup: func(_ *customersmocks.MockService, authService *authmocks.MockService) {
 				authService.EXPECT().GetClaims(gomock.Any(), gomock.Any()).
@@ -483,10 +447,8 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 		{
 			name: "when fields length are shorten than minimum required, " +
 				"then it should return a 400 with the short length validation errors",
-			token: "valid-token",
-			pathParams: map[string]string{
-				"customerID": "fakeID",
-			},
+			token:      "valid-token",
+			pathParams: map[string]string{"customerID": "fakeID"},
 			jsonPayload: `{
 				"name": "New John Doe",
 				"address": "New 123 Main St",
@@ -512,10 +474,8 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 		{
 			name: "when fields length are longer than maximum required, " +
 				"then it should return a 400 with the long length validation errors",
-			token: "valid-token",
-			pathParams: map[string]string{
-				"customerID": "fakeID",
-			},
+			token:      "valid-token",
+			pathParams: map[string]string{"customerID": "fakeID"},
 			jsonPayload: fmt.Sprintf(`{
 					"name": "%s",
 					"address": "%s",
@@ -549,10 +509,8 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 		{
 			name: "when authenticated customer is not the same as the one requested, " +
 				"then it should return a 403 with the forbidden error",
-			token: "none-customer-token",
-			pathParams: map[string]string{
-				"customerID": "fakeID",
-			},
+			token:      "none-customer-token",
+			pathParams: map[string]string{"customerID": "fakeID"},
 			jsonPayload: `{
 				"name": "New John Doe",
 				"address": "New 123 Main St",
@@ -571,11 +529,7 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 				service.EXPECT().UpdateCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.UpdateCustomerOutput{}, customers.ErrCustomerIDMismatch)
 			},
-			wantJSON: `{
-				"code": "FORBIDDEN",
-				"message": "You do not have permission to access this resource",
-				"details": []
-			}`,
+			wantJSON:   auth.NewForbiddenRespBuilder().Build(),
 			wantStatus: http.StatusForbidden,
 		},
 		{
@@ -602,20 +556,14 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 				service.EXPECT().UpdateCustomer(gomock.Any(), gomock.Any()).
 					Return(customers.UpdateCustomerOutput{}, customers.ErrCustomerNotFound)
 			},
-			wantJSON: `{
-				"code": "NOT_FOUND",
-				"message": "resource not found",
-				"details": []
-			}`,
+			wantJSON:   customhttp.NewNotFoundRespBuilder().Build(),
 			wantStatus: http.StatusNotFound,
 		},
 		{
 			name: "when unexpected error when updating the customer, " +
 				"then it should return a 500 with the internal error",
-			token: "valid-token",
-			pathParams: map[string]string{
-				"customerID": "fakeID",
-			},
+			token:      "valid-token",
+			pathParams: map[string]string{"customerID": "fakeID"},
 			jsonPayload: `{
 				"name": "New John Doe",
 				"address": "New 123 Main St",
@@ -638,11 +586,9 @@ func TestHandler_UpdateCustomer(t *testing.T) {
 			wantStatus: http.StatusInternalServerError,
 		},
 		{
-			name:  "when the customer can be updated, then it should return a 200 with the customer details updated",
-			token: "valid-token",
-			pathParams: map[string]string{
-				"customerID": "fakeID",
-			},
+			name:       "when the customer can be updated, then it should return a 200 with the customer details updated",
+			token:      "valid-token",
+			pathParams: map[string]string{"customerID": "fakeID"},
 			jsonPayload: `{
 				"name": "New John Doe",
 				"address": "New 123 Main St",
