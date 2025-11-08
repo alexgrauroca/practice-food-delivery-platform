@@ -5,9 +5,10 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Id** | **string** | Unique staff identifier | [readonly] 
+**Email** | **string** | The email address of the staff | 
+**RestaurantId** | **string** | Unique restaurant identifier | [readonly] 
 **Owner** | **bool** | Whether the staff is the restaurant owner | [readonly] 
 **Name** | **string** | The full name of the staff | 
-**Email** | **string** | The email address of the staff | 
 **Address** | **string** | Staff&#39;s address | 
 **City** | **string** | Staff&#39;s city | 
 **PostalCode** | **string** | Staff&#39;s postal code | 
@@ -19,7 +20,7 @@ Name | Type | Description | Notes
 
 ### NewStaff
 
-`func NewStaff(id string, owner bool, name string, email string, address string, city string, postalCode string, countryCode string, createdAt time.Time, updatedAt time.Time, ) *Staff`
+`func NewStaff(id string, email string, restaurantId string, owner bool, name string, address string, city string, postalCode string, countryCode string, createdAt time.Time, updatedAt time.Time, ) *Staff`
 
 NewStaff instantiates a new Staff object
 This constructor will assign default values to properties that have it defined,
@@ -52,6 +53,46 @@ and a boolean to check if the value has been set.
 `func (o *Staff) SetId(v string)`
 
 SetId sets Id field to given value.
+
+
+### GetEmail
+
+`func (o *Staff) GetEmail() string`
+
+GetEmail returns the Email field if non-nil, zero value otherwise.
+
+### GetEmailOk
+
+`func (o *Staff) GetEmailOk() (*string, bool)`
+
+GetEmailOk returns a tuple with the Email field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetEmail
+
+`func (o *Staff) SetEmail(v string)`
+
+SetEmail sets Email field to given value.
+
+
+### GetRestaurantId
+
+`func (o *Staff) GetRestaurantId() string`
+
+GetRestaurantId returns the RestaurantId field if non-nil, zero value otherwise.
+
+### GetRestaurantIdOk
+
+`func (o *Staff) GetRestaurantIdOk() (*string, bool)`
+
+GetRestaurantIdOk returns a tuple with the RestaurantId field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetRestaurantId
+
+`func (o *Staff) SetRestaurantId(v string)`
+
+SetRestaurantId sets RestaurantId field to given value.
 
 
 ### GetOwner
@@ -92,26 +133,6 @@ and a boolean to check if the value has been set.
 `func (o *Staff) SetName(v string)`
 
 SetName sets Name field to given value.
-
-
-### GetEmail
-
-`func (o *Staff) GetEmail() string`
-
-GetEmail returns the Email field if non-nil, zero value otherwise.
-
-### GetEmailOk
-
-`func (o *Staff) GetEmailOk() (*string, bool)`
-
-GetEmailOk returns a tuple with the Email field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetEmail
-
-`func (o *Staff) SetEmail(v string)`
-
-SetEmail sets Email field to given value.
 
 
 ### GetAddress

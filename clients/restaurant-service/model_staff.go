@@ -24,12 +24,14 @@ var _ MappedNullable = &Staff{}
 type Staff struct {
 	// Unique staff identifier
 	Id string `json:"id" validate:"regexp=^[0-9a-fA-F]{24}$"`
+	// The email address of the staff
+	Email string `json:"email"`
+	// Unique restaurant identifier
+	RestaurantId string `json:"restaurant_id" validate:"regexp=^[0-9a-fA-F]{24}$"`
 	// Whether the staff is the restaurant owner
 	Owner bool `json:"owner"`
 	// The full name of the staff
 	Name string `json:"name"`
-	// The email address of the staff
-	Email string `json:"email"`
 	// Staff's address
 	Address string `json:"address"`
 	// Staff's city
@@ -50,12 +52,13 @@ type _Staff Staff
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewStaff(id string, owner bool, name string, email string, address string, city string, postalCode string, countryCode string, createdAt time.Time, updatedAt time.Time) *Staff {
+func NewStaff(id string, email string, restaurantId string, owner bool, name string, address string, city string, postalCode string, countryCode string, createdAt time.Time, updatedAt time.Time) *Staff {
 	this := Staff{}
 	this.Id = id
+	this.Email = email
+	this.RestaurantId = restaurantId
 	this.Owner = owner
 	this.Name = name
-	this.Email = email
 	this.Address = address
 	this.City = city
 	this.PostalCode = postalCode
@@ -95,6 +98,54 @@ func (o *Staff) GetIdOk() (*string, bool) {
 // SetId sets field value
 func (o *Staff) SetId(v string) {
 	o.Id = v
+}
+
+// GetEmail returns the Email field value
+func (o *Staff) GetEmail() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.Email
+}
+
+// GetEmailOk returns a tuple with the Email field value
+// and a boolean to check if the value has been set.
+func (o *Staff) GetEmailOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Email, true
+}
+
+// SetEmail sets field value
+func (o *Staff) SetEmail(v string) {
+	o.Email = v
+}
+
+// GetRestaurantId returns the RestaurantId field value
+func (o *Staff) GetRestaurantId() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.RestaurantId
+}
+
+// GetRestaurantIdOk returns a tuple with the RestaurantId field value
+// and a boolean to check if the value has been set.
+func (o *Staff) GetRestaurantIdOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.RestaurantId, true
+}
+
+// SetRestaurantId sets field value
+func (o *Staff) SetRestaurantId(v string) {
+	o.RestaurantId = v
 }
 
 // GetOwner returns the Owner field value
@@ -143,30 +194,6 @@ func (o *Staff) GetNameOk() (*string, bool) {
 // SetName sets field value
 func (o *Staff) SetName(v string) {
 	o.Name = v
-}
-
-// GetEmail returns the Email field value
-func (o *Staff) GetEmail() string {
-	if o == nil {
-		var ret string
-		return ret
-	}
-
-	return o.Email
-}
-
-// GetEmailOk returns a tuple with the Email field value
-// and a boolean to check if the value has been set.
-func (o *Staff) GetEmailOk() (*string, bool) {
-	if o == nil {
-		return nil, false
-	}
-	return &o.Email, true
-}
-
-// SetEmail sets field value
-func (o *Staff) SetEmail(v string) {
-	o.Email = v
 }
 
 // GetAddress returns the Address field value
@@ -324,9 +351,10 @@ func (o Staff) MarshalJSON() ([]byte, error) {
 func (o Staff) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["id"] = o.Id
+	toSerialize["email"] = o.Email
+	toSerialize["restaurant_id"] = o.RestaurantId
 	toSerialize["owner"] = o.Owner
 	toSerialize["name"] = o.Name
-	toSerialize["email"] = o.Email
 	toSerialize["address"] = o.Address
 	toSerialize["city"] = o.City
 	toSerialize["postal_code"] = o.PostalCode
@@ -342,9 +370,10 @@ func (o *Staff) UnmarshalJSON(data []byte) (err error) {
 	// that every required field exists as a key in the generic map.
 	requiredProperties := []string{
 		"id",
+		"email",
+		"restaurant_id",
 		"owner",
 		"name",
-		"email",
 		"address",
 		"city",
 		"postal_code",
