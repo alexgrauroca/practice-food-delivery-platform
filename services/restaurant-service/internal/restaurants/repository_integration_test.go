@@ -90,7 +90,6 @@ func TestRepository_CreateRestaurant(t *testing.T) {
 				CreatedAt: now,
 				UpdatedAt: now,
 			},
-			wantErr: nil,
 		},
 	}
 
@@ -121,6 +120,20 @@ func TestRepository_CreateRestaurant(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestRepository_CreateRestaurant_UnexpectedFailure(t *testing.T) {
+	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	logger, _ := log.NewTest()
+
+	tdb := mongodb.NewTestDB(t, dbPrefix)
+	repo := restaurants.NewRepository(logger, tdb.DB, clock.FixedClock{FixedTime: now})
+
+	tdb.Close(t)
+
+	_, err := repo.CreateRestaurant(context.Background(), restaurants.CreateRestaurantParams{})
+	assert.Error(t, err, "Expected an error due to unexpected failure")
+	assert.NotErrorIs(t, err, restaurants.ErrRestaurantAlreadyExists)
 }
 
 func setupTestRestaurantsCollection(t *testing.T, db *mongo.Database) *mongo.Collection {
