@@ -162,6 +162,7 @@ func TestService_RegisterRestaurant(t *testing.T) {
 						PostalCode:  "SW1A 1AA",
 						CountryCode: "GB",
 					},
+					Active:    true,
 					CreatedAt: now,
 					UpdatedAt: now,
 				}, nil)
