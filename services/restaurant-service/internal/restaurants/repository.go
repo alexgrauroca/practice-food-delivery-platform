@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
@@ -129,6 +130,22 @@ func (r repository) CreateRestaurant(ctx context.Context, params CreateRestauran
 }
 
 func (r repository) PurgeRestaurant(ctx context.Context, vatCode string) error {
-	//TODO implement me
-	panic("implement me")
+	logger := r.logger.WithContext(ctx)
+	logger.Info("Purging restaurant", log.Field{Key: "vat_code", Value: vatCode})
+
+	res, err := r.collection.DeleteOne(ctx, bson.M{
+		FieldVatCode: vatCode,
+		FieldActive:  true,
+	})
+	if err != nil {
+		logger.Error("Failed to purge restaurant", err)
+		return err
+	}
+	if res.DeletedCount == 0 {
+		logger.Warn("Restaurant not found", log.Field{Key: "vat_code", Value: vatCode})
+		return ErrRestaurantNotFound
+	}
+
+	logger.Info("Restaurant purged successfully", log.Field{Key: "vat_code", Value: vatCode})
+	return nil
 }

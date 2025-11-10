@@ -126,7 +126,10 @@ func (r *repository) PurgeCustomer(ctx context.Context, email string) error {
 	logger := r.logger.WithContext(ctx)
 	logger.Info("Purging customer", log.Field{Key: "email", Value: email})
 
-	res, err := r.collection.DeleteOne(ctx, bson.M{FieldEmail: email})
+	res, err := r.collection.DeleteOne(ctx, bson.M{
+		FieldEmail:  email,
+		FieldActive: true,
+	})
 	if err != nil {
 		logger.Error("Failed to purge customer", err)
 		return err

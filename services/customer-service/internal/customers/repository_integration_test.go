@@ -132,21 +132,34 @@ func TestRepository_PurgeCustomer(t *testing.T) {
 	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 	logger, _ := log.NewTest()
 
-	// Params is just string as id. We don't need want, so it will be any type
+	// Params is just string as email. We don't need want, so it will be any type
 	tests := []customersRepositoryTestCase[string, any]{
 		{
-			name:    "when the customer does not exist, then it should return a customer not found error",
-			params:  "test@example.com",
+			name:   "when the customer does not exist, then it should return a customer not found error",
+			params: "test@example.com",
+			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
+				mongodb.InsertTestDocument(t, coll, customers.Customer{
+					Email:  "test@example.com",
+					Active: false,
+				})
+				mongodb.InsertTestDocument(t, coll, customers.Customer{
+					Email:  "another-test@example.com",
+					Active: true,
+				})
+			},
 			wantErr: customers.ErrCustomerNotFound,
 		},
 		{
 			name: "when the customer exist, then it should not return an error",
 			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
 				mongodb.InsertTestDocument(t, coll, customers.Customer{
-					Email:     "test@example.com",
-					Active:    true,
-					CreatedAt: now,
-					UpdatedAt: now,
+					Email:  "another-test@example.com",
+					Active: true,
+				})
+
+				mongodb.InsertTestDocument(t, coll, customers.Customer{
+					Email:  "test@example.com",
+					Active: true,
 				})
 			},
 			params:  "test@example.com",

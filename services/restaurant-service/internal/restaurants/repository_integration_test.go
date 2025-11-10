@@ -136,6 +136,78 @@ func TestRepository_CreateRestaurant_UnexpectedFailure(t *testing.T) {
 	assert.NotErrorIs(t, err, restaurants.ErrRestaurantAlreadyExists)
 }
 
+func TestRepository_PurgeRestaurant(t *testing.T) {
+	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	logger, _ := log.NewTest()
+
+	// Params is just string as vat code. We don't need want, so it will be any type
+	tests := []repoTestCase[string, any]{
+		{
+			name:   "when the restaurant does not exist, then it should return a restaurant not found error",
+			params: "unexisting-vat-code",
+			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
+				mongodb.InsertTestDocument(t, coll, restaurants.Restaurant{
+					VatCode: "another-vat-code",
+					Active:  true,
+				})
+
+				mongodb.InsertTestDocument(t, coll, restaurants.Restaurant{
+					VatCode: "unexisting-vat-code",
+					Active:  false,
+				})
+			},
+			wantErr: restaurants.ErrRestaurantNotFound,
+		},
+		{
+			name:   "when the restaurant exist, then it should not return an error",
+			params: "valid-vat-code",
+			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
+				mongodb.InsertTestDocument(t, coll, restaurants.Restaurant{
+					VatCode: "another-vat-code",
+					Active:  true,
+				})
+
+				mongodb.InsertTestDocument(t, coll, restaurants.Restaurant{
+					VatCode: "valid-vat-code",
+					Active:  true,
+				})
+			},
+			wantErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tdb := mongodb.NewTestDB(t, dbPrefix)
+			defer tdb.Close(t)
+
+			coll := setupTestRestaurantsCollection(t, tdb.DB)
+			if tt.insertDocuments != nil {
+				tt.insertDocuments(t, coll)
+			}
+
+			repo := restaurants.NewRepository(logger, tdb.DB, clock.FixedClock{FixedTime: now})
+			err := repo.PurgeRestaurant(context.Background(), tt.params)
+
+			assert.ErrorIs(t, err, tt.wantErr)
+		})
+	}
+}
+
+func TestRepository_PurgeRestaurant_UnexpectedFailure(t *testing.T) {
+	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	logger, _ := log.NewTest()
+
+	tdb := mongodb.NewTestDB(t, dbPrefix)
+	repo := restaurants.NewRepository(logger, tdb.DB, clock.FixedClock{FixedTime: now})
+
+	tdb.Close(t)
+
+	err := repo.PurgeRestaurant(context.Background(), "")
+	assert.Error(t, err, "Expected an error due to unexpected failure")
+	assert.NotErrorIs(t, err, restaurants.ErrRestaurantNotFound)
+}
+
 func setupTestRestaurantsCollection(t *testing.T, db *mongo.Database) *mongo.Collection {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
