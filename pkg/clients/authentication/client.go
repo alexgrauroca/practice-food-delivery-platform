@@ -16,6 +16,7 @@ import (
 //go:generate mockgen -destination=./mocks/authclient_mock.go -package=authentication_mocks github.com/alexgrauroca/practice-food-delivery-platform/pkg/clients/authentication Client
 type Client interface {
 	RegisterCustomer(ctx context.Context, req RegisterCustomerRequest) (RegisterCustomerResponse, error)
+	RegisterStaff(ctx context.Context, req RegisterStaffRequest) (RegisterStaffResponse, error)
 }
 
 // Config holds the configuration options for the authentication client.
@@ -86,4 +87,28 @@ func (c *client) RegisterCustomer(ctx context.Context, req RegisterCustomerReque
 		Email:     resp.Email,
 		CreatedAt: resp.CreatedAt,
 	}, nil
+}
+
+// RegisterStaffRequest represents the data required to register a new staff user in the authentication service.
+type RegisterStaffRequest struct {
+	StaffID      string
+	Email        string
+	RestaurantID string
+	Password     string
+}
+
+// RegisterStaffResponse contains the data returned after successfully registering a staff user in the authentication
+// service.
+type RegisterStaffResponse struct {
+	ID           string
+	StaffID      string
+	Email        string
+	RestaurantID string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+}
+
+func (c *client) RegisterStaff(ctx context.Context, req RegisterStaffRequest) (RegisterStaffResponse, error) {
+	//TODO implement me
+	panic("implement me")
 }
