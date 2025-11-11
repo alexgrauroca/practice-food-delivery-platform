@@ -129,7 +129,7 @@ func TestService_RegisterStaffOwner(t *testing.T) {
 				}, nil)
 			},
 			want: staff.RegisterStaffOwnerOutput{
-				ID:           "valid-staff-owner-id",
+				ID:           "fake-staff-id",
 				Email:        "test@example.com",
 				RestaurantID: "valid-restaurant-id",
 				Owner:        true,
