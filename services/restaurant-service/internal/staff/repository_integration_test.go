@@ -199,7 +199,20 @@ func TestRepository_CreateStaff(t *testing.T) {
 	}
 }
 
-func TestRepository_CreateStaff_UnexpectedFailure(t *testing.T) {}
+func TestRepository_CreateStaff_UnexpectedFailure(t *testing.T) {
+	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	logger, _ := log.NewTest()
+
+	tdb := mongodb.NewTestDB(t, "customers_test_authentication_service")
+	repo := staff.NewRepository(logger, tdb.DB, clock.FixedClock{FixedTime: now})
+
+	// Simulating an unexpected failure by closing the opened connection
+	tdb.Close(t)
+
+	_, err := repo.CreateStaff(context.Background(), staff.CreateStaffParams{})
+	assert.Error(t, err, "Expected an error due to unexpected failure")
+	assert.NotErrorIs(t, err, staff.ErrStaffAlreadyExists)
+}
 
 func TestRepository_PurgeStaff(t *testing.T) {}
 
