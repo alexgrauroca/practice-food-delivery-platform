@@ -214,9 +214,75 @@ func TestRepository_CreateStaff_UnexpectedFailure(t *testing.T) {
 	assert.NotErrorIs(t, err, staff.ErrStaffAlreadyExists)
 }
 
-func TestRepository_PurgeStaff(t *testing.T) {}
+func TestRepository_PurgeStaff(t *testing.T) {
+	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	logger, _ := log.NewTest()
 
-func TestRepository_PurgeStaff_UnexpectedFailure(t *testing.T) {}
+	// Params is just string as email. We don't need want, so it will be any type
+	tests := []repoTestCase[string, any]{
+		{
+			name:   "when the staff does not exist, then it should return a staff not found error",
+			params: "test@example.com",
+			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
+				mongodb.InsertTestDocument(t, coll, staff.Staff{
+					Email:  "test@example.com",
+					Active: false,
+				})
+				mongodb.InsertTestDocument(t, coll, staff.Staff{
+					Email:  "another-test@example.com",
+					Active: true,
+				})
+			},
+			wantErr: staff.ErrStaffNotFound,
+		},
+		{
+			name:   "when the staff exist, then it should not return an error",
+			params: "test@example.com",
+			insertDocuments: func(t *testing.T, coll *mongo.Collection) {
+				mongodb.InsertTestDocument(t, coll, staff.Staff{
+					Email:  "another-test@example.com",
+					Active: true,
+				})
+				mongodb.InsertTestDocument(t, coll, staff.Staff{
+					Email:  "test@example.com",
+					Active: true,
+				})
+			},
+			wantErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tdb := mongodb.NewTestDB(t, dbPrefix)
+			defer tdb.Close(t)
+
+			coll := setupTestStaffCollection(t, tdb.DB)
+			if tt.insertDocuments != nil {
+				tt.insertDocuments(t, coll)
+			}
+
+			repo := staff.NewRepository(logger, tdb.DB, clock.FixedClock{FixedTime: now})
+			err := repo.PurgeStaff(context.Background(), tt.params)
+
+			assert.ErrorIs(t, err, tt.wantErr)
+		})
+	}
+}
+
+func TestRepository_PurgeStaff_UnexpectedFailure(t *testing.T) {
+	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	logger, _ := log.NewTest()
+
+	tdb := mongodb.NewTestDB(t, dbPrefix)
+	repo := staff.NewRepository(logger, tdb.DB, clock.FixedClock{FixedTime: now})
+
+	tdb.Close(t)
+
+	err := repo.PurgeStaff(context.Background(), "")
+	assert.Error(t, err, "Expected an error due to unexpected failure")
+	assert.NotErrorIs(t, err, staff.ErrStaffNotFound)
+}
 
 func setupTestStaffCollection(t *testing.T, db *mongo.Database) *mongo.Collection {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
@@ -116,6 +117,21 @@ func (r repository) CreateStaff(ctx context.Context, params CreateStaffParams) (
 }
 
 func (r repository) PurgeStaff(ctx context.Context, email string) error {
-	//TODO implement me
-	panic("implement me")
+	logger := r.logger.WithContext(ctx)
+	logger.Info("purging staff", log.Field{Key: "email", Value: email})
+
+	res, err := r.collection.DeleteOne(ctx, bson.M{
+		FieldEmail: email,
+		FieldActive: true,
+	})
+	if err != nil {
+		logger.Error("failed to purge staff", err)
+		return err
+	}
+	if res.DeletedCount == 0 {
+		logger.Warn("staff not found", log.Field{Key: "email", Value: email})
+		return ErrStaffNotFound
+	}
+	logger.Info("staff purged successfully", log.Field{Key: "email", Value: email})
+	return nil
 }
