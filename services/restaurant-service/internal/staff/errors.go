@@ -1,3 +1,7 @@
+// Package staff provides functionality for managing restaurant staff members,
+// including creation, retrieval, and management of staff accounts. It handles
+// staff-related operations such as authentication, authorization, and maintains
+// staff records in the system.
 package staff
 
 import "errors"
