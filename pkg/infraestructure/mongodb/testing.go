@@ -85,7 +85,7 @@ func InsertTestDocument(t *testing.T, coll *mongo.Collection, doc any) {
 	}
 
 	// Check if there's an _id field with a string value and convert it to ObjectID
-	if idStr, ok := bdoc["_id"].(string); ok {
+	if idStr, ok := bdoc["_id"].(string); ok && idStr != "" {
 		id, err := primitive.ObjectIDFromHex(idStr)
 		if err != nil {
 			t.Fatalf("Failed to convert string ID to ObjectID: %v", err)
