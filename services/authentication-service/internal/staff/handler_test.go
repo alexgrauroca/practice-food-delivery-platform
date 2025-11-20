@@ -173,21 +173,30 @@ func TestHandler_LoginStaff(t *testing.T) {
 			wantJSON: customhttp.NewValidationErrorRespBuilder().
 				WithDetails(
 					"email is required",
+					"restaurant_id is required",
 					"password is required",
 				).Build(),
 			wantStatus: http.StatusBadRequest,
 		},
 		{
-			name:        "when invalid email is provided, then it should return a 400 with the email validation error",
-			jsonPayload: `{"email": "invalid-email", "password": "ValidPassword123"}`,
+			name: "when invalid email is provided, then it should return a 400 with the email validation error",
+			jsonPayload: `{
+				"email": "invalid-email",
+				"password": "ValidPassword123",
+				"restaurant_id": "fake-restaurant-id"
+			}`,
 			wantJSON: customhttp.NewValidationErrorRespBuilder().
 				WithDetails("email must be a valid email address").
 				Build(),
 			wantStatus: http.StatusBadRequest,
 		},
 		{
-			name:        "when invalid password is provided, then it should return a 400 with the pwd validation error",
-			jsonPayload: `{"email":"test@example.com", "password": "short"}`,
+			name: "when invalid password is provided, then it should return a 400 with the pwd validation error",
+			jsonPayload: `{
+				"email":"test@example.com",
+				"password": "short",
+				"restaurant_id": "fake-restaurant-id"
+			}`,
 			wantJSON: customhttp.NewValidationErrorRespBuilder().
 				WithDetails("password must be a valid password with at least 8 characters long").
 				Build(),
@@ -195,9 +204,13 @@ func TestHandler_LoginStaff(t *testing.T) {
 		},
 
 		{
-			name: "when there is not an active staff with the same email and password, " +
+			name: "when there is not an active staff with the same email, password and restaurant, " +
 				"then it should return a 401 with invalid credentials error",
-			jsonPayload: `{"email": "test@example.com", "password": "ValidPassword123"}`,
+			jsonPayload: `{
+				"email": "test@example.com",
+				"password": "ValidPassword123",
+				"restaurant_id": "fake-restaurant-id"
+			}`,
 			mocksSetup: func(service *staffmocks.MockService, _ *authmocks.MockService) {
 				service.EXPECT().LoginStaff(gomock.Any(), gomock.Any()).
 					Return(staff.LoginStaffOutput{}, authcore.ErrInvalidCredentials)
@@ -212,7 +225,11 @@ func TestHandler_LoginStaff(t *testing.T) {
 		{
 			name: "when unexpected error when login the staff, " +
 				"then it should return a 500 with the internal error",
-			jsonPayload: `{"email": "test@example.com", "password": "ValidPassword123"}`,
+			jsonPayload: `{
+				"email": "test@example.com",
+				"password": "ValidPassword123",
+				"restaurant_id": "fake-restaurant-id"
+			}`,
 			mocksSetup: func(service *staffmocks.MockService, _ *authmocks.MockService) {
 				service.EXPECT().LoginStaff(gomock.Any(), gomock.Any()).
 					Return(staff.LoginStaffOutput{}, errUnexpected)
@@ -221,13 +238,18 @@ func TestHandler_LoginStaff(t *testing.T) {
 			wantStatus: http.StatusInternalServerError,
 		},
 		{
-			name: "when an active staff has the same email and password, " +
+			name: "when an active staff has the same email, password and restaurant, " +
 				"then it should return a 200 with the token",
-			jsonPayload: `{"email": "test@example.com", "password": "ValidPassword123"}`,
+			jsonPayload: `{
+				"email": "test@example.com",
+				"password": "ValidPassword123",
+				"restaurant_id": "fake-restaurant-id"
+			}`,
 			mocksSetup: func(service *staffmocks.MockService, _ *authmocks.MockService) {
 				service.EXPECT().LoginStaff(gomock.Any(), staff.LoginStaffInput{
-					Email:    "test@example.com",
-					Password: "ValidPassword123",
+					Email:        "test@example.com",
+					RestaurantID: "fake-restaurant-id",
+					Password:     "ValidPassword123",
 				}).Return(staff.LoginStaffOutput{
 					TokenPair: authcore.TokenPair{
 						AccessToken:  "fake-token",

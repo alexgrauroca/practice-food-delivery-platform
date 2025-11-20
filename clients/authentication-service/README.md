@@ -95,6 +95,7 @@ Class | Method | HTTP request | Description
  - [ErrorResponse](docs/ErrorResponse.md)
  - [LoginRequest](docs/LoginRequest.md)
  - [LoginResponse](docs/LoginResponse.md)
+ - [LoginStaffRequest](docs/LoginStaffRequest.md)
  - [RefreshRequest](docs/RefreshRequest.md)
  - [RefreshResponse](docs/RefreshResponse.md)
  - [RegisterCustomerRequest](docs/RegisterCustomerRequest.md)

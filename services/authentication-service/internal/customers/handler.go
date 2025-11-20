@@ -59,6 +59,7 @@ type RegisterCustomerResponse struct {
 	ID        string    `json:"id"`
 	Email     string    `json:"email"`
 	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // RegisterCustomer handles the registration of a new customer.
@@ -82,14 +83,19 @@ func (h *Handler) RegisterCustomer(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, ErrCustomerAlreadyExists) {
 			logger.Warn("Customer already exists", log.Field{Key: "email", Value: req.Email})
-			c.JSON(http.StatusConflict, customhttp.NewErrorResponse(CodeCustomerAlreadyExists, MsgCustomerAlreadyExists))
+			c.JSON(
+				http.StatusConflict,
+				customhttp.NewErrorResponse(CodeCustomerAlreadyExists, MsgCustomerAlreadyExists),
+			)
 			return
 		}
 		logger.Error("Failed to register customer", err)
-		c.JSON(http.StatusInternalServerError, customhttp.NewErrorResponse(
-			customhttp.CodeInternalError,
-			customhttp.MsgInternalError,
-		))
+		c.JSON(
+			http.StatusInternalServerError, customhttp.NewErrorResponse(
+				customhttp.CodeInternalError,
+				customhttp.MsgInternalError,
+			),
+		)
 		return
 	}
 
@@ -129,17 +135,21 @@ func (h *Handler) LoginCustomer(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, authcore.ErrInvalidCredentials) {
 			logger.Warn("Invalid credentials provided", log.Field{Key: "email", Value: req.Email})
-			c.JSON(http.StatusUnauthorized, customhttp.NewErrorResponse(
-				authcore.CodeInvalidCredentials,
-				authcore.MsgInvalidCredentials,
-			))
+			c.JSON(
+				http.StatusUnauthorized, customhttp.NewErrorResponse(
+					authcore.CodeInvalidCredentials,
+					authcore.MsgInvalidCredentials,
+				),
+			)
 			return
 		}
 		logger.Error("Failed to login customer", err)
-		c.JSON(http.StatusInternalServerError, customhttp.NewErrorResponse(
-			customhttp.CodeInternalError,
-			customhttp.MsgInternalError,
-		))
+		c.JSON(
+			http.StatusInternalServerError, customhttp.NewErrorResponse(
+				customhttp.CodeInternalError,
+				customhttp.MsgInternalError,
+			),
+		)
 		return
 	}
 
@@ -179,25 +189,31 @@ func (h *Handler) RefreshCustomer(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, authcore.ErrInvalidRefreshToken) {
 			logger.Warn("Invalid refresh token provided")
-			c.JSON(http.StatusUnauthorized, customhttp.NewErrorResponse(
-				authcore.CodeInvalidRefreshToken,
-				authcore.MsgInvalidRefreshToken,
-			))
+			c.JSON(
+				http.StatusUnauthorized, customhttp.NewErrorResponse(
+					authcore.CodeInvalidRefreshToken,
+					authcore.MsgInvalidRefreshToken,
+				),
+			)
 			return
 		} else if errors.Is(err, authcore.ErrTokenMismatch) {
 			logger.Warn("Token mismatch")
-			c.JSON(http.StatusForbidden, customhttp.NewErrorResponse(
-				authcore.CodeTokenMismatch,
-				authcore.MsgTokenMismatch,
-			))
+			c.JSON(
+				http.StatusForbidden, customhttp.NewErrorResponse(
+					authcore.CodeTokenMismatch,
+					authcore.MsgTokenMismatch,
+				),
+			)
 			return
 		}
 
 		logger.Error("Failed to refresh customer", err)
-		c.JSON(http.StatusInternalServerError, customhttp.NewErrorResponse(
-			customhttp.CodeInternalError,
-			customhttp.MsgInternalError,
-		))
+		c.JSON(
+			http.StatusInternalServerError, customhttp.NewErrorResponse(
+				customhttp.CodeInternalError,
+				customhttp.MsgInternalError,
+			),
+		)
 		return
 	}
 

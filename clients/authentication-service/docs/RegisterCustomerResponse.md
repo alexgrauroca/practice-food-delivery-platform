@@ -7,12 +7,13 @@ Name | Type | Description | Notes
 **Id** | **string** | Unique customer identifier in the auth service | 
 **Email** | **string** | Customer&#39;s email address | 
 **CreatedAt** | **time.Time** | Account creation timestamp | 
+**UpdatedAt** | **time.Time** | Account last update timestamp | 
 
 ## Methods
 
 ### NewRegisterCustomerResponse
 
-`func NewRegisterCustomerResponse(id string, email string, createdAt time.Time, ) *RegisterCustomerResponse`
+`func NewRegisterCustomerResponse(id string, email string, createdAt time.Time, updatedAt time.Time, ) *RegisterCustomerResponse`
 
 NewRegisterCustomerResponse instantiates a new RegisterCustomerResponse object
 This constructor will assign default values to properties that have it defined,
@@ -85,6 +86,26 @@ and a boolean to check if the value has been set.
 `func (o *RegisterCustomerResponse) SetCreatedAt(v time.Time)`
 
 SetCreatedAt sets CreatedAt field to given value.
+
+
+### GetUpdatedAt
+
+`func (o *RegisterCustomerResponse) GetUpdatedAt() time.Time`
+
+GetUpdatedAt returns the UpdatedAt field if non-nil, zero value otherwise.
+
+### GetUpdatedAtOk
+
+`func (o *RegisterCustomerResponse) GetUpdatedAtOk() (*time.Time, bool)`
+
+GetUpdatedAtOk returns a tuple with the UpdatedAt field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetUpdatedAt
+
+`func (o *RegisterCustomerResponse) SetUpdatedAt(v time.Time)`
+
+SetUpdatedAt sets UpdatedAt field to given value.
 
 
 

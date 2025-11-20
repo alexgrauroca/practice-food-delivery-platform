@@ -103,8 +103,9 @@ func (h *Handler) RegisterStaff(c *gin.Context) {
 
 // LoginStaffRequest represents the request payload for logging in a staff user.
 type LoginStaffRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=8"`
+	Email        string `json:"email" binding:"required,email"`
+	RestaurantID string `json:"restaurant_id" binding:"required"`
+	Password     string `json:"password" binding:"required,min=8"`
 }
 
 // LoginStaffResponse represents the response payload for a successful staff user login.
