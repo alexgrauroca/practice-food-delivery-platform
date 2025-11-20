@@ -58,6 +58,7 @@ type RegisterCustomerOutput struct {
 	ID        string
 	Email     string
 	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func (s *service) RegisterCustomer(ctx context.Context, input RegisterCustomerInput) (RegisterCustomerOutput, error) {
@@ -86,6 +87,7 @@ func (s *service) RegisterCustomer(ctx context.Context, input RegisterCustomerIn
 		ID:        customer.ID,
 		Email:     customer.Email,
 		CreatedAt: customer.CreatedAt,
+		UpdatedAt: customer.UpdatedAt,
 	}
 	logger.Info("customer registered successfully", log.Field{Key: "customerID", Value: customer.ID})
 	return output, nil
@@ -122,11 +124,13 @@ func (s *service) LoginCustomer(ctx context.Context, input LoginCustomerInput) (
 		return LoginCustomerOutput{}, authcore.ErrInvalidCredentials
 	}
 
-	tokenPair, err := s.authCoreService.GenerateTokenPair(ctx, authcore.GenerateTokenPairInput{
-		UserID:     customer.CustomerID,
-		Expiration: DefaultTokenExpiration,
-		Role:       DefaultTokenRole,
-	})
+	tokenPair, err := s.authCoreService.GenerateTokenPair(
+		ctx, authcore.GenerateTokenPairInput{
+			UserID:     customer.CustomerID,
+			Expiration: DefaultTokenExpiration,
+			Role:       DefaultTokenRole,
+		},
+	)
 	if err != nil {
 		logger.Error("failed to generate token pair", err)
 		return LoginCustomerOutput{}, err
@@ -151,12 +155,14 @@ func (s *service) RefreshCustomer(ctx context.Context, input RefreshCustomerInpu
 
 	logger.Info("refreshing customer token")
 
-	tokenPair, err := s.authCoreService.RefreshToken(ctx, authcore.RefreshTokenInput{
-		RefreshToken: input.RefreshToken,
-		AccessToken:  input.AccessToken,
-		Expiration:   DefaultTokenExpiration,
-		Role:         DefaultTokenRole,
-	})
+	tokenPair, err := s.authCoreService.RefreshToken(
+		ctx, authcore.RefreshTokenInput{
+			RefreshToken: input.RefreshToken,
+			AccessToken:  input.AccessToken,
+			Expiration:   DefaultTokenExpiration,
+			Role:         DefaultTokenRole,
+		},
+	)
 	if err != nil {
 		logger.Error("failed to refresh the customer token", err)
 		return RefreshCustomerOutput{}, err

@@ -535,6 +535,7 @@ components:
         - id
         - email
         - created_at
+        - updated_at
       properties:
         id:
           type: string
@@ -550,6 +551,11 @@ components:
           type: string
           format: date-time
           description: Account creation timestamp
+          example: '2025-01-01T00:00:00Z'
+        updated_at:
+          type: string
+          format: date-time
+          description: Account last update timestamp
           example: '2025-01-01T00:00:00Z'
     LoginStaffRequest:
       type: object

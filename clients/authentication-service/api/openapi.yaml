@@ -563,6 +563,7 @@ components:
       type: object
     RegisterCustomerResponse:
       example:
+        updated_at: 2025-01-01T00:00:00Z
         created_at: 2025-01-01T00:00:00Z
         id: 507f1f77bcf86cd799439011
         email: user@example.com
@@ -582,10 +583,16 @@ components:
           example: 2025-01-01T00:00:00Z
           format: date-time
           type: string
+        updated_at:
+          description: Account last update timestamp
+          example: 2025-01-01T00:00:00Z
+          format: date-time
+          type: string
       required:
       - created_at
       - email
       - id
+      - updated_at
       type: object
     LoginStaffRequest:
       example:
