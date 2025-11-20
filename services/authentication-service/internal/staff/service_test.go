@@ -138,17 +138,18 @@ func TestService_LoginStaff(t *testing.T) {
 
 	tests := []staffServiceTestCase[staff.LoginStaffInput, staff.LoginStaffOutput]{
 		{
-			name: "when there is not an active staff with the same email, " +
+			name: "when there is not an active staff with the same email and restaurant, " +
 				"then it should return an invalid credentials error",
 			input: staff.LoginStaffInput{
-				Email:    "test@example.com",
-				Password: "ValidPassword123",
+				Email:        "test@example.com",
+				RestaurantID: "fake-restaurant-id",
+				Password:     "ValidPassword123",
 			},
 			mocksSetup: func(
 				repo *staffmocks.MockRepository,
 				_ *authcoremocks.MockService,
 			) {
-				repo.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).
+				repo.EXPECT().FindStaff(gomock.Any(), gomock.Any()).
 					Return(staff.Staff{}, staff.ErrStaffNotFound)
 			},
 			want:    staff.LoginStaffOutput{},
@@ -158,8 +159,9 @@ func TestService_LoginStaff(t *testing.T) {
 			name: "when there is not an active staff with the same password, " +
 				"then it should return an invalid credentials error",
 			input: staff.LoginStaffInput{
-				Email:    "test@example.com",
-				Password: "InvalidPassword123",
+				Email:        "test@example.com",
+				RestaurantID: "fake-restaurant-id",
+				Password:     "InvalidPassword123",
 			},
 			mocksSetup: func(
 				repo *staffmocks.MockRepository,
@@ -168,14 +170,15 @@ func TestService_LoginStaff(t *testing.T) {
 				hashedPassword, err := password.Hash("ValidPassword123")
 				require.NoError(t, err)
 
-				repo.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).
+				repo.EXPECT().FindStaff(gomock.Any(), gomock.Any()).
 					Return(staff.Staff{
-						ID:        "fake-id",
-						Email:     "test@example.com",
-						Password:  hashedPassword, // This should be a hashed password
-						CreatedAt: now,
-						UpdatedAt: now,
-						Active:    true,
+						ID:           "fake-id",
+						Email:        "test@example.com",
+						RestaurantID: "fake-restaurant-id",
+						Password:     hashedPassword, // This should be a hashed password
+						CreatedAt:    now,
+						UpdatedAt:    now,
+						Active:       true,
 					}, nil)
 			},
 			want:    staff.LoginStaffOutput{},
@@ -184,14 +187,15 @@ func TestService_LoginStaff(t *testing.T) {
 		{
 			name: "when there is an unexpected error when fetching the staff, then it should propagate the error",
 			input: staff.LoginStaffInput{
-				Email:    "test@example.com",
-				Password: "ValidPassword123",
+				Email:        "test@example.com",
+				RestaurantID: "fake-restaurant-id",
+				Password:     "ValidPassword123",
 			},
 			mocksSetup: func(
 				repo *staffmocks.MockRepository,
 				_ *authcoremocks.MockService,
 			) {
-				repo.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).
+				repo.EXPECT().FindStaff(gomock.Any(), gomock.Any()).
 					Return(staff.Staff{}, errRepo)
 			},
 			want:    staff.LoginStaffOutput{},
@@ -200,8 +204,9 @@ func TestService_LoginStaff(t *testing.T) {
 		{
 			name: "when there is an error generating the token pair, then it should propagate the error",
 			input: staff.LoginStaffInput{
-				Email:    "test@example.com",
-				Password: "ValidPassword123",
+				Email:        "test@example.com",
+				RestaurantID: "fake-restaurant-id",
+				Password:     "ValidPassword123",
 			},
 			mocksSetup: func(
 				repo *staffmocks.MockRepository,
@@ -210,14 +215,15 @@ func TestService_LoginStaff(t *testing.T) {
 				hashedPassword, err := password.Hash("ValidPassword123")
 				require.NoError(t, err)
 
-				repo.EXPECT().FindByEmail(gomock.Any(), "test@example.com").
+				repo.EXPECT().FindStaff(gomock.Any(), gomock.Any()).
 					Return(staff.Staff{
-						ID:        "fake-id",
-						Email:     "test@example.com",
-						Password:  hashedPassword, // This should be a hashed password
-						CreatedAt: now,
-						UpdatedAt: now,
-						Active:    true,
+						ID:           "fake-id",
+						Email:        "test@example.com",
+						RestaurantID: "fake-restaurant-id",
+						Password:     hashedPassword, // This should be a hashed password
+						CreatedAt:    now,
+						UpdatedAt:    now,
+						Active:       true,
 					}, nil)
 
 				authCoreService.EXPECT().GenerateTokenPair(gomock.Any(), gomock.Any()).
@@ -229,8 +235,9 @@ func TestService_LoginStaff(t *testing.T) {
 		{
 			name: "when there is an active staff with the same email and password, then it should return its token",
 			input: staff.LoginStaffInput{
-				Email:    "test@example.com",
-				Password: "ValidPassword123",
+				Email:        "test@example.com",
+				RestaurantID: "fake-restaurant-id",
+				Password:     "ValidPassword123",
 			},
 			mocksSetup: func(
 				repo *staffmocks.MockRepository,
@@ -239,16 +246,19 @@ func TestService_LoginStaff(t *testing.T) {
 				hashedPassword, err := password.Hash("ValidPassword123")
 				require.NoError(t, err)
 
-				repo.EXPECT().FindByEmail(gomock.Any(), "test@example.com").
-					Return(staff.Staff{
-						ID:        "fake-staff-id",
-						StaffID:   "fake-id",
-						Email:     "test@example.com",
-						Password:  hashedPassword, // This should be a hashed password
-						CreatedAt: now,
-						UpdatedAt: now,
-						Active:    true,
-					}, nil)
+				repo.EXPECT().FindStaff(gomock.Any(), staff.FindStaffParams{
+					Email:        "test@example.com",
+					RestaurantID: "fake-restaurant-id",
+				}).Return(staff.Staff{
+					ID:           "fake-staff-id",
+					StaffID:      "fake-id",
+					Email:        "test@example.com",
+					RestaurantID: "fake-restaurant-id",
+					Password:     hashedPassword, // This should be a hashed password
+					CreatedAt:    now,
+					UpdatedAt:    now,
+					Active:       true,
+				}, nil)
 
 				authCoreService.EXPECT().GenerateTokenPair(gomock.Any(), gomock.Any()).
 					Return(authcore.TokenPair{
@@ -344,10 +354,12 @@ func TestService_RefreshStaff(t *testing.T) {
 	}
 }
 
-func serviceSetup(t *testing.T, logger log.Logger, mocksSetup func(
-	repo *staffmocks.MockRepository,
-	authCoreService *authcoremocks.MockService,
-)) (staff.Service, func()) {
+func serviceSetup(
+	t *testing.T, logger log.Logger, mocksSetup func(
+		repo *staffmocks.MockRepository,
+		authCoreService *authcoremocks.MockService,
+	),
+) (staff.Service, func()) {
 	ctrl := gomock.NewController(t)
 
 	repo := staffmocks.NewMockRepository(ctrl)
