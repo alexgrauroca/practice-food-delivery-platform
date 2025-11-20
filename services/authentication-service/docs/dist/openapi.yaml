@@ -195,7 +195,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LoginRequest'
+              $ref: '#/components/schemas/LoginStaffRequest'
       responses:
         '200':
           description: Login successful
@@ -219,6 +219,7 @@ paths:
                     message: validation failed
                     details:
                       - email is required
+                      - restaurant_id is required
                       - password is required
         '401':
           description: Invalid credentials
@@ -407,7 +408,6 @@ components:
           format: password
           minLength: 8
           example: strongpassword123
-          writeOnly: true
     LoginResponse:
       type: object
       required:
@@ -551,6 +551,26 @@ components:
           format: date-time
           description: Account creation timestamp
           example: '2025-01-01T00:00:00Z'
+    LoginStaffRequest:
+      type: object
+      required:
+        - email
+        - restaurant_id
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        restaurant_id:
+          type: string
+          pattern: ^[0-9a-fA-F]{24}$
+          example: 507f1f77bcf86cd799439011
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: strongpassword123
     RegisterStaffRequest:
       type: object
       required:

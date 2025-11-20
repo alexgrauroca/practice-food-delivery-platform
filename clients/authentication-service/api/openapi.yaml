@@ -191,7 +191,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/LoginRequest"
+              $ref: "#/components/schemas/LoginStaffRequest"
         required: true
       responses:
         "200":
@@ -213,6 +213,7 @@ paths:
                     message: validation failed
                     details:
                     - email is required
+                    - restaurant_id is required
                     - password is required
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
@@ -412,7 +413,6 @@ components:
           format: password
           minLength: 8
           type: string
-          writeOnly: true
       required:
       - email
       - password
@@ -586,6 +586,30 @@ components:
       - created_at
       - email
       - id
+      type: object
+    LoginStaffRequest:
+      example:
+        password: strongpassword123
+        restaurant_id: 507f1f77bcf86cd799439011
+        email: user@example.com
+      properties:
+        email:
+          example: user@example.com
+          format: email
+          type: string
+        restaurant_id:
+          example: 507f1f77bcf86cd799439011
+          pattern: "^[0-9a-fA-F]{24}$"
+          type: string
+        password:
+          example: strongpassword123
+          format: password
+          minLength: 8
+          type: string
+      required:
+      - email
+      - password
+      - restaurant_id
       type: object
     RegisterStaffRequest:
       example:

@@ -112,7 +112,7 @@ func (s *service) LoginStaff(ctx context.Context, input LoginStaffInput) (LoginS
 	logger := s.logger.WithContext(ctx)
 
 	logger.Info("logging in", log.Field{Key: "email", Value: input.Email})
-	customer, err := s.repo.FindByEmail(ctx, input.Email)
+	customer, err := s.repo.FindStaff(ctx, input.Email)
 	if err != nil {
 		if errors.Is(err, ErrStaffNotFound) {
 			logger.Warn("customer not found", log.Field{Key: "email", Value: input.Email})

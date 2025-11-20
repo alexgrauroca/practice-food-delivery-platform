@@ -12,7 +12,7 @@ Method | HTTP request | Description
 
 ## LoginStaff
 
-> LoginResponse LoginStaff(ctx).LoginRequest(loginRequest).Execute()
+> LoginResponse LoginStaff(ctx).LoginStaffRequest(loginStaffRequest).Execute()
 
 Login as staff user
 
@@ -31,11 +31,11 @@ import (
 )
 
 func main() {
-	loginRequest := *openapiclient.NewLoginRequest("user@example.com", "strongpassword123") // LoginRequest | 
+	loginStaffRequest := *openapiclient.NewLoginStaffRequest("user@example.com", "507f1f77bcf86cd799439011", "strongpassword123") // LoginStaffRequest | 
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)
-	resp, r, err := apiClient.StaffAPI.LoginStaff(context.Background()).LoginRequest(loginRequest).Execute()
+	resp, r, err := apiClient.StaffAPI.LoginStaff(context.Background()).LoginStaffRequest(loginStaffRequest).Execute()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error when calling `StaffAPI.LoginStaff``: %v\n", err)
 		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -56,7 +56,7 @@ Other parameters are passed through a pointer to a apiLoginStaffRequest struct v
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **loginRequest** | [**LoginRequest**](LoginRequest.md) |  | 
+ **loginStaffRequest** | [**LoginStaffRequest**](LoginStaffRequest.md) |  | 
 
 ### Return type
 
