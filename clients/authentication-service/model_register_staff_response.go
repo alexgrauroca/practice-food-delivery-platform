@@ -26,8 +26,12 @@ type RegisterStaffResponse struct {
 	Id string `json:"id" validate:"regexp=^[0-9a-fA-F]{24}$"`
 	// Staff's email address
 	Email string `json:"email"`
-	// Account creation timestamp
+	// Unique restaurant identifier in the auth service
+	RestaurantId *string `json:"restaurant_id,omitempty" validate:"regexp=^[0-9a-fA-F]{24}$"`
+	// Staff creation timestamp
 	CreatedAt time.Time `json:"created_at"`
+	// Staff update timestamp
+	UpdatedAt *time.Time `json:"updated_at,omitempty"`
 }
 
 type _RegisterStaffResponse RegisterStaffResponse
@@ -100,6 +104,38 @@ func (o *RegisterStaffResponse) SetEmail(v string) {
 	o.Email = v
 }
 
+// GetRestaurantId returns the RestaurantId field value if set, zero value otherwise.
+func (o *RegisterStaffResponse) GetRestaurantId() string {
+	if o == nil || IsNil(o.RestaurantId) {
+		var ret string
+		return ret
+	}
+	return *o.RestaurantId
+}
+
+// GetRestaurantIdOk returns a tuple with the RestaurantId field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *RegisterStaffResponse) GetRestaurantIdOk() (*string, bool) {
+	if o == nil || IsNil(o.RestaurantId) {
+		return nil, false
+	}
+	return o.RestaurantId, true
+}
+
+// HasRestaurantId returns a boolean if a field has been set.
+func (o *RegisterStaffResponse) HasRestaurantId() bool {
+	if o != nil && !IsNil(o.RestaurantId) {
+		return true
+	}
+
+	return false
+}
+
+// SetRestaurantId gets a reference to the given string and assigns it to the RestaurantId field.
+func (o *RegisterStaffResponse) SetRestaurantId(v string) {
+	o.RestaurantId = &v
+}
+
 // GetCreatedAt returns the CreatedAt field value
 func (o *RegisterStaffResponse) GetCreatedAt() time.Time {
 	if o == nil {
@@ -124,6 +160,38 @@ func (o *RegisterStaffResponse) SetCreatedAt(v time.Time) {
 	o.CreatedAt = v
 }
 
+// GetUpdatedAt returns the UpdatedAt field value if set, zero value otherwise.
+func (o *RegisterStaffResponse) GetUpdatedAt() time.Time {
+	if o == nil || IsNil(o.UpdatedAt) {
+		var ret time.Time
+		return ret
+	}
+	return *o.UpdatedAt
+}
+
+// GetUpdatedAtOk returns a tuple with the UpdatedAt field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *RegisterStaffResponse) GetUpdatedAtOk() (*time.Time, bool) {
+	if o == nil || IsNil(o.UpdatedAt) {
+		return nil, false
+	}
+	return o.UpdatedAt, true
+}
+
+// HasUpdatedAt returns a boolean if a field has been set.
+func (o *RegisterStaffResponse) HasUpdatedAt() bool {
+	if o != nil && !IsNil(o.UpdatedAt) {
+		return true
+	}
+
+	return false
+}
+
+// SetUpdatedAt gets a reference to the given time.Time and assigns it to the UpdatedAt field.
+func (o *RegisterStaffResponse) SetUpdatedAt(v time.Time) {
+	o.UpdatedAt = &v
+}
+
 func (o RegisterStaffResponse) MarshalJSON() ([]byte, error) {
 	toSerialize,err := o.ToMap()
 	if err != nil {
@@ -136,7 +204,13 @@ func (o RegisterStaffResponse) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["id"] = o.Id
 	toSerialize["email"] = o.Email
+	if !IsNil(o.RestaurantId) {
+		toSerialize["restaurant_id"] = o.RestaurantId
+	}
 	toSerialize["created_at"] = o.CreatedAt
+	if !IsNil(o.UpdatedAt) {
+		toSerialize["updated_at"] = o.UpdatedAt
+	}
 	return toSerialize, nil
 }
 

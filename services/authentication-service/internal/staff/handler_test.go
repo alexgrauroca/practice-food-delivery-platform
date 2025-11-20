@@ -51,6 +51,7 @@ func TestHandler_RegisterStaff(t *testing.T) {
 				WithDetails(
 					"staff_id is required",
 					"email is required",
+					"restaurant_id is required",
 					"password is required",
 				).Build(),
 			wantStatus: http.StatusBadRequest,
@@ -60,6 +61,7 @@ func TestHandler_RegisterStaff(t *testing.T) {
 			jsonPayload: `{
 				"staff_id": "fake-staff-id",
 				"email": "invalid-email",
+				"restaurant_id": "fake-restaurant-id",
 				"password": "ValidPassword123"
 			}`,
 			wantJSON: customhttp.NewValidationErrorRespBuilder().
@@ -72,6 +74,7 @@ func TestHandler_RegisterStaff(t *testing.T) {
 			jsonPayload: `{
 				"staff_id": "fake-staff-id",
 				"email": "test@example.com",
+				"restaurant_id": "fake-restaurant-id",
 				"password": "short"
 			}`,
 			wantJSON: customhttp.NewValidationErrorRespBuilder().
@@ -84,6 +87,7 @@ func TestHandler_RegisterStaff(t *testing.T) {
 			jsonPayload: `{
 				"staff_id": "fake-staff-id",
 				"email": "test@example.com",
+				"restaurant_id": "fake-restaurant-id",
 				"password": "ValidPassword123"
 			}`,
 			mocksSetup: func(service *staffmocks.MockService, _ *authmocks.MockService) {
@@ -103,6 +107,7 @@ func TestHandler_RegisterStaff(t *testing.T) {
 			jsonPayload: `{
 				"staff_id": "fake-staff-id",
 				"email": "test@example.com",
+				"restaurant_id": "fake-restaurant-id",
 				"password": "ValidPassword123"
 			}`,
 			mocksSetup: func(service *staffmocks.MockService, _ *authmocks.MockService) {
@@ -117,23 +122,29 @@ func TestHandler_RegisterStaff(t *testing.T) {
 			jsonPayload: `{
 				"staff_id": "fake-staff-id",
 				"email": "test@example.com",
+				"restaurant_id": "fake-restaurant-id",
 				"password": "ValidPassword123"
 			}`,
 			mocksSetup: func(service *staffmocks.MockService, _ *authmocks.MockService) {
 				service.EXPECT().RegisterStaff(gomock.Any(), staff.RegisterStaffInput{
-					StaffID:  "fake-staff-id",
-					Email:    "test@example.com",
-					Password: "ValidPassword123",
+					StaffID:      "fake-staff-id",
+					Email:        "test@example.com",
+					RestaurantID: "fake-restaurant-id",
+					Password:     "ValidPassword123",
 				}).Return(staff.RegisterStaffOutput{
-					ID:        "fake-id",
-					Email:     "test@example.com",
-					CreatedAt: now,
+					ID:           "fake-id",
+					Email:        "test@example.com",
+					RestaurantID: "fake-restaurant-id",
+					CreatedAt:    now,
+					UpdatedAt:    now,
 				}, nil)
 			},
 			wantJSON: `{
 				"id":"fake-id",
 				"email":"test@example.com",
-				"created_at":"2025-01-01T00:00:00Z"
+				"restaurant_id":"fake-restaurant-id",
+				"created_at":"2025-01-01T00:00:00Z",
+				"updated_at":"2025-01-01T00:00:00Z"
 			}`,
 			wantStatus: http.StatusCreated,
 		},

@@ -6,13 +6,14 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **StaffId** | **string** | Unique staff identifier | 
 **Email** | **string** | Staff&#39;s email address | 
+**RestaurantId** | **string** | Unique restaurant identifier | 
 **Password** | **string** | Password must be at least 8 characters long | 
 
 ## Methods
 
 ### NewRegisterStaffRequest
 
-`func NewRegisterStaffRequest(staffId string, email string, password string, ) *RegisterStaffRequest`
+`func NewRegisterStaffRequest(staffId string, email string, restaurantId string, password string, ) *RegisterStaffRequest`
 
 NewRegisterStaffRequest instantiates a new RegisterStaffRequest object
 This constructor will assign default values to properties that have it defined,
@@ -65,6 +66,26 @@ and a boolean to check if the value has been set.
 `func (o *RegisterStaffRequest) SetEmail(v string)`
 
 SetEmail sets Email field to given value.
+
+
+### GetRestaurantId
+
+`func (o *RegisterStaffRequest) GetRestaurantId() string`
+
+GetRestaurantId returns the RestaurantId field if non-nil, zero value otherwise.
+
+### GetRestaurantIdOk
+
+`func (o *RegisterStaffRequest) GetRestaurantIdOk() (*string, bool)`
+
+GetRestaurantIdOk returns a tuple with the RestaurantId field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetRestaurantId
+
+`func (o *RegisterStaffRequest) SetRestaurantId(v string)`
+
+SetRestaurantId sets RestaurantId field to given value.
 
 
 ### GetPassword

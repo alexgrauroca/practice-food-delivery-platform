@@ -14,8 +14,18 @@ properties:
     format: email
     description: Staff's email address
     example: user@example.com
+  restaurant_id:
+    type: string
+    pattern: '^[0-9a-fA-F]{24}$'
+    description: Unique restaurant identifier in the auth service
+    example: 507f1f77bcf86cd799439011
   created_at:
     type: string
     format: date-time
-    description: Account creation timestamp
+    description: Staff creation timestamp
+    example: 2025-01-01T00:00:00Z
+  updated_at:
+    type: string
+    format: date-time
+    description: Staff update timestamp
     example: 2025-01-01T00:00:00Z

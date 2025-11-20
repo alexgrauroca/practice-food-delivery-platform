@@ -26,13 +26,14 @@ const (
 
 // Staff represents a user in the system with associated details such as email, name, and account activation status.
 type Staff struct {
-	ID        string    `bson:"_id,omitempty"`
-	StaffID   string    `bson:"staff_id"`
-	Email     string    `bson:"email"`
-	Active    bool      `bson:"active"`
-	Password  string    `bson:"password,omitempty"`
-	CreatedAt time.Time `bson:"created_at,omitempty"`
-	UpdatedAt time.Time `bson:"updated_at,omitempty"`
+	ID           string    `bson:"_id,omitempty"`
+	StaffID      string    `bson:"staff_id"`
+	Email        string    `bson:"email"`
+	RestaurantID string    `bson:"restaurant_id"`
+	Active       bool      `bson:"active"`
+	Password     string    `bson:"password,omitempty"`
+	CreatedAt    time.Time `bson:"created_at,omitempty"`
+	UpdatedAt    time.Time `bson:"updated_at,omitempty"`
 }
 
 // Repository defines the interface for the staff repository.
@@ -60,9 +61,10 @@ func NewRepository(logger log.Logger, db *mongo.Database, clk clock.Clock) Repos
 
 // CreateStaffParams represents the parameters required to create a new staff user.
 type CreateStaffParams struct {
-	StaffID  string `json:"staff_id"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	StaffID      string `json:"staff_id"`
+	Email        string `json:"email"`
+	RestaurantID string `json:"restaurant_id"`
+	Password     string `json:"password"`
 }
 
 func (r *repository) CreateStaff(ctx context.Context, params CreateStaffParams) (Staff, error) {
@@ -70,12 +72,13 @@ func (r *repository) CreateStaff(ctx context.Context, params CreateStaffParams) 
 
 	now := r.clock.Now()
 	c := Staff{
-		StaffID:   params.StaffID,
-		Email:     params.Email,
-		Password:  params.Password,
-		CreatedAt: now,
-		UpdatedAt: now,
-		Active:    true,
+		StaffID:      params.StaffID,
+		Email:        params.Email,
+		RestaurantID: params.RestaurantID,
+		Password:     params.Password,
+		CreatedAt:    now,
+		UpdatedAt:    now,
+		Active:       true,
 	}
 	res, err := r.collection.InsertOne(ctx, c)
 	if err != nil {

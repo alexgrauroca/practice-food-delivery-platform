@@ -64,12 +64,9 @@ type RegisterCustomerResponse struct {
 
 func (c *client) RegisterCustomer(ctx context.Context, req RegisterCustomerRequest) (RegisterCustomerResponse, error) {
 	c.logger.Info("Registering customer", log.Field{Key: "customerID", Value: req.CustomerID})
-	authreq := authclient.RegisterCustomerRequest{
-		CustomerId: req.CustomerID,
-		Email:      req.Email,
-		Password:   req.Password,
-	}
-	resp, r, err := c.apicli.CustomersAPI.RegisterCustomer(ctx).RegisterCustomerRequest(authreq).Execute()
+
+	authreq := authclient.NewRegisterCustomerRequest(req.CustomerID, req.Email, req.Password)
+	resp, r, err := c.apicli.CustomersAPI.RegisterCustomer(ctx).RegisterCustomerRequest(*authreq).Execute()
 	if err != nil {
 		c.logger.Warn(
 			"Failed to register customer",
@@ -80,12 +77,12 @@ func (c *client) RegisterCustomer(ctx context.Context, req RegisterCustomerReque
 	}
 	c.logger.Info(
 		"Customer registered successfully at authentication service",
-		log.Field{Key: "customerID", Value: resp.Id},
+		log.Field{Key: "customerID", Value: resp.GetId()},
 	)
 	return RegisterCustomerResponse{
-		ID:        resp.Id,
-		Email:     resp.Email,
-		CreatedAt: resp.CreatedAt,
+		ID:        resp.GetId(),
+		Email:     resp.GetEmail(),
+		CreatedAt: resp.GetCreatedAt(),
 	}, nil
 }
 
@@ -109,6 +106,26 @@ type RegisterStaffResponse struct {
 }
 
 func (c *client) RegisterStaff(ctx context.Context, req RegisterStaffRequest) (RegisterStaffResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	c.logger.Info("Registering staff", log.Field{Key: "staffID", Value: req.StaffID})
+	authreq := authclient.NewRegisterStaffRequest(req.StaffID, req.Email, req.RestaurantID, req.Password)
+	resp, r, err := c.apicli.StaffAPI.RegisterStaff(ctx).RegisterStaffRequest(*authreq).Execute()
+	if err != nil {
+		c.logger.Warn(
+			"Failed to register staff",
+			log.Field{Key: "error", Value: err.Error()},
+			log.Field{Key: "response", Value: r},
+		)
+		return RegisterStaffResponse{}, err
+	}
+	c.logger.Info(
+		"Staff registered successfully at authentication service",
+		log.Field{Key: "staffID", Value: resp.GetId()},
+	)
+	return RegisterStaffResponse{
+		ID:           resp.GetId(),
+		Email:        resp.GetEmail(),
+		RestaurantID: resp.GetRestaurantId(),
+		CreatedAt:    resp.GetCreatedAt(),
+		UpdatedAt:    resp.GetUpdatedAt(),
+	}, nil
 }
