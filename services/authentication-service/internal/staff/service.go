@@ -99,8 +99,9 @@ func (s *service) RegisterStaff(ctx context.Context, input RegisterStaffInput) (
 
 // LoginStaffInput represents the input required for the staff user login process.
 type LoginStaffInput struct {
-	Email    string
-	Password string
+	Email        string
+	RestaurantID string
+	Password     string
 }
 
 // LoginStaffOutput represents the output returned upon successful login of a staff user.
@@ -112,7 +113,10 @@ func (s *service) LoginStaff(ctx context.Context, input LoginStaffInput) (LoginS
 	logger := s.logger.WithContext(ctx)
 
 	logger.Info("logging in", log.Field{Key: "email", Value: input.Email})
-	customer, err := s.repo.FindStaff(ctx, input.Email)
+	customer, err := s.repo.FindStaff(ctx, FindStaffParams{
+		Email:        input.Email,
+		RestaurantID: input.RestaurantID,
+	})
 	if err != nil {
 		if errors.Is(err, ErrStaffNotFound) {
 			logger.Warn("customer not found", log.Field{Key: "email", Value: input.Email})

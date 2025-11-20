@@ -124,7 +124,7 @@ func TestRepository_CreateStaff_UnexpectedFailure(t *testing.T) {
 	assert.NotErrorIs(t, err, staff.ErrStaffAlreadyExists)
 }
 
-func TestRepository_FindByEmail(t *testing.T) {
+func TestRepository_FindStaff(t *testing.T) {
 	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 	logger, _ := log.NewTest()
 
@@ -233,7 +233,7 @@ func TestRepository_FindByEmail(t *testing.T) {
 	}
 }
 
-func TestRepository_FindByEmail_UnexpectedFailure(t *testing.T) {
+func TestRepository_FindStaff_UnexpectedFailure(t *testing.T) {
 	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 	logger, _ := log.NewTest()
 
