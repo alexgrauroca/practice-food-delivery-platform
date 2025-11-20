@@ -74,9 +74,10 @@ func (s *service) RegisterStaff(ctx context.Context, input RegisterStaffInput) (
 	}
 
 	params := CreateStaffParams{
-		StaffID:  input.StaffID,
-		Email:    input.Email,
-		Password: hashedPassword,
+		StaffID:      input.StaffID,
+		Email:        input.Email,
+		RestaurantID: input.RestaurantID,
+		Password:     hashedPassword,
 	}
 
 	staff, err := s.repo.CreateStaff(ctx, params)
