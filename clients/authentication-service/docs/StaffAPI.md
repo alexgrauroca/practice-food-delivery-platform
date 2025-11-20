@@ -163,7 +163,7 @@ import (
 )
 
 func main() {
-	registerStaffRequest := *openapiclient.NewRegisterStaffRequest("507f1f77bcf86cd799439011", "user@example.com", "strongpassword123") // RegisterStaffRequest | 
+	registerStaffRequest := *openapiclient.NewRegisterStaffRequest("507f1f77bcf86cd799439011", "user@example.com", "507f1f77bcf86cd799439011", "strongpassword123") // RegisterStaffRequest | 
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)

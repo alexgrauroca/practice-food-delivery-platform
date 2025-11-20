@@ -48,16 +48,19 @@ func NewService(
 
 // RegisterStaffInput defines the input structure required for registering a new staff.
 type RegisterStaffInput struct {
-	StaffID  string
-	Email    string
-	Password string
+	StaffID      string
+	Email        string
+	RestaurantID string
+	Password     string
 }
 
 // RegisterStaffOutput represents the output data returned after successfully registering a new staff.
 type RegisterStaffOutput struct {
-	ID        string
-	Email     string
-	CreatedAt time.Time
+	ID           string
+	Email        string
+	RestaurantID string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }
 
 func (s *service) RegisterStaff(ctx context.Context, input RegisterStaffInput) (RegisterStaffOutput, error) {
@@ -71,9 +74,10 @@ func (s *service) RegisterStaff(ctx context.Context, input RegisterStaffInput) (
 	}
 
 	params := CreateStaffParams{
-		StaffID:  input.StaffID,
-		Email:    input.Email,
-		Password: hashedPassword,
+		StaffID:      input.StaffID,
+		Email:        input.Email,
+		RestaurantID: input.RestaurantID,
+		Password:     hashedPassword,
 	}
 
 	staff, err := s.repo.CreateStaff(ctx, params)
@@ -83,9 +87,11 @@ func (s *service) RegisterStaff(ctx context.Context, input RegisterStaffInput) (
 	}
 
 	output := RegisterStaffOutput{
-		ID:        staff.ID,
-		Email:     staff.Email,
-		CreatedAt: staff.CreatedAt,
+		ID:           staff.ID,
+		Email:        staff.Email,
+		RestaurantID: staff.RestaurantID,
+		CreatedAt:    staff.CreatedAt,
+		UpdatedAt:    staff.UpdatedAt,
 	}
 	logger.Info("staff registered successfully", log.Field{Key: "staffID", Value: staff.ID})
 	return output, nil

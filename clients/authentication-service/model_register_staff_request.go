@@ -25,6 +25,8 @@ type RegisterStaffRequest struct {
 	StaffId string `json:"staff_id" validate:"regexp=^[0-9a-fA-F]{24}$"`
 	// Staff's email address
 	Email string `json:"email" validate:"regexp=^[\\\\w\\\\.-]+@[\\\\w\\\\.-]+\\\\.\\\\w{2,}$"`
+	// Unique restaurant identifier
+	RestaurantId string `json:"restaurant_id" validate:"regexp=^[0-9a-fA-F]{24}$"`
 	// Password must be at least 8 characters long
 	Password string `json:"password"`
 }
@@ -35,10 +37,11 @@ type _RegisterStaffRequest RegisterStaffRequest
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewRegisterStaffRequest(staffId string, email string, password string) *RegisterStaffRequest {
+func NewRegisterStaffRequest(staffId string, email string, restaurantId string, password string) *RegisterStaffRequest {
 	this := RegisterStaffRequest{}
 	this.StaffId = staffId
 	this.Email = email
+	this.RestaurantId = restaurantId
 	this.Password = password
 	return &this
 }
@@ -99,6 +102,30 @@ func (o *RegisterStaffRequest) SetEmail(v string) {
 	o.Email = v
 }
 
+// GetRestaurantId returns the RestaurantId field value
+func (o *RegisterStaffRequest) GetRestaurantId() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.RestaurantId
+}
+
+// GetRestaurantIdOk returns a tuple with the RestaurantId field value
+// and a boolean to check if the value has been set.
+func (o *RegisterStaffRequest) GetRestaurantIdOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.RestaurantId, true
+}
+
+// SetRestaurantId sets field value
+func (o *RegisterStaffRequest) SetRestaurantId(v string) {
+	o.RestaurantId = v
+}
+
 // GetPassword returns the Password field value
 func (o *RegisterStaffRequest) GetPassword() string {
 	if o == nil {
@@ -135,6 +162,7 @@ func (o RegisterStaffRequest) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["staff_id"] = o.StaffId
 	toSerialize["email"] = o.Email
+	toSerialize["restaurant_id"] = o.RestaurantId
 	toSerialize["password"] = o.Password
 	return toSerialize, nil
 }
@@ -146,6 +174,7 @@ func (o *RegisterStaffRequest) UnmarshalJSON(data []byte) (err error) {
 	requiredProperties := []string{
 		"staff_id",
 		"email",
+		"restaurant_id",
 		"password",
 	}
 

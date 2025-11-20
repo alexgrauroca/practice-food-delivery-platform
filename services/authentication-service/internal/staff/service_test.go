@@ -45,9 +45,10 @@ func TestService_RegisterStaff(t *testing.T) {
 			name: "when there is an active staff with the same email, " +
 				"then it should return a staff already exists error",
 			input: staff.RegisterStaffInput{
-				StaffID:  "fake-staff-id",
-				Email:    "test@example.com",
-				Password: "ValidPassword123",
+				StaffID:      "fake-staff-id",
+				Email:        "test@example.com",
+				RestaurantID: "fake-restaurant-id",
+				Password:     "ValidPassword123",
 			},
 			mocksSetup: func(
 				repo *staffmocks.MockRepository,
@@ -62,9 +63,10 @@ func TestService_RegisterStaff(t *testing.T) {
 		{
 			name: "when there is an unexpected error when creating the staff, then it should propagate the error",
 			input: staff.RegisterStaffInput{
-				StaffID:  "fake-staff-id",
-				Email:    "test@example.com",
-				Password: "ValidPassword123",
+				StaffID:      "fake-staff-id",
+				Email:        "test@example.com",
+				RestaurantID: "fake-restaurant-id",
+				Password:     "ValidPassword123",
 			},
 			mocksSetup: func(
 				repo *staffmocks.MockRepository,
@@ -79,9 +81,10 @@ func TestService_RegisterStaff(t *testing.T) {
 		{
 			name: "when the staff can be created, then it should return the created staff",
 			input: staff.RegisterStaffInput{
-				StaffID:  "fake-staff-id",
-				Email:    "test@example.com",
-				Password: "ValidPassword123",
+				StaffID:      "fake-staff-id",
+				Email:        "test@example.com",
+				RestaurantID: "fake-restaurant-id",
+				Password:     "ValidPassword123",
 			},
 			mocksSetup: func(
 				repo *staffmocks.MockRepository,
@@ -94,20 +97,23 @@ func TestService_RegisterStaff(t *testing.T) {
 						require.True(t, ok, "Password should be hashed and match the input password")
 
 						return staff.Staff{
-							ID:        "fake-id",
-							StaffID:   params.StaffID,
-							Email:     params.Email,
-							Password:  params.Password,
-							CreatedAt: now,
-							UpdatedAt: now,
-							Active:    true,
+							ID:           "fake-id",
+							StaffID:      params.StaffID,
+							Email:        params.Email,
+							Password:     params.Password,
+							RestaurantID: params.RestaurantID,
+							CreatedAt:    now,
+							UpdatedAt:    now,
+							Active:       true,
 						}, nil
 					})
 			},
 			want: staff.RegisterStaffOutput{
-				ID:        "fake-id",
-				Email:     "test@example.com",
-				CreatedAt: now,
+				ID:           "fake-id",
+				Email:        "test@example.com",
+				RestaurantID: "fake-restaurant-id",
+				CreatedAt:    now,
+				UpdatedAt:    now,
 			},
 			wantErr: nil,
 		},

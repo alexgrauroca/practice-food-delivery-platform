@@ -49,16 +49,19 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 
 // RegisterStaffRequest represents the request payload for registering a new staff user.
 type RegisterStaffRequest struct {
-	StaffID  string `json:"staff_id" binding:"required"`
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=8"`
+	StaffID      string `json:"staff_id" binding:"required"`
+	Email        string `json:"email" binding:"required,email"`
+	RestaurantID string `json:"restaurant_id" binding:"required"`
+	Password     string `json:"password" binding:"required,min=8"`
 }
 
 // RegisterStaffResponse represents the response returned after successfully registering a new staff user.
 type RegisterStaffResponse struct {
-	ID        string    `json:"id"`
-	Email     string    `json:"email"`
-	CreatedAt time.Time `json:"created_at"`
+	ID           string    `json:"id"`
+	Email        string    `json:"email"`
+	RestaurantID string    `json:"restaurant_id"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
 
 // RegisterStaff handles the registration of a new staff user.

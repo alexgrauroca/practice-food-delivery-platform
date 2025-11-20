@@ -34,6 +34,7 @@ post:
                 message: validation failed
                 details:
                   - email is required
+                  - restaurant_id is required
                   - password is required
                   - email must be a valid email address
                   - password must be a valid password with at least 8 characters long

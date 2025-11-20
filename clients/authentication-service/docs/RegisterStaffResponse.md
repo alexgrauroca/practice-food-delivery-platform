@@ -6,7 +6,9 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Id** | **string** | Unique staff identifier in the auth service | 
 **Email** | **string** | Staff&#39;s email address | 
-**CreatedAt** | **time.Time** | Account creation timestamp | 
+**RestaurantId** | Pointer to **string** | Unique restaurant identifier in the auth service | [optional] 
+**CreatedAt** | **time.Time** | Staff creation timestamp | 
+**UpdatedAt** | Pointer to **time.Time** | Staff update timestamp | [optional] 
 
 ## Methods
 
@@ -67,6 +69,31 @@ and a boolean to check if the value has been set.
 SetEmail sets Email field to given value.
 
 
+### GetRestaurantId
+
+`func (o *RegisterStaffResponse) GetRestaurantId() string`
+
+GetRestaurantId returns the RestaurantId field if non-nil, zero value otherwise.
+
+### GetRestaurantIdOk
+
+`func (o *RegisterStaffResponse) GetRestaurantIdOk() (*string, bool)`
+
+GetRestaurantIdOk returns a tuple with the RestaurantId field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetRestaurantId
+
+`func (o *RegisterStaffResponse) SetRestaurantId(v string)`
+
+SetRestaurantId sets RestaurantId field to given value.
+
+### HasRestaurantId
+
+`func (o *RegisterStaffResponse) HasRestaurantId() bool`
+
+HasRestaurantId returns a boolean if a field has been set.
+
 ### GetCreatedAt
 
 `func (o *RegisterStaffResponse) GetCreatedAt() time.Time`
@@ -86,6 +113,31 @@ and a boolean to check if the value has been set.
 
 SetCreatedAt sets CreatedAt field to given value.
 
+
+### GetUpdatedAt
+
+`func (o *RegisterStaffResponse) GetUpdatedAt() time.Time`
+
+GetUpdatedAt returns the UpdatedAt field if non-nil, zero value otherwise.
+
+### GetUpdatedAtOk
+
+`func (o *RegisterStaffResponse) GetUpdatedAtOk() (*time.Time, bool)`
+
+GetUpdatedAtOk returns a tuple with the UpdatedAt field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetUpdatedAt
+
+`func (o *RegisterStaffResponse) SetUpdatedAt(v time.Time)`
+
+SetUpdatedAt sets UpdatedAt field to given value.
+
+### HasUpdatedAt
+
+`func (o *RegisterStaffResponse) HasUpdatedAt() bool`
+
+HasUpdatedAt returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
