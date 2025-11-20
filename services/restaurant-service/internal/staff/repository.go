@@ -3,6 +3,29 @@ package staff
 import (
 	"context"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/clock"
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/infraestructure/mongodb"
+	"github.com/alexgrauroca/practice-food-delivery-platform/pkg/log"
+)
+
+const (
+	// CollectionName defines the name of the MongoDB collection used for storing staff documents.
+	CollectionName = "staff"
+
+	// FieldEmail represents the field name used to store or query email addresses in the database.
+	FieldEmail = "email"
+	// FieldActive represents the field name used to indicate the active status of a staff user in the database.
+	FieldActive = "active"
+	// FieldRestaurantID represents the field name used to store the unique RestaurantID of a staff user in the
+	//database.
+	FieldRestaurantID = "restaurant_id"
+	// FieldOwner represents the field name used to indicate whether a staff user is a restaurant owner or not.
+	FieldOwner = "owner"
 )
 
 // Staff represents the structure of a restaurant staff user.
@@ -29,6 +52,21 @@ type Repository interface {
 	PurgeStaff(ctx context.Context, email string) error
 }
 
+type repository struct {
+	logger     log.Logger
+	collection *mongo.Collection
+	clock      clock.Clock
+}
+
+// NewRepository creates a new instance of the Repository interface with MongoDB implementation.
+func NewRepository(logger log.Logger, db *mongo.Database, clk clock.Clock) Repository {
+	return &repository{
+		logger:     logger,
+		collection: db.Collection(CollectionName),
+		clock:      clk,
+	}
+}
+
 // CreateStaffParams represents the input data required for creating a new staff user.
 type CreateStaffParams struct {
 	Email        string
@@ -39,4 +77,61 @@ type CreateStaffParams struct {
 	City         string
 	PostalCode   string
 	CountryCode  string
+}
+
+func (r repository) CreateStaff(ctx context.Context, params CreateStaffParams) (Staff, error) {
+	logger := r.logger.WithContext(ctx)
+
+	now := r.clock.Now()
+	staff := Staff{
+		Email:        params.Email,
+		RestaurantID: params.RestaurantID,
+		Owner:        params.Owner,
+		Name:         params.Name,
+		Active:       true,
+		Address:      params.Address,
+		City:         params.City,
+		PostalCode:   params.PostalCode,
+		CountryCode:  params.CountryCode,
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	}
+	res, err := r.collection.InsertOne(ctx, staff)
+	if err != nil {
+		if mongodb.IsDuplicateKeyError(err) {
+			logger.Warn(
+				"staff already exists",
+				log.Field{Key: "email", Value: params.Email},
+				log.Field{Key: "restaurant_id", Value: params.RestaurantID},
+				log.Field{Key: "owner", Value: params.Owner},
+			)
+			return Staff{}, ErrStaffAlreadyExists
+		}
+		logger.Error("failed to insert staff", err)
+		return Staff{}, err
+	}
+
+	staff.ID = res.InsertedID.(primitive.ObjectID).Hex()
+	logger.Info("staff created successfully", log.Field{Key: "staff_id", Value: staff.ID})
+	return staff, nil
+}
+
+func (r repository) PurgeStaff(ctx context.Context, email string) error {
+	logger := r.logger.WithContext(ctx)
+	logger.Info("purging staff", log.Field{Key: "email", Value: email})
+
+	res, err := r.collection.DeleteOne(ctx, bson.M{
+		FieldEmail: email,
+		FieldActive: true,
+	})
+	if err != nil {
+		logger.Error("failed to purge staff", err)
+		return err
+	}
+	if res.DeletedCount == 0 {
+		logger.Warn("staff not found", log.Field{Key: "email", Value: email})
+		return ErrStaffNotFound
+	}
+	logger.Info("staff purged successfully", log.Field{Key: "email", Value: email})
+	return nil
 }
