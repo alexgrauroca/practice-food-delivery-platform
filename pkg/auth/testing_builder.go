@@ -5,20 +5,20 @@ import (
 	"strings"
 )
 
-// AuthResponseBuilder is a type used to build and return HTTP response payloads in JSON format.
-type AuthResponseBuilder struct {
+// ResponseBuilder is a type used to build and return HTTP response payloads in JSON format.
+type ResponseBuilder struct {
 	json    string
 	details []string
 }
 
 // WithDetails sets the details of the response.
-func (b AuthResponseBuilder) WithDetails(details ...string) AuthResponseBuilder {
+func (b ResponseBuilder) WithDetails(details ...string) ResponseBuilder {
 	b.details = details
 	return b
 }
 
 // Build returns the JSON string.
-func (b AuthResponseBuilder) Build() string {
+func (b ResponseBuilder) Build() string {
 	if len(b.details) == 0 {
 		return b.json
 	}
@@ -31,8 +31,8 @@ func (b AuthResponseBuilder) Build() string {
 }
 
 // NewUnauthorizedRespBuilder creates a builder for the UNAUTHORIZED JSON used in tests.
-func NewUnauthorizedRespBuilder() AuthResponseBuilder {
-	return AuthResponseBuilder{
+func NewUnauthorizedRespBuilder() ResponseBuilder {
+	return ResponseBuilder{
 		json: `{
 			"code": "UNAUTHORIZED",
 			"message": "Authentication is required to access this resource",
@@ -42,8 +42,8 @@ func NewUnauthorizedRespBuilder() AuthResponseBuilder {
 }
 
 // NewForbiddenRespBuilder creates a builder for the FORBIDDEN JSON used in tests.
-func NewForbiddenRespBuilder() AuthResponseBuilder {
-	return AuthResponseBuilder{
+func NewForbiddenRespBuilder() ResponseBuilder {
+	return ResponseBuilder{
 		json: `{
 			"code": "FORBIDDEN",
 			"message": "You do not have permission to access this resource",
