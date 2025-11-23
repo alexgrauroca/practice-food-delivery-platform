@@ -13,5 +13,6 @@ const (
 // Claims represent the authentication claims
 type Claims struct {
 	jwt.RegisteredClaims
-	Role string `json:"role"`
+	Role   string `json:"role"`
+	Tenant string `json:"tenant"`
 }

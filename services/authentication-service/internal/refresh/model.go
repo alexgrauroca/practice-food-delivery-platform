@@ -12,6 +12,20 @@ const (
 	TokenStatusRevoked TokenStatus = "revoked"
 )
 
+// Token represents a token used to refresh authentication credentials for a specific user and role.
+type Token struct {
+	ID         string      `bson:"_id,omitempty"`
+	UserID     string      `bson:"user_id"`
+	Role       string      `bson:"role"`
+	TenantID   string      `bson:"tenant_id"`
+	Token      string      `bson:"token"`
+	Status     TokenStatus `bson:"status"`
+	DeviceInfo DeviceInfo  `bson:"device_info"`
+	ExpiresAt  time.Time   `bson:"expires_at"`
+	CreatedAt  time.Time   `bson:"created_at"`
+	UpdatedAt  time.Time   `bson:"updated_at"`
+}
+
 // DeviceInfo represents information about a device.
 type DeviceInfo struct {
 	DeviceID    string    `bson:"device_id"`
@@ -19,17 +33,4 @@ type DeviceInfo struct {
 	IP          string    `bson:"ip"`
 	FirstUsedAt time.Time `bson:"first_used_at"`
 	LastUsedAt  time.Time `bson:"last_used_at"`
-}
-
-// Token represents a token used to refresh authentication credentials for a specific user and role.
-type Token struct {
-	ID         string      `bson:"_id,omitempty"`
-	UserID     string      `bson:"user_id"`
-	Role       string      `bson:"role"`
-	Token      string      `bson:"token"`
-	Status     TokenStatus `bson:"status"`
-	DeviceInfo DeviceInfo  `bson:"device_info"`
-	ExpiresAt  time.Time   `bson:"expires_at"`
-	CreatedAt  time.Time   `bson:"created_at"`
-	UpdatedAt  time.Time   `bson:"updated_at"`
 }

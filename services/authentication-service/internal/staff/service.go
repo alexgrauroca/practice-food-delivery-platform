@@ -136,6 +136,7 @@ func (s *service) LoginStaff(ctx context.Context, input LoginStaffInput) (LoginS
 		UserID:     customer.StaffID,
 		Expiration: DefaultTokenExpiration,
 		Role:       DefaultTokenRole,
+		TenantID:   customer.RestaurantID,
 	})
 	if err != nil {
 		logger.Error("failed to generate token pair", err)
