@@ -20,6 +20,8 @@ import (
 	"github.com/alexgrauroca/practice-food-delivery-platform/services/customer-service/internal/customers"
 )
 
+const dbName = "customer_service"
+
 func main() {
 	ctx := context.Background()
 
@@ -45,11 +47,11 @@ func main() {
 		logger.Fatal("Failed to initialize MongoDB client", err)
 		return
 	}
-	defer func(client *mongo.Client, ctx context.Context) {
+	defer func(ctx context.Context, client *mongo.Client) {
 		_ = client.Disconnect(ctx)
-	}(client, ctx)
+	}(ctx, client)
 
-	db := client.Database("customer_service")
+	db := client.Database(dbName)
 
 	// Initialize features
 	authcli, authMiddleware, authctx := initAuthenticationFeature(logger)
