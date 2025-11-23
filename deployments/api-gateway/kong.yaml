@@ -9,6 +9,8 @@ services:
         paths:
           - /v1.0/customers/login
           - /v1.0/customers/refresh
+          - /v1.0/staff/login
+          - /v1.0/staff/refresh
         strip_path: false
     plugins:
       - name: correlation-id
@@ -29,6 +31,26 @@ services:
       - name: customer-routes
         paths:
           - /v1.0/customers
+        strip_path: false
+    plugins:
+      - name: correlation-id
+        config:
+          header_name: X-Request-ID
+          generator: uuid#counter
+          echo_downstream: true
+      - name: request-transformer
+        config:
+          add:
+            headers:
+              - "Host:${host}"
+              - "X-Real-IP:${remote_addr}"
+
+  - name: restaurant-service
+    url: http://restaurant-service:8080
+    routes:
+      - name: restaurant-routes
+        paths:
+          - /v1.0/restaurants
         strip_path: false
     plugins:
       - name: correlation-id
