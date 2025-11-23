@@ -42,6 +42,7 @@ type GenerateTokenInput struct {
 	ID         string
 	Expiration int // AccessToken expiration duration in seconds
 	Role       string
+	TenantID   string
 }
 
 // GenerateTokenOutput contains the generated access token
@@ -58,7 +59,8 @@ func (s service) GenerateToken(_ context.Context, input GenerateTokenInput) (Gen
 			IssuedAt:  jwt.NewNumericDate(now),
 			NotBefore: jwt.NewNumericDate(now),
 		},
-		Role: input.Role,
+		Role:   input.Role,
+		Tenant: input.TenantID,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

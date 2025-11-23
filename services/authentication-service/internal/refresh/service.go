@@ -33,43 +33,6 @@ type Service interface {
 	Expire(ctx context.Context, input ExpireInput) (ExpireOutput, error)
 }
 
-// GenerateTokenInput represents the input data required for generating a token.
-type GenerateTokenInput struct {
-	UserID string
-	Role   string
-}
-
-// GenerateTokenOutput represents the output result of a token generation operation.
-type GenerateTokenOutput struct {
-	Token string
-}
-
-// FindActiveTokenInput represents the input required to locate an active refresh token.
-type FindActiveTokenInput struct {
-	Token string
-}
-
-// FindActiveTokenOutput represents the result of a query to locate an active refresh token associated with a user.
-type FindActiveTokenOutput struct {
-	ID     string
-	Token  string
-	UserID string
-	Role   string
-	Device DeviceInfo
-}
-
-// ExpireInput represents the input required to mark a token as expired.
-type ExpireInput struct {
-	Token string
-}
-
-// ExpireOutput represents the output structure of a token expiration operation.
-type ExpireOutput struct {
-	ID        string
-	Token     string
-	ExpiresAt time.Time
-}
-
 type service struct {
 	logger log.Logger
 	repo   Repository
@@ -79,6 +42,18 @@ type service struct {
 // NewService initializes and returns a new Service implementation.
 func NewService(logger log.Logger, repo Repository, clk clock.Clock) Service {
 	return &service{logger: logger, repo: repo, clock: clk}
+}
+
+// GenerateTokenInput represents the input data required for generating a token.
+type GenerateTokenInput struct {
+	UserID   string
+	Role     string
+	TenantID string
+}
+
+// GenerateTokenOutput represents the output result of a token generation operation.
+type GenerateTokenOutput struct {
+	Token string
 }
 
 func (s *service) Generate(ctx context.Context, input GenerateTokenInput) (GenerateTokenOutput, error) {
@@ -94,6 +69,7 @@ func (s *service) Generate(ctx context.Context, input GenerateTokenInput) (Gener
 	params := CreateTokenParams{
 		UserID:    input.UserID,
 		Role:      input.Role,
+		TenantID:  input.TenantID,
 		Token:     token,
 		ExpiresAt: time.Now().Add(DefaultTokenExpiration),
 		Device:    device,
@@ -107,6 +83,21 @@ func (s *service) Generate(ctx context.Context, input GenerateTokenInput) (Gener
 	return GenerateTokenOutput{Token: refreshToken.Token}, nil
 }
 
+// FindActiveTokenInput represents the input required to locate an active refresh token.
+type FindActiveTokenInput struct {
+	Token string
+}
+
+// FindActiveTokenOutput represents the result of a query to locate an active refresh token associated with a user.
+type FindActiveTokenOutput struct {
+	ID       string
+	Token    string
+	UserID   string
+	Role     string
+	TenantID string
+	Device   DeviceInfo
+}
+
 func (s *service) FindActiveToken(ctx context.Context, input FindActiveTokenInput) (FindActiveTokenOutput, error) {
 	logger := s.logger.WithContext(ctx)
 
@@ -117,12 +108,25 @@ func (s *service) FindActiveToken(ctx context.Context, input FindActiveTokenInpu
 	}
 
 	return FindActiveTokenOutput{
-		ID:     token.ID,
-		Token:  token.Token,
-		UserID: token.UserID,
-		Role:   token.Role,
-		Device: token.DeviceInfo,
+		ID:       token.ID,
+		Token:    token.Token,
+		UserID:   token.UserID,
+		Role:     token.Role,
+		Device:   token.DeviceInfo,
+		TenantID: token.TenantID,
 	}, nil
+}
+
+// ExpireInput represents the input required to mark a token as expired.
+type ExpireInput struct {
+	Token string
+}
+
+// ExpireOutput represents the output structure of a token expiration operation.
+type ExpireOutput struct {
+	ID        string
+	Token     string
+	ExpiresAt time.Time
 }
 
 func (s *service) Expire(ctx context.Context, input ExpireInput) (ExpireOutput, error) {

@@ -38,23 +38,6 @@ type Repository interface {
 	Expire(ctx context.Context, params ExpireParams) (Token, error)
 }
 
-// CreateTokenParams defines the parameters required to create a new token for a user.
-type CreateTokenParams struct {
-	UserID    string
-	Role      string
-	Token     string
-	Device    DeviceInfo
-	ExpiresAt time.Time
-}
-
-// ExpireParams defines parameters needed to update a token's expiration status.
-// Token represents the refresh token to be expired.
-// ExpiresAt specifies the new expiration time for the token.
-type ExpireParams struct {
-	Token     string
-	ExpiresAt time.Time
-}
-
 type repository struct {
 	logger     log.Logger
 	collection *mongo.Collection
@@ -70,6 +53,16 @@ func NewRepository(logger log.Logger, db *mongo.Database, clk clock.Clock) Repos
 	}
 }
 
+// CreateTokenParams defines the parameters required to create a new token for a user.
+type CreateTokenParams struct {
+	UserID    string
+	Role      string
+	TenantID  string
+	Token     string
+	Device    DeviceInfo
+	ExpiresAt time.Time
+}
+
 func (r *repository) Create(ctx context.Context, params CreateTokenParams) (Token, error) {
 	logger := r.logger.WithContext(ctx)
 
@@ -77,6 +70,7 @@ func (r *repository) Create(ctx context.Context, params CreateTokenParams) (Toke
 	token := Token{
 		UserID:     params.UserID,
 		Role:       params.Role,
+		TenantID:   params.TenantID,
 		Token:      params.Token,
 		Status:     TokenStatusActive,
 		DeviceInfo: params.Device,
@@ -123,6 +117,14 @@ func (r *repository) FindActiveToken(ctx context.Context, refreshToken string) (
 	}
 
 	return token, nil
+}
+
+// ExpireParams defines parameters needed to update a token's expiration status.
+// Token represents the refresh token to be expired.
+// ExpiresAt specifies the new expiration time for the token.
+type ExpireParams struct {
+	Token     string
+	ExpiresAt time.Time
 }
 
 func (r *repository) Expire(ctx context.Context, params ExpireParams) (Token, error) {

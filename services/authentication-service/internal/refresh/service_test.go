@@ -35,8 +35,9 @@ func TestService_Generate(t *testing.T) {
 		{
 			name: "when there is an error storing the refresh token, then it propagates the error",
 			input: refresh.GenerateTokenInput{
-				UserID: "fake-user-id",
-				Role:   "fake-role",
+				UserID:   "fake-user-id",
+				Role:     "fake-role",
+				TenantID: "fake-tenant-id",
 			},
 			mocksSetup: func(repo *refreshmocks.MockRepository) {
 				repo.EXPECT().Create(gomock.Any(), gomock.Any()).
@@ -48,14 +49,16 @@ func TestService_Generate(t *testing.T) {
 		{
 			name: "when the refresh token is generated and stored, then it returns the token",
 			input: refresh.GenerateTokenInput{
-				UserID: "fake-user-id",
-				Role:   "fake-role",
+				UserID:   "fake-user-id",
+				Role:     "fake-role",
+				TenantID: "fake-tenant-id",
 			},
 			mocksSetup: func(repo *refreshmocks.MockRepository) {
 				repo.EXPECT().Create(gomock.Any(), gomock.Any()).
 					DoAndReturn(func(_ context.Context, params refresh.CreateTokenParams) (refresh.Token, error) {
 						require.Equal(t, "fake-user-id", params.UserID)
 						require.Equal(t, "fake-role", params.Role)
+						require.Equal(t, "fake-tenant-id", params.TenantID)
 						require.NotEmpty(t, params.Token)
 						require.NotEmpty(t, params.ExpiresAt)
 
@@ -128,11 +131,12 @@ func TestService_FindByActiveToken(t *testing.T) {
 			mocksSetup: func(repo *refreshmocks.MockRepository) {
 				repo.EXPECT().FindActiveToken(gomock.Any(), "active-token").
 					Return(refresh.Token{
-						ID:     "fake-id",
-						UserID: "fake-user-id",
-						Role:   "fake-role",
-						Token:  "fake-token",
-						Status: refresh.TokenStatusActive,
+						ID:       "fake-id",
+						UserID:   "fake-user-id",
+						Role:     "fake-role",
+						TenantID: "fake-tenant-id",
+						Token:    "fake-token",
+						Status:   refresh.TokenStatusActive,
 						DeviceInfo: refresh.DeviceInfo{
 							DeviceID:    "fake-device-id",
 							UserAgent:   "fake-user-agent",
@@ -146,10 +150,11 @@ func TestService_FindByActiveToken(t *testing.T) {
 					}, nil)
 			},
 			want: refresh.FindActiveTokenOutput{
-				ID:     "fake-id",
-				Token:  "fake-token",
-				UserID: "fake-user-id",
-				Role:   "fake-role",
+				ID:       "fake-id",
+				Token:    "fake-token",
+				UserID:   "fake-user-id",
+				Role:     "fake-role",
+				TenantID: "fake-tenant-id",
 				Device: refresh.DeviceInfo{
 					DeviceID:    "fake-device-id",
 					UserAgent:   "fake-user-agent",
@@ -210,6 +215,8 @@ func TestService_Expire(t *testing.T) {
 					ExpiresAt: now.Add(5 * time.Second),
 				}).Return(refresh.Token{
 					ID:        "fake-token-id",
+					Role:      "fake-role",
+					TenantID:  "fake-tenant-id",
 					Token:     "fake-token",
 					Status:    refresh.TokenStatusActive,
 					ExpiresAt: now.Add(5 * time.Second),
