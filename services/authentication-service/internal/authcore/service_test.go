@@ -42,6 +42,7 @@ func TestService_GenerateTokenPair(t *testing.T) {
 				UserID:     "fake-id",
 				Expiration: 3600,
 				Role:       "fake-role",
+				TenantID:   "fake-tenant-id",
 			},
 			mocksSetup: func(authService *authmocks.MockService, _ *refreshmocks.MockService) {
 				authService.EXPECT().GenerateToken(gomock.Any(), gomock.Any()).
@@ -56,6 +57,7 @@ func TestService_GenerateTokenPair(t *testing.T) {
 				UserID:     "fake-id",
 				Expiration: 3600,
 				Role:       "fake-role",
+				TenantID:   "fake-tenant-id",
 			},
 			mocksSetup: func(authService *authmocks.MockService, refreshService *refreshmocks.MockService) {
 				authService.EXPECT().GenerateToken(gomock.Any(), gomock.Any()).
@@ -75,19 +77,22 @@ func TestService_GenerateTokenPair(t *testing.T) {
 				UserID:     "fake-id",
 				Expiration: 3600,
 				Role:       "fake-role",
+				TenantID:   "fake-tenant-id",
 			},
 			mocksSetup: func(authService *authmocks.MockService, refreshService *refreshmocks.MockService) {
 				authService.EXPECT().GenerateToken(gomock.Any(), auth.GenerateTokenInput{
 					ID:         "fake-id",
 					Expiration: 3600,
 					Role:       "fake-role",
+					TenantID:   "fake-tenant-id",
 				}).Return(auth.GenerateTokenOutput{
 					AccessToken: "fake-access-token",
 				}, nil)
 
 				refreshService.EXPECT().Generate(gomock.Any(), refresh.GenerateTokenInput{
-					UserID: "fake-id",
-					Role:   "fake-role",
+					UserID:   "fake-id",
+					Role:     "fake-role",
+					TenantID: "fake-tenant-id",
 				}).Return(refresh.GenerateTokenOutput{
 					Token: "fake-refresh-token",
 				}, nil)
@@ -153,11 +158,12 @@ func TestService_RefreshToken(t *testing.T) {
 			mocksSetup: func(authService *authmocks.MockService, refreshService *refreshmocks.MockService) {
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
 					Return(refresh.FindActiveTokenOutput{
-						ID:     "fake-id",
-						Token:  "ValidRefreshToken",
-						UserID: "fake-user-id",
-						Role:   "fake-role",
-						Device: refresh.DeviceInfo{}, // device info is irrelevant here
+						ID:       "fake-id",
+						Token:    "ValidRefreshToken",
+						UserID:   "fake-user-id",
+						Role:     "fake-role",
+						TenantID: "fake-tenant-id",
+						Device:   refresh.DeviceInfo{}, // device info is irrelevant here
 					}, nil)
 
 				authService.EXPECT().GetClaims(gomock.Any(), gomock.Any()).
@@ -176,11 +182,12 @@ func TestService_RefreshToken(t *testing.T) {
 			mocksSetup: func(authService *authmocks.MockService, refreshService *refreshmocks.MockService) {
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
 					Return(refresh.FindActiveTokenOutput{
-						ID:     "fake-id",
-						Token:  "ValidRefreshToken",
-						UserID: "fake-user-id",
-						Role:   "fake-role",
-						Device: refresh.DeviceInfo{}, // device info is irrelevant here
+						ID:       "fake-id",
+						Token:    "ValidRefreshToken",
+						UserID:   "fake-user-id",
+						Role:     "fake-role",
+						TenantID: "fake-tenant-id",
+						Device:   refresh.DeviceInfo{}, // device info is irrelevant here
 					}, nil)
 
 				authService.EXPECT().GetClaims(gomock.Any(), gomock.Any()).
@@ -199,11 +206,12 @@ func TestService_RefreshToken(t *testing.T) {
 			mocksSetup: func(authService *authmocks.MockService, refreshService *refreshmocks.MockService) {
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
 					Return(refresh.FindActiveTokenOutput{
-						ID:     "fake-id",
-						Token:  "ValidRefreshToken",
-						UserID: "fake-user-id",
-						Role:   "fake-role",
-						Device: refresh.DeviceInfo{}, // device info is irrelevant here
+						ID:       "fake-id",
+						Token:    "ValidRefreshToken",
+						UserID:   "fake-user-id",
+						Role:     "fake-role",
+						TenantID: "fake-tenant-id",
+						Device:   refresh.DeviceInfo{}, // device info is irrelevant here
 					}, nil)
 
 				authService.EXPECT().GetClaims(gomock.Any(), gomock.Any()).
@@ -212,7 +220,8 @@ func TestService_RefreshToken(t *testing.T) {
 							RegisteredClaims: jwt.RegisteredClaims{
 								Subject: "invalid-user-id",
 							},
-							Role: "fake-role",
+							Role:   "fake-role",
+							Tenant: "fake-tenant-id",
 						},
 					}, nil)
 			},
@@ -229,11 +238,12 @@ func TestService_RefreshToken(t *testing.T) {
 			mocksSetup: func(authService *authmocks.MockService, refreshService *refreshmocks.MockService) {
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
 					Return(refresh.FindActiveTokenOutput{
-						ID:     "fake-id",
-						Token:  "ValidRefreshToken",
-						UserID: "fake-user-id",
-						Role:   "fake-role",
-						Device: refresh.DeviceInfo{}, // device info is irrelevant here
+						ID:       "fake-id",
+						Token:    "ValidRefreshToken",
+						UserID:   "fake-user-id",
+						Role:     "fake-role",
+						TenantID: "fake-tenant-id",
+						Device:   refresh.DeviceInfo{}, // device info is irrelevant here
 					}, nil)
 
 				authService.EXPECT().GetClaims(gomock.Any(), gomock.Any()).
@@ -242,7 +252,40 @@ func TestService_RefreshToken(t *testing.T) {
 							RegisteredClaims: jwt.RegisteredClaims{
 								Subject: "fake-user-id",
 							},
-							Role: "invalid-role",
+							Role:   "invalid-role",
+							Tenant: "fake-tenant-id",
+						},
+					}, nil)
+			},
+			want:    authcore.TokenPair{},
+			wantErr: authcore.ErrTokenMismatch,
+		},
+		{
+			name: "when the tenant from the claims is different than the one from the refresh token, " +
+				"then it should return a token mismatch error",
+			input: authcore.RefreshTokenInput{
+				AccessToken:  "ValidAccessToken",
+				RefreshToken: "ValidRefreshToken",
+			},
+			mocksSetup: func(authService *authmocks.MockService, refreshService *refreshmocks.MockService) {
+				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
+					Return(refresh.FindActiveTokenOutput{
+						ID:       "fake-id",
+						Token:    "ValidRefreshToken",
+						UserID:   "fake-user-id",
+						Role:     "fake-role",
+						TenantID: "fake-tenant-id",
+						Device:   refresh.DeviceInfo{}, // device info is irrelevant here
+					}, nil)
+
+				authService.EXPECT().GetClaims(gomock.Any(), gomock.Any()).
+					Return(auth.GetClaimsOutput{
+						Claims: &auth.Claims{
+							RegisteredClaims: jwt.RegisteredClaims{
+								Subject: "fake-user-id",
+							},
+							Role:   "invalid-role",
+							Tenant: "",
 						},
 					}, nil)
 			},
@@ -258,11 +301,12 @@ func TestService_RefreshToken(t *testing.T) {
 			mocksSetup: func(authService *authmocks.MockService, refreshService *refreshmocks.MockService) {
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
 					Return(refresh.FindActiveTokenOutput{
-						ID:     "fake-id",
-						Token:  "ValidRefreshToken",
-						UserID: "fake-user-id",
-						Role:   "fake-role",
-						Device: refresh.DeviceInfo{}, // device info is irrelevant here
+						ID:       "fake-id",
+						Token:    "ValidRefreshToken",
+						UserID:   "fake-user-id",
+						Role:     "fake-role",
+						TenantID: "fake-tenant-id",
+						Device:   refresh.DeviceInfo{}, // device info is irrelevant here
 					}, nil)
 
 				authService.EXPECT().GetClaims(gomock.Any(), gomock.Any()).
@@ -271,7 +315,8 @@ func TestService_RefreshToken(t *testing.T) {
 							RegisteredClaims: jwt.RegisteredClaims{
 								Subject: "fake-user-id",
 							},
-							Role: "fake-role",
+							Role:   "fake-role",
+							Tenant: "fake-tenant-id",
 						},
 					}, nil)
 
@@ -290,11 +335,12 @@ func TestService_RefreshToken(t *testing.T) {
 			mocksSetup: func(authService *authmocks.MockService, refreshService *refreshmocks.MockService) {
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
 					Return(refresh.FindActiveTokenOutput{
-						ID:     "fake-id",
-						Token:  "ValidRefreshToken",
-						UserID: "fake-user-id",
-						Role:   "fake-role",
-						Device: refresh.DeviceInfo{}, // device info is irrelevant here
+						ID:       "fake-id",
+						Token:    "ValidRefreshToken",
+						UserID:   "fake-user-id",
+						Role:     "fake-role",
+						TenantID: "fake-tenant-id",
+						Device:   refresh.DeviceInfo{}, // device info is irrelevant here
 					}, nil)
 
 				authService.EXPECT().GetClaims(gomock.Any(), gomock.Any()).
@@ -303,7 +349,8 @@ func TestService_RefreshToken(t *testing.T) {
 							RegisteredClaims: jwt.RegisteredClaims{
 								Subject: "fake-user-id",
 							},
-							Role: "fake-role",
+							Role:   "fake-role",
+							Tenant: "fake-tenant-id",
 						},
 					}, nil)
 
@@ -327,11 +374,12 @@ func TestService_RefreshToken(t *testing.T) {
 			mocksSetup: func(authService *authmocks.MockService, refreshService *refreshmocks.MockService) {
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
 					Return(refresh.FindActiveTokenOutput{
-						ID:     "fake-id",
-						Token:  "ValidRefreshToken",
-						UserID: "fake-user-id",
-						Role:   "fake-role",
-						Device: refresh.DeviceInfo{}, // device info is irrelevant here
+						ID:       "fake-id",
+						Token:    "ValidRefreshToken",
+						UserID:   "fake-user-id",
+						Role:     "fake-role",
+						TenantID: "fake-tenant-id",
+						Device:   refresh.DeviceInfo{}, // device info is irrelevant here
 					}, nil)
 
 				authService.EXPECT().GetClaims(gomock.Any(), gomock.Any()).
@@ -340,7 +388,8 @@ func TestService_RefreshToken(t *testing.T) {
 							RegisteredClaims: jwt.RegisteredClaims{
 								Subject: "fake-user-id",
 							},
-							Role: "fake-role",
+							Role:   "fake-role",
+							Tenant: "fake-tenant-id",
 						},
 					}, nil)
 
@@ -371,11 +420,12 @@ func TestService_RefreshToken(t *testing.T) {
 			mocksSetup: func(authService *authmocks.MockService, refreshService *refreshmocks.MockService) {
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), gomock.Any()).
 					Return(refresh.FindActiveTokenOutput{
-						ID:     "fake-id",
-						Token:  "ValidRefreshToken",
-						UserID: "fake-user-id",
-						Role:   "fake-role",
-						Device: refresh.DeviceInfo{}, // device info is irrelevant here
+						ID:       "fake-id",
+						Token:    "ValidRefreshToken",
+						UserID:   "fake-user-id",
+						Role:     "fake-role",
+						TenantID: "fake-tenant-id",
+						Device:   refresh.DeviceInfo{}, // device info is irrelevant here
 					}, nil)
 
 				authService.EXPECT().GetClaims(gomock.Any(), gomock.Any()).
@@ -384,7 +434,8 @@ func TestService_RefreshToken(t *testing.T) {
 							RegisteredClaims: jwt.RegisteredClaims{
 								Subject: "fake-user-id",
 							},
-							Role: "fake-role",
+							Role:   "fake-role",
+							Tenant: "fake-tenant-id",
 						},
 					}, nil)
 
@@ -421,11 +472,12 @@ func TestService_RefreshToken(t *testing.T) {
 				refreshService.EXPECT().FindActiveToken(gomock.Any(), refresh.FindActiveTokenInput{
 					Token: "ValidRefreshToken",
 				}).Return(refresh.FindActiveTokenOutput{
-					ID:     "fake-id",
-					Token:  "ValidRefreshToken",
-					UserID: "fake-user-id",
-					Role:   "fake-role",
-					Device: refresh.DeviceInfo{}, // device info is irrelevant here
+					ID:       "fake-id",
+					Token:    "ValidRefreshToken",
+					UserID:   "fake-user-id",
+					Role:     "fake-role",
+					TenantID: "fake-tenant-id",
+					Device:   refresh.DeviceInfo{}, // device info is irrelevant here
 				}, nil)
 
 				authService.EXPECT().GetClaims(gomock.Any(), auth.GetClaimsInput{
@@ -435,7 +487,8 @@ func TestService_RefreshToken(t *testing.T) {
 						RegisteredClaims: jwt.RegisteredClaims{
 							Subject: "fake-user-id",
 						},
-						Role: "fake-role",
+						Role:   "fake-role",
+						Tenant: "fake-tenant-id",
 					},
 				}, nil)
 
@@ -443,13 +496,15 @@ func TestService_RefreshToken(t *testing.T) {
 					ID:         "fake-user-id",
 					Expiration: 3600,
 					Role:       "ValidRole",
+					TenantID:   "fake-tenant-id",
 				}).Return(auth.GenerateTokenOutput{
 					AccessToken: "fake-access-token",
 				}, nil)
 
 				refreshService.EXPECT().Generate(gomock.Any(), refresh.GenerateTokenInput{
-					UserID: "fake-user-id",
-					Role:   "ValidRole",
+					UserID:   "fake-user-id",
+					Role:     "ValidRole",
+					TenantID: "fake-tenant-id",
 				}).Return(refresh.GenerateTokenOutput{
 					Token: "fake-refresh-token",
 				}, nil)
@@ -481,10 +536,12 @@ func TestService_RefreshToken(t *testing.T) {
 	}
 }
 
-func serviceSetup(t *testing.T, logger log.Logger, mocksSetup func(
-	authService *authmocks.MockService,
-	refreshService *refreshmocks.MockService,
-)) (authcore.Service, func()) {
+func serviceSetup(
+	t *testing.T, logger log.Logger, mocksSetup func(
+		authService *authmocks.MockService,
+		refreshService *refreshmocks.MockService,
+	),
+) (authcore.Service, func()) {
 	ctrl := gomock.NewController(t)
 
 	authService := authmocks.NewMockService(ctrl)

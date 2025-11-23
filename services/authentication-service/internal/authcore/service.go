@@ -49,6 +49,7 @@ type GenerateTokenPairInput struct {
 	UserID     string
 	Expiration int
 	Role       string
+	TenantID   string
 }
 
 func (s service) GenerateTokenPair(ctx context.Context, input GenerateTokenPairInput) (TokenPair, error) {
@@ -58,6 +59,7 @@ func (s service) GenerateTokenPair(ctx context.Context, input GenerateTokenPairI
 		ID:         input.UserID,
 		Expiration: input.Expiration,
 		Role:       input.Role,
+		TenantID:   input.TenantID,
 	})
 	if err != nil {
 		logger.Error("failed to generate JWT", err)
@@ -65,8 +67,9 @@ func (s service) GenerateTokenPair(ctx context.Context, input GenerateTokenPairI
 	}
 
 	refreshToken, err := s.refreshService.Generate(ctx, refresh.GenerateTokenInput{
-		UserID: input.UserID,
-		Role:   input.Role,
+		UserID:   input.UserID,
+		Role:     input.Role,
+		TenantID: input.TenantID,
 	})
 	if err != nil {
 		logger.Error("failed to generate refresh token", err)
@@ -116,7 +119,10 @@ func (s service) RefreshToken(ctx context.Context, input RefreshTokenInput) (Tok
 	}
 
 	claims := claimsOutput.Claims
-	if claims.Subject != refreshToken.UserID || claims.Role != refreshToken.Role {
+	if claims.Subject != refreshToken.UserID ||
+		claims.Role != refreshToken.Role ||
+		claims.Tenant != refreshToken.TenantID {
+		
 		logger.Warn("token mismatch")
 		return TokenPair{}, ErrTokenMismatch
 	}
@@ -125,6 +131,7 @@ func (s service) RefreshToken(ctx context.Context, input RefreshTokenInput) (Tok
 		UserID:     refreshToken.UserID,
 		Expiration: input.Expiration,
 		Role:       input.Role,
+		TenantID:   refreshToken.TenantID,
 	})
 	if err != nil {
 		logger.Error("failed to generate token pair", err)

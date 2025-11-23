@@ -40,6 +40,7 @@ func TestRepository_Create(t *testing.T) {
 				mongodb.InsertTestDocument(t, coll, refresh.Token{
 					UserID:    "fake-user-id",
 					Role:      "fake-role",
+					TenantID:  "fake-tenant-id",
 					Token:     "fake-token",
 					Status:    refresh.TokenStatusActive,
 					ExpiresAt: expiresAt,
@@ -57,6 +58,7 @@ func TestRepository_Create(t *testing.T) {
 			params: refresh.CreateTokenParams{
 				UserID:    "fake-user-id",
 				Role:      "fake-role",
+				TenantID:  "fake-tenant-id",
 				Token:     "fake-token",
 				ExpiresAt: expiresAt,
 				Device: refresh.DeviceInfo{
@@ -75,6 +77,7 @@ func TestRepository_Create(t *testing.T) {
 			params: refresh.CreateTokenParams{
 				UserID:    "fake-user-id",
 				Role:      "fake-role",
+				TenantID:  "fake-tenant-id",
 				Token:     "fake-token",
 				ExpiresAt: expiresAt,
 				Device: refresh.DeviceInfo{
@@ -88,6 +91,7 @@ func TestRepository_Create(t *testing.T) {
 			want: refresh.Token{
 				UserID:    "fake-user-id",
 				Role:      "fake-role",
+				TenantID:  "fake-tenant-id",
 				Token:     "fake-token",
 				Status:    refresh.TokenStatusActive,
 				ExpiresAt: expiresAt,
@@ -165,6 +169,7 @@ func TestRepository_FindActiveToken(t *testing.T) {
 				mongodb.InsertTestDocument(t, coll, refresh.Token{
 					UserID:    "fake-user-id",
 					Role:      "fake-role",
+					TenantID:  "fake-tenant-id",
 					Token:     "active-token",
 					Status:    refresh.TokenStatusActive,
 					ExpiresAt: expiresAt,
@@ -189,6 +194,7 @@ func TestRepository_FindActiveToken(t *testing.T) {
 				mongodb.InsertTestDocument(t, coll, refresh.Token{
 					UserID:    "fake-user-id",
 					Role:      "fake-role",
+					TenantID:  "fake-tenant-id",
 					Token:     "revoked-token",
 					Status:    refresh.TokenStatusRevoked,
 					ExpiresAt: expiresAt,
@@ -213,6 +219,7 @@ func TestRepository_FindActiveToken(t *testing.T) {
 				mongodb.InsertTestDocument(t, coll, refresh.Token{
 					UserID:    "fake-user-id",
 					Role:      "fake-role",
+					TenantID:  "fake-tenant-id",
 					Token:     "expired-token",
 					Status:    refresh.TokenStatusActive,
 					ExpiresAt: expiredAt,
@@ -237,6 +244,7 @@ func TestRepository_FindActiveToken(t *testing.T) {
 				mongodb.InsertTestDocument(t, coll, refresh.Token{
 					UserID:    "fake-user-id",
 					Role:      "fake-role",
+					TenantID:  "fake-tenant-id",
 					Token:     "active-token",
 					Status:    refresh.TokenStatusActive,
 					ExpiresAt: expiresAt,
@@ -255,6 +263,7 @@ func TestRepository_FindActiveToken(t *testing.T) {
 			want: refresh.Token{
 				UserID:    "fake-user-id",
 				Role:      "fake-role",
+				TenantID:  "fake-tenant-id",
 				Token:     "active-token",
 				Status:    refresh.TokenStatusActive,
 				ExpiresAt: expiresAt,
@@ -333,6 +342,7 @@ func TestRepository_Expire(t *testing.T) {
 				mongodb.InsertTestDocument(t, coll, refresh.Token{
 					UserID:    "fake-user-id",
 					Role:      "fake-role",
+					TenantID:  "fake-tenant-id",
 					Token:     "active-token",
 					Status:    refresh.TokenStatusActive,
 					ExpiresAt: expiresAt,
@@ -357,6 +367,7 @@ func TestRepository_Expire(t *testing.T) {
 				mongodb.InsertTestDocument(t, coll, refresh.Token{
 					UserID:    "fake-user-id",
 					Role:      "fake-role",
+					TenantID:  "fake-tenant-id",
 					Token:     "revoked-token",
 					Status:    refresh.TokenStatusRevoked,
 					ExpiresAt: expiresAt,
@@ -381,6 +392,7 @@ func TestRepository_Expire(t *testing.T) {
 				mongodb.InsertTestDocument(t, coll, refresh.Token{
 					UserID:    "fake-user-id",
 					Role:      "fake-role",
+					TenantID:  "fake-tenant-id",
 					Token:     "expired-token",
 					Status:    refresh.TokenStatusActive,
 					ExpiresAt: newExpiresAt,
@@ -408,6 +420,7 @@ func TestRepository_Expire(t *testing.T) {
 				mongodb.InsertTestDocument(t, coll, refresh.Token{
 					UserID:    "fake-user-id",
 					Role:      "fake-role",
+					TenantID:  "fake-tenant-id",
 					Token:     "active-token",
 					Status:    refresh.TokenStatusActive,
 					ExpiresAt: expiresAt,
@@ -429,6 +442,7 @@ func TestRepository_Expire(t *testing.T) {
 			want: refresh.Token{
 				UserID:    "fake-user-id",
 				Role:      "fake-role",
+				TenantID:  "fake-tenant-id",
 				Token:     "active-token",
 				Status:    refresh.TokenStatusActive,
 				ExpiresAt: newExpiresAt,
