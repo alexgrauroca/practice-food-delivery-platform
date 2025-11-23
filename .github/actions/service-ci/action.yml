@@ -18,16 +18,9 @@ runs:
       uses: actions/setup-go@v6
       with:
         go-version: ${{ inputs.go-version }}
-    - name: Cache Go modules
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.cache/go-build
-          ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ inputs.service }}-${{ hashFiles(format('services/{0}/go.sum', inputs.service)) }}
-        restore-keys: |
-          ${{ runner.os }}-go-${{ inputs.service }}-
-          ${{ runner.os }}-go-
+        cache: true
+        cache-dependency-path: services/${{ inputs.service }}/go.sum
+
     - name: Run Unit Tests
       if: ${{ inputs.task == 'unit' }}
       shell: bash
