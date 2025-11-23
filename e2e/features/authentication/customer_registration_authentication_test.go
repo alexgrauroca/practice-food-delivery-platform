@@ -25,7 +25,9 @@ var _ = g.Describe("Customer Authentication Workflow", func() {
 		Expect(registerResponse.Email).To(Equal(c.Email))
 		Expect(registerResponse.Name).To(Equal(c.Name))
 		Expect(registerResponse.ID).To(MatchRegexp(customer.IDRegexPattern))
-		Expect(registerResponse.CreatedAt).NotTo(BeEmpty())
+		Expect(registerResponse.CreatedAt).NotTo(BeZero())
+		// TODO update register customer response to return the updated_at value
+		// Expect(registerResponse.UpdatedAt).NotTo(BeZero())
 
 		// Log in the registered customer
 		loginResponse, err := c.Login()
@@ -34,7 +36,9 @@ var _ = g.Describe("Customer Authentication Workflow", func() {
 		Expect(loginResponse.RefreshToken).NotTo(BeEmpty())
 		Expect(loginResponse.ExpiresIn).To(BeNumerically(">", 0))
 		Expect(loginResponse.TokenType).To(Equal("Bearer"))
-		Expect(loginResponse.Token.GetSubject()).To(Equal(c.ID))
+		claims, err := loginResponse.Token.GetClaims()
+		Expect(err).NotTo(HaveOccurred())
+		Expect(claims.GetSubject()).To(Equal(c.ID))
 
 		// Refresh the customer auth tokens
 		// Wait 1 second to ensure a difference between ExpiresIn values from each new access_token

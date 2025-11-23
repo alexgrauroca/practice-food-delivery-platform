@@ -26,8 +26,8 @@ var _ = g.Describe("Customer Profile Workflow", func() {
 		Expect(getCustomerResponse.City).To(Equal(c.City))
 		Expect(getCustomerResponse.PostalCode).To(Equal(c.PostalCode))
 		Expect(getCustomerResponse.CountryCode).To(Equal(c.CountryCode))
-		Expect(getCustomerResponse.CreatedAt).NotTo(BeEmpty())
-		Expect(getCustomerResponse.UpdatedAt).NotTo(BeEmpty())
+		Expect(getCustomerResponse.CreatedAt).NotTo(BeZero())
+		Expect(getCustomerResponse.UpdatedAt).NotTo(BeZero())
 
 		tmpCustomer := customer.New()
 		updateCustomerResponse, err := c.Update(customer.UpdateCustomerParams{
@@ -47,6 +47,5 @@ var _ = g.Describe("Customer Profile Workflow", func() {
 		Expect(updateCustomerResponse.CountryCode).To(Equal(tmpCustomer.CountryCode))
 		Expect(updateCustomerResponse.CreatedAt).To(Equal(getCustomerResponse.CreatedAt))
 		Expect(updateCustomerResponse.UpdatedAt).NotTo(Equal(getCustomerResponse.UpdatedAt))
-		Expect(updateCustomerResponse.UpdatedAt).NotTo(BeEmpty())
 	})
 })

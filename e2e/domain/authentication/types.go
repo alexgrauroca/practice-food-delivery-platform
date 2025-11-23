@@ -15,13 +15,19 @@ type Token struct {
 // Claims represent the custom claims structure for JWT tokens
 type Claims struct {
 	jwt.RegisteredClaims
-	Role string `json:"role"`
+	Role   string `json:"role"`
+	Tenant string `json:"tenant"`
 }
 
 // LoginRequest represents the payload needed for user authentication, containing email and password.
 type LoginRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+}
+
+type StaffLoginRequest struct {
+	LoginRequest
+	RestaurantID string `json:"restaurant_id"`
 }
 
 // LoginResponse contains the authentication token details returned after successful login.

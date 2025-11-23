@@ -1,6 +1,10 @@
 package customer
 
-import "github.com/alexgrauroca/practice-food-delivery-platform/e2e/domain/authentication"
+import (
+	"time"
+
+	"github.com/alexgrauroca/practice-food-delivery-platform/e2e/domain/authentication"
+)
 
 const (
 	// IDRegexPattern defines a regular expression pattern to validate a 24-character hexadecimal string typically used as an ID.
@@ -22,15 +26,15 @@ type TestCustomer struct {
 
 // customerData captures the common customer fields returned by multiple endpoints.
 type customerData struct {
-	ID          string `json:"id"`
-	Email       string `json:"email"`
-	Name        string `json:"name"`
-	Address     string `json:"address"`
-	City        string `json:"city"`
-	PostalCode  string `json:"postal_code"`
-	CountryCode string `json:"country_code"`
-	CreatedAt   string `json:"created_at"`
-	UpdatedAt   string `json:"updated_at"`
+	ID          string    `json:"id"`
+	Email       string    `json:"email"`
+	Name        string    `json:"name"`
+	Address     string    `json:"address"`
+	City        string    `json:"city"`
+	PostalCode  string    `json:"postal_code"`
+	CountryCode string    `json:"country_code"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 // RegisterRequest represents the payload required to register a new customer, containing personal details and credentials.
@@ -46,10 +50,12 @@ type RegisterRequest struct {
 
 // RegisterResponse represents the response data structure for a successful user registration.
 type RegisterResponse struct {
-	ID        string `json:"id"`
-	Email     string `json:"email"`
-	Name      string `json:"name"`
-	CreatedAt string `json:"created_at"`
+	ID        string    `json:"id"`
+	Email     string    `json:"email"`
+	Name      string    `json:"name"`
+	CreatedAt time.Time `json:"created_at"`
+	// TODO update register customer response to return the updated_at value
+	// UpdatedAt time.Time `json:"updated_at"`
 }
 
 // GetCustomerRequest represents the request to retrieve customer details, containing the customer ID as a path parameter.
