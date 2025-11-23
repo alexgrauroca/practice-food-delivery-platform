@@ -50,10 +50,12 @@ type RegisterRequest struct {
 
 // RegisterResponse represents the response data structure for a successful user registration.
 type RegisterResponse struct {
-	ID        string `json:"id"`
-	Email     string `json:"email"`
-	Name      string `json:"name"`
-	CreatedAt string `json:"created_at"`
+	ID        string    `json:"id"`
+	Email     string    `json:"email"`
+	Name      string    `json:"name"`
+	CreatedAt time.Time `json:"created_at"`
+	// TODO update register customer response to return the updated_at value
+	// UpdatedAt time.Time `json:"updated_at"`
 }
 
 // GetCustomerRequest represents the request to retrieve customer details, containing the customer ID as a path parameter.

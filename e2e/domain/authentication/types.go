@@ -27,7 +27,7 @@ type LoginRequest struct {
 
 type StaffLoginRequest struct {
 	LoginRequest
-	RestaurantID string
+	RestaurantID string `json:"restaurant_id"`
 }
 
 // LoginResponse contains the authentication token details returned after successful login.

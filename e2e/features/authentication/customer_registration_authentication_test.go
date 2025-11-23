@@ -25,7 +25,9 @@ var _ = g.Describe("Customer Authentication Workflow", func() {
 		Expect(registerResponse.Email).To(Equal(c.Email))
 		Expect(registerResponse.Name).To(Equal(c.Name))
 		Expect(registerResponse.ID).To(MatchRegexp(customer.IDRegexPattern))
-		Expect(registerResponse.CreatedAt).NotTo(BeEmpty())
+		Expect(registerResponse.CreatedAt).NotTo(BeZero())
+		// TODO update register customer response to return the updated_at value
+		// Expect(registerResponse.UpdatedAt).NotTo(BeZero())
 
 		// Log in the registered customer
 		loginResponse, err := c.Login()

@@ -22,10 +22,11 @@ var _ = g.Describe("Restaurant Authentication Workflow", func() {
 
 		// Register the customer
 		registerResponse, err := rest.Register(&owner)
+		Expect(err).NotTo(HaveOccurred())
+
 		restaurantResponse := registerResponse.Restaurant
 		ownerResponse := registerResponse.StaffOwner
 
-		Expect(err).NotTo(HaveOccurred())
 		// Check restaurant response
 		Expect(restaurantResponse.ID).To(MatchRegexp(restaurant.IDRegexPattern))
 		Expect(restaurantResponse.Name).To(Equal(rest.Name))
@@ -33,9 +34,15 @@ var _ = g.Describe("Restaurant Authentication Workflow", func() {
 		Expect(restaurantResponse.VatCode).To(Equal(rest.VatCode))
 		Expect(restaurantResponse.TimezoneID).To(Equal(rest.TimezoneID))
 		Expect(restaurantResponse.TaxID).To(Equal(rest.TaxID))
-		Expect(restaurantResponse.Contact).To(Equal(rest.Contact))
-		Expect(restaurantResponse.CreatedAt).NotTo(BeEmpty())
-		Expect(restaurantResponse.UpdatedAt).NotTo(BeEmpty())
+		Expect(restaurantResponse.Contact.PhonePrefix).To(Equal(rest.Contact.PhonePrefix))
+		Expect(restaurantResponse.Contact.PhoneNumber).To(Equal(rest.Contact.PhoneNumber))
+		Expect(restaurantResponse.Contact.Email).To(Equal(rest.Contact.Email))
+		Expect(restaurantResponse.Contact.Address).To(Equal(rest.Contact.Address))
+		Expect(restaurantResponse.Contact.City).To(Equal(rest.Contact.City))
+		Expect(restaurantResponse.Contact.PostalCode).To(Equal(rest.Contact.PostalCode))
+		Expect(restaurantResponse.Contact.CountryCode).To(Equal(rest.Contact.CountryCode))
+		Expect(restaurantResponse.CreatedAt).NotTo(BeZero())
+		Expect(restaurantResponse.UpdatedAt).NotTo(BeZero())
 
 		// Check staff owner response
 		Expect(ownerResponse.ID).To(MatchRegexp(staff.IDRegexPattern))
@@ -43,8 +50,9 @@ var _ = g.Describe("Restaurant Authentication Workflow", func() {
 		Expect(ownerResponse.Name).To(Equal(owner.Name))
 		Expect(ownerResponse.RestaurantID).To(Equal(rest.ID))
 		Expect(ownerResponse.Owner).To(BeTrue())
-		Expect(ownerResponse.CreatedAt).NotTo(BeEmpty())
-		Expect(ownerResponse.UpdatedAt).NotTo(BeEmpty())
+		Expect(ownerResponse.CreatedAt).NotTo(BeZero())
+		Expect(ownerResponse.UpdatedAt).NotTo(BeZero())
+		Expect(owner.RestaurantID).To(Equal(rest.ID))
 
 		// Log in the registered customer
 		loginResponse, err := owner.Login()

@@ -8,20 +8,20 @@ import (
 
 // Login authenticates a staff by sending their email and password to the login API and returns the login response or an
 // error.
-func (c *TestStaff) Login() (*authentication.LoginResponse, error) {
+func (staff *TestStaff) Login() (*authentication.LoginResponse, error) {
 	req := authentication.StaffLoginRequest{
 		LoginRequest: authentication.LoginRequest{
-			Email:    c.Email,
-			Password: c.Password,
+			Email:    staff.Email,
+			Password: staff.Password,
 		},
-		RestaurantID: c.RestaurantID,
+		RestaurantID: staff.RestaurantID,
 	}
 	res, err := api.DoPost[authentication.StaffLoginRequest, authentication.LoginResponse](LoginEndpoint, req, nil)
 	if err == nil {
 		if res == nil {
 			err = ErrUnexpectedResponse
 		} else {
-			c.SetAuth(res.Token)
+			staff.SetAuth(res.Token)
 		}
 	}
 
@@ -29,16 +29,16 @@ func (c *TestStaff) Login() (*authentication.LoginResponse, error) {
 }
 
 // Refresh attempts to refresh the authentication token for the TestStaff using the provided access and refresh tokens.
-func (c *TestStaff) Refresh() (*authentication.RefreshResponse, error) {
+func (staff *TestStaff) Refresh() (*authentication.RefreshResponse, error) {
 	req := authentication.RefreshRequest{
-		AccessToken:  c.Auth.AccessToken,
-		RefreshToken: c.Auth.RefreshToken,
+		AccessToken:  staff.Auth.AccessToken,
+		RefreshToken: staff.Auth.RefreshToken,
 	}
 
 	return api.DoPost[authentication.RefreshRequest, authentication.RefreshResponse](RefreshEndpoint, req, nil)
 }
 
 // SetAuth sets the authentication token for the TestStaff instance.
-func (c *TestStaff) SetAuth(auth authentication.Token) {
-	c.Auth = auth
+func (staff *TestStaff) SetAuth(auth authentication.Token) {
+	staff.Auth = auth
 }

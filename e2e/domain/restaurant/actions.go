@@ -7,21 +7,22 @@ import (
 )
 
 // Register sends a registration request for a TestCustomer and returns a RegisterResponse or an error.
-func (c *TestRestaurant) Register(owner *staff.TestStaff) (*RegisterResponse, error) {
+func (restaurant *TestRestaurant) Register(owner *staff.TestStaff) (*RegisterResponse, error) {
 	req := RegisterRequest{
 		Restaurant: RegisterRestaurantRequest{
-			Name:       c.Name,
-			LegalName:  c.LegalName,
-			TaxID:      c.TaxID,
-			TimezoneID: c.TimezoneID,
+			VatCode:    restaurant.VatCode,
+			Name:       restaurant.Name,
+			LegalName:  restaurant.LegalName,
+			TaxID:      restaurant.TaxID,
+			TimezoneID: restaurant.TimezoneID,
 			Contact: ContactData{
-				PhonePrefix: c.Contact.PhonePrefix,
-				PhoneNumber: c.Contact.PhoneNumber,
-				Email:       c.Contact.Email,
-				Address:     c.Contact.Address,
-				City:        c.Contact.City,
-				PostalCode:  c.Contact.PostalCode,
-				CountryCode: c.Contact.CountryCode,
+				PhonePrefix: restaurant.Contact.PhonePrefix,
+				PhoneNumber: restaurant.Contact.PhoneNumber,
+				Email:       restaurant.Contact.Email,
+				Address:     restaurant.Contact.Address,
+				City:        restaurant.Contact.City,
+				PostalCode:  restaurant.Contact.PostalCode,
+				CountryCode: restaurant.Contact.CountryCode,
 			},
 		},
 		StaffOwner: staff.RegisterOwnerRequest{
@@ -40,11 +41,11 @@ func (c *TestRestaurant) Register(owner *staff.TestStaff) (*RegisterResponse, er
 			err = ErrUnexpectedResponse
 		} else {
 			// Update restaurant data
-			c.ID = res.Restaurant.ID
+			restaurant.ID = res.Restaurant.ID
 
 			// Update staff owner data
 			owner.ID = res.StaffOwner.ID
-			owner.RestaurantID = c.ID
+			owner.RestaurantID = restaurant.ID
 			owner.Owner = res.StaffOwner.Owner
 		}
 	}
