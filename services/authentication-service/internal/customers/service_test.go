@@ -88,41 +88,46 @@ func TestService_RegisterCustomer(t *testing.T) {
 				_ *authcoremocks.MockService,
 			) {
 				repo.EXPECT().CreateCustomer(gomock.Any(), gomock.Any()).
-					DoAndReturn(func(_ context.Context, params customers.CreateCustomerParams) (customers.Customer, error) {
-						// Assert that the password is hashed
-						ok := password.Verify(params.Password, "ValidPassword123")
-						require.True(t, ok, "Password should be hashed and match the input password")
+					DoAndReturn(
+						func(_ context.Context, params customers.CreateCustomerParams) (customers.Customer, error) {
+							// Assert that the password is hashed
+							ok := password.Verify(params.Password, "ValidPassword123")
+							require.True(t, ok, "Password should be hashed and match the input password")
 
-						return customers.Customer{
-							ID:         "fake-id",
-							CustomerID: params.CustomerID,
-							Email:      params.Email,
-							Password:   params.Password,
-							CreatedAt:  now,
-							UpdatedAt:  now,
-							Active:     true,
-						}, nil
-					})
+							return customers.Customer{
+								ID:         "fake-id",
+								CustomerID: params.CustomerID,
+								Email:      params.Email,
+								Password:   params.Password,
+								CreatedAt:  now,
+								UpdatedAt:  now,
+								Active:     true,
+							}, nil
+						},
+					)
 			},
 			want: customers.RegisterCustomerOutput{
 				ID:        "fake-id",
 				Email:     "test@example.com",
 				CreatedAt: now,
+				UpdatedAt: now,
 			},
 			wantErr: nil,
 		},
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			service, cleanup := serviceSetup(t, logger, tt.mocksSetup)
-			defer cleanup()
+		t.Run(
+			tt.name, func(t *testing.T) {
+				service, cleanup := serviceSetup(t, logger, tt.mocksSetup)
+				defer cleanup()
 
-			got, err := service.RegisterCustomer(context.Background(), tt.input)
+				got, err := service.RegisterCustomer(context.Background(), tt.input)
 
-			assert.ErrorIs(t, err, tt.wantErr)
-			assert.Equal(t, tt.want, got)
-		})
+				assert.ErrorIs(t, err, tt.wantErr)
+				assert.Equal(t, tt.want, got)
+			},
+		)
 	}
 }
 
@@ -163,14 +168,16 @@ func TestService_LoginCustomer(t *testing.T) {
 				require.NoError(t, err)
 
 				repo.EXPECT().FindByEmail(gomock.Any(), gomock.Any()).
-					Return(customers.Customer{
-						ID:        "fake-id",
-						Email:     "test@example.com",
-						Password:  hashedPassword, // This should be a hashed password
-						CreatedAt: now,
-						UpdatedAt: now,
-						Active:    true,
-					}, nil)
+					Return(
+						customers.Customer{
+							ID:        "fake-id",
+							Email:     "test@example.com",
+							Password:  hashedPassword, // This should be a hashed password
+							CreatedAt: now,
+							UpdatedAt: now,
+							Active:    true,
+						}, nil,
+					)
 			},
 			want:    customers.LoginCustomerOutput{},
 			wantErr: authcore.ErrInvalidCredentials,
@@ -205,14 +212,16 @@ func TestService_LoginCustomer(t *testing.T) {
 				require.NoError(t, err)
 
 				repo.EXPECT().FindByEmail(gomock.Any(), "test@example.com").
-					Return(customers.Customer{
-						ID:        "fake-id",
-						Email:     "test@example.com",
-						Password:  hashedPassword, // This should be a hashed password
-						CreatedAt: now,
-						UpdatedAt: now,
-						Active:    true,
-					}, nil)
+					Return(
+						customers.Customer{
+							ID:        "fake-id",
+							Email:     "test@example.com",
+							Password:  hashedPassword, // This should be a hashed password
+							CreatedAt: now,
+							UpdatedAt: now,
+							Active:    true,
+						}, nil,
+					)
 
 				authCoreService.EXPECT().GenerateTokenPair(gomock.Any(), gomock.Any()).
 					Return(authcore.TokenPair{}, errToken)
@@ -234,23 +243,27 @@ func TestService_LoginCustomer(t *testing.T) {
 				require.NoError(t, err)
 
 				repo.EXPECT().FindByEmail(gomock.Any(), "test@example.com").
-					Return(customers.Customer{
-						ID:         "fake-customer-id",
-						CustomerID: "fake-id",
-						Email:      "test@example.com",
-						Password:   hashedPassword, // This should be a hashed password
-						CreatedAt:  now,
-						UpdatedAt:  now,
-						Active:     true,
-					}, nil)
+					Return(
+						customers.Customer{
+							ID:         "fake-customer-id",
+							CustomerID: "fake-id",
+							Email:      "test@example.com",
+							Password:   hashedPassword, // This should be a hashed password
+							CreatedAt:  now,
+							UpdatedAt:  now,
+							Active:     true,
+						}, nil,
+					)
 
 				authCoreService.EXPECT().GenerateTokenPair(gomock.Any(), gomock.Any()).
-					Return(authcore.TokenPair{
-						AccessToken:  "fake-token",
-						RefreshToken: "fake-refresh-token",
-						ExpiresIn:    3600,
-						TokenType:    "Bearer",
-					}, nil)
+					Return(
+						authcore.TokenPair{
+							AccessToken:  "fake-token",
+							RefreshToken: "fake-refresh-token",
+							ExpiresIn:    3600,
+							TokenType:    "Bearer",
+						}, nil,
+					)
 			},
 			want: customers.LoginCustomerOutput{
 				TokenPair: authcore.TokenPair{
@@ -264,15 +277,17 @@ func TestService_LoginCustomer(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			service, cleanup := serviceSetup(t, logger, tt.mocksSetup)
-			defer cleanup()
+		t.Run(
+			tt.name, func(t *testing.T) {
+				service, cleanup := serviceSetup(t, logger, tt.mocksSetup)
+				defer cleanup()
 
-			got, err := service.LoginCustomer(context.Background(), tt.input)
+				got, err := service.LoginCustomer(context.Background(), tt.input)
 
-			assert.ErrorIs(t, err, tt.wantErr)
-			assert.Equal(t, tt.want, got)
-		})
+				assert.ErrorIs(t, err, tt.wantErr)
+				assert.Equal(t, tt.want, got)
+			},
+		)
 	}
 }
 
@@ -307,12 +322,14 @@ func TestService_RefreshCustomer(t *testing.T) {
 				authCoreService *authcoremocks.MockService,
 			) {
 				authCoreService.EXPECT().RefreshToken(gomock.Any(), gomock.Any()).
-					Return(authcore.TokenPair{
-						AccessToken:  "fake-token",
-						RefreshToken: "fake-refresh-token",
-						ExpiresIn:    3600,
-						TokenType:    "Bearer",
-					}, nil)
+					Return(
+						authcore.TokenPair{
+							AccessToken:  "fake-token",
+							RefreshToken: "fake-refresh-token",
+							ExpiresIn:    3600,
+							TokenType:    "Bearer",
+						}, nil,
+					)
 			},
 			want: customers.RefreshCustomerOutput{
 				TokenPair: authcore.TokenPair{
@@ -326,22 +343,26 @@ func TestService_RefreshCustomer(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			service, cleanup := serviceSetup(t, logger, tt.mocksSetup)
-			defer cleanup()
+		t.Run(
+			tt.name, func(t *testing.T) {
+				service, cleanup := serviceSetup(t, logger, tt.mocksSetup)
+				defer cleanup()
 
-			got, err := service.RefreshCustomer(context.Background(), tt.input)
+				got, err := service.RefreshCustomer(context.Background(), tt.input)
 
-			assert.ErrorIs(t, err, tt.wantErr)
-			assert.Equal(t, tt.want, got)
-		})
+				assert.ErrorIs(t, err, tt.wantErr)
+				assert.Equal(t, tt.want, got)
+			},
+		)
 	}
 }
 
-func serviceSetup(t *testing.T, logger log.Logger, mocksSetup func(
-	repo *customersmocks.MockRepository,
-	authCoreService *authcoremocks.MockService,
-)) (customers.Service, func()) {
+func serviceSetup(
+	t *testing.T, logger log.Logger, mocksSetup func(
+		repo *customersmocks.MockRepository,
+		authCoreService *authcoremocks.MockService,
+	),
+) (customers.Service, func()) {
 	ctrl := gomock.NewController(t)
 
 	repo := customersmocks.NewMockRepository(ctrl)

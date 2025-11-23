@@ -22,6 +22,8 @@ const (
 	FieldEmail = "email"
 	// FieldActive represents the field name used to indicate the active status of a staff in the database.
 	FieldActive = "active"
+	// FieldRestaurantID represents the field name used to store the restaurant ID associated with a staff in the database.
+	FieldRestaurantID = "restaurant_id"
 )
 
 // Staff represents a user in the system with associated details such as email, name, and account activation status.
@@ -41,7 +43,7 @@ type Staff struct {
 //go:generate mockgen -destination=./mocks/repository_mock.go -package=staff_mocks github.com/alexgrauroca/practice-food-delivery-platform/services/authentication-service/internal/staff Repository
 type Repository interface {
 	CreateStaff(ctx context.Context, params CreateStaffParams) (Staff, error)
-	FindByEmail(ctx context.Context, email string) (Staff, error)
+	FindStaff(ctx context.Context, params FindStaffParams) (Staff, error)
 }
 
 type repository struct {
@@ -94,18 +96,28 @@ func (r *repository) CreateStaff(ctx context.Context, params CreateStaffParams) 
 	return c, nil
 }
 
-func (r *repository) FindByEmail(ctx context.Context, email string) (Staff, error) {
+type FindStaffParams struct {
+	Email        string
+	RestaurantID string
+}
+
+func (r *repository) FindStaff(ctx context.Context, params FindStaffParams) (Staff, error) {
 	logger := r.logger.WithContext(ctx)
 
 	var staff Staff
 	filter := bson.M{
-		FieldEmail:  email,
-		FieldActive: true,
+		FieldEmail:        params.Email,
+		FieldRestaurantID: params.RestaurantID,
+		FieldActive:       true,
 	}
 
 	if err := r.collection.FindOne(ctx, filter).Decode(&staff); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			logger.Warn("Staff not found", log.Field{Key: "email", Value: email})
+			logger.Warn(
+				"Staff not found",
+				log.Field{Key: "email", Value: params.Email},
+				log.Field{Key: "restaurant_id", Value: params.RestaurantID},
+			)
 			return Staff{}, ErrStaffNotFound
 		}
 		logger.Error("Failed to find staff", err)

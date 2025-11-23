@@ -6,8 +6,7 @@ inputs:
     required: true
   go-version:
     description: Go version to setup
-    required: false
-    default: '1.25'
+    required: true
   task:
     description: "One of: unit | integration | docs"
     required: true
@@ -18,6 +17,8 @@ runs:
       uses: actions/setup-go@v6
       with:
         go-version: ${{ inputs.go-version }}
+        cache: true
+        cache-dependency-path: services/${{ inputs.service }}/go.sum
 
     - name: Run Unit Tests
       if: ${{ inputs.task == 'unit' }}

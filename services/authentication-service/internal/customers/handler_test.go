@@ -120,29 +120,37 @@ func TestHandler_RegisterCustomer(t *testing.T) {
 				"password": "ValidPassword123"
 			}`,
 			mocksSetup: func(service *customersmocks.MockService, _ *authmocks.MockService) {
-				service.EXPECT().RegisterCustomer(gomock.Any(), customers.RegisterCustomerInput{
-					CustomerID: "fake-customer-id",
-					Email:      "test@example.com",
-					Password:   "ValidPassword123",
-				}).Return(customers.RegisterCustomerOutput{
-					ID:        "fake-id",
-					Email:     "test@example.com",
-					CreatedAt: now,
-				}, nil)
+				service.EXPECT().RegisterCustomer(
+					gomock.Any(), customers.RegisterCustomerInput{
+						CustomerID: "fake-customer-id",
+						Email:      "test@example.com",
+						Password:   "ValidPassword123",
+					},
+				).Return(
+					customers.RegisterCustomerOutput{
+						ID:        "fake-id",
+						Email:     "test@example.com",
+						CreatedAt: now,
+						UpdatedAt: now,
+					}, nil,
+				)
 			},
 			wantJSON: `{
 				"created_at":"2025-01-01T00:00:00Z",
 				"email":"test@example.com",
-				"id":"fake-id"
+				"id":"fake-id",
+				"updated_at":"2025-01-01T00:00:00Z"
 			}`,
 			wantStatus: http.StatusCreated,
 		},
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			runCustomerHandlerTestCase(t, logger, http.MethodPost, "/v1.0/auth/customers", tt, "")
-		})
+		t.Run(
+			tt.name, func(t *testing.T) {
+				runCustomerHandlerTestCase(t, logger, http.MethodPost, "/v1.0/auth/customers", tt, "")
+			},
+		)
 	}
 }
 
@@ -211,17 +219,21 @@ func TestHandler_LoginCustomer(t *testing.T) {
 			name:        "when an active customer has the same email and password, then it should return a 200 with the token",
 			jsonPayload: `{"email": "test@example.com", "password": "ValidPassword123"}`,
 			mocksSetup: func(service *customersmocks.MockService, _ *authmocks.MockService) {
-				service.EXPECT().LoginCustomer(gomock.Any(), customers.LoginCustomerInput{
-					Email:    "test@example.com",
-					Password: "ValidPassword123",
-				}).Return(customers.LoginCustomerOutput{
-					TokenPair: authcore.TokenPair{
-						AccessToken:  "fake-token",
-						RefreshToken: "fake-refresh-token",
-						ExpiresIn:    customers.DefaultTokenExpiration,
-						TokenType:    auth.DefaultTokenType,
+				service.EXPECT().LoginCustomer(
+					gomock.Any(), customers.LoginCustomerInput{
+						Email:    "test@example.com",
+						Password: "ValidPassword123",
 					},
-				}, nil)
+				).Return(
+					customers.LoginCustomerOutput{
+						TokenPair: authcore.TokenPair{
+							AccessToken:  "fake-token",
+							RefreshToken: "fake-refresh-token",
+							ExpiresIn:    customers.DefaultTokenExpiration,
+							TokenType:    auth.DefaultTokenType,
+						},
+					}, nil,
+				)
 			},
 			wantJSON: `{
 			  "access_token": "fake-token",
@@ -234,9 +246,11 @@ func TestHandler_LoginCustomer(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			runCustomerHandlerTestCase(t, logger, http.MethodPost, "/v1.0/customers/login", tt, "")
-		})
+		t.Run(
+			tt.name, func(t *testing.T) {
+				runCustomerHandlerTestCase(t, logger, http.MethodPost, "/v1.0/customers/login", tt, "")
+			},
+		)
 	}
 }
 
@@ -305,17 +319,21 @@ func TestHandler_RefreshCustomer(t *testing.T) {
 			name:        "when the customer token is refreshed, then it should return a 200 with the new token",
 			jsonPayload: `{"access_token": "valid-access-token", "refresh_token": "valid-refresh-token"}`,
 			mocksSetup: func(service *customersmocks.MockService, _ *authmocks.MockService) {
-				service.EXPECT().RefreshCustomer(gomock.Any(), customers.RefreshCustomerInput{
-					AccessToken:  "valid-access-token",
-					RefreshToken: "valid-refresh-token",
-				}).Return(customers.RefreshCustomerOutput{
-					TokenPair: authcore.TokenPair{
-						AccessToken:  "fake-token",
-						RefreshToken: "fake-refresh-token",
-						ExpiresIn:    customers.DefaultTokenExpiration,
-						TokenType:    auth.DefaultTokenType,
+				service.EXPECT().RefreshCustomer(
+					gomock.Any(), customers.RefreshCustomerInput{
+						AccessToken:  "valid-access-token",
+						RefreshToken: "valid-refresh-token",
 					},
-				}, nil)
+				).Return(
+					customers.RefreshCustomerOutput{
+						TokenPair: authcore.TokenPair{
+							AccessToken:  "fake-token",
+							RefreshToken: "fake-refresh-token",
+							ExpiresIn:    customers.DefaultTokenExpiration,
+							TokenType:    auth.DefaultTokenType,
+						},
+					}, nil,
+				)
 			},
 			wantJSON: `{
 			  "access_token": "fake-token",
@@ -328,9 +346,11 @@ func TestHandler_RefreshCustomer(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			runCustomerHandlerTestCase(t, logger, http.MethodPost, "/v1.0/customers/refresh", tt, "")
-		})
+		t.Run(
+			tt.name, func(t *testing.T) {
+				runCustomerHandlerTestCase(t, logger, http.MethodPost, "/v1.0/customers/refresh", tt, "")
+			},
+		)
 	}
 }
 

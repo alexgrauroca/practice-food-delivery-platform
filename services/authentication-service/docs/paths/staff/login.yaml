@@ -10,7 +10,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: './../../components/schemas/requests/LoginRequest.yaml'
+          $ref: './../../components/schemas/requests/LoginStaffRequest.yaml'
   responses:
     '200':
       description: Login successful
@@ -34,6 +34,7 @@ post:
                 message: validation failed
                 details:
                   - email is required
+                  - restaurant_id is required
                   - password is required
     '401':
       description: Invalid credentials

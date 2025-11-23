@@ -28,6 +28,8 @@ type RegisterCustomerResponse struct {
 	Email string `json:"email"`
 	// Account creation timestamp
 	CreatedAt time.Time `json:"created_at"`
+	// Account last update timestamp
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type _RegisterCustomerResponse RegisterCustomerResponse
@@ -36,11 +38,12 @@ type _RegisterCustomerResponse RegisterCustomerResponse
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewRegisterCustomerResponse(id string, email string, createdAt time.Time) *RegisterCustomerResponse {
+func NewRegisterCustomerResponse(id string, email string, createdAt time.Time, updatedAt time.Time) *RegisterCustomerResponse {
 	this := RegisterCustomerResponse{}
 	this.Id = id
 	this.Email = email
 	this.CreatedAt = createdAt
+	this.UpdatedAt = updatedAt
 	return &this
 }
 
@@ -124,6 +127,30 @@ func (o *RegisterCustomerResponse) SetCreatedAt(v time.Time) {
 	o.CreatedAt = v
 }
 
+// GetUpdatedAt returns the UpdatedAt field value
+func (o *RegisterCustomerResponse) GetUpdatedAt() time.Time {
+	if o == nil {
+		var ret time.Time
+		return ret
+	}
+
+	return o.UpdatedAt
+}
+
+// GetUpdatedAtOk returns a tuple with the UpdatedAt field value
+// and a boolean to check if the value has been set.
+func (o *RegisterCustomerResponse) GetUpdatedAtOk() (*time.Time, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.UpdatedAt, true
+}
+
+// SetUpdatedAt sets field value
+func (o *RegisterCustomerResponse) SetUpdatedAt(v time.Time) {
+	o.UpdatedAt = v
+}
+
 func (o RegisterCustomerResponse) MarshalJSON() ([]byte, error) {
 	toSerialize,err := o.ToMap()
 	if err != nil {
@@ -137,6 +164,7 @@ func (o RegisterCustomerResponse) ToMap() (map[string]interface{}, error) {
 	toSerialize["id"] = o.Id
 	toSerialize["email"] = o.Email
 	toSerialize["created_at"] = o.CreatedAt
+	toSerialize["updated_at"] = o.UpdatedAt
 	return toSerialize, nil
 }
 
@@ -148,6 +176,7 @@ func (o *RegisterCustomerResponse) UnmarshalJSON(data []byte) (err error) {
 		"id",
 		"email",
 		"created_at",
+		"updated_at",
 	}
 
 	allProperties := make(map[string]interface{})

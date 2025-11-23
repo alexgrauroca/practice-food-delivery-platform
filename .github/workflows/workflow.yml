@@ -85,11 +85,6 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
 
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version: ${{ env.GO_VERSION }}
-
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
@@ -231,6 +226,8 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version: ${{ env.GO_VERSION }}
+          cache: true
+          cache-dependency-path: e2e/${{ inputs.service }}/go.sum
       - name: Run E2E Tests
         id: run-e2e-tests
         run: make run-e2e-tests

@@ -25,11 +25,11 @@ type StaffAPIService service
 type ApiLoginStaffRequest struct {
 	ctx context.Context
 	ApiService *StaffAPIService
-	loginRequest *LoginRequest
+	loginStaffRequest *LoginStaffRequest
 }
 
-func (r ApiLoginStaffRequest) LoginRequest(loginRequest LoginRequest) ApiLoginStaffRequest {
-	r.loginRequest = &loginRequest
+func (r ApiLoginStaffRequest) LoginStaffRequest(loginStaffRequest LoginStaffRequest) ApiLoginStaffRequest {
+	r.loginStaffRequest = &loginStaffRequest
 	return r
 }
 
@@ -72,8 +72,8 @@ func (a *StaffAPIService) LoginStaffExecute(r ApiLoginStaffRequest) (*LoginRespo
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
-	if r.loginRequest == nil {
-		return localVarReturnValue, nil, reportError("loginRequest is required and must be specified")
+	if r.loginStaffRequest == nil {
+		return localVarReturnValue, nil, reportError("loginStaffRequest is required and must be specified")
 	}
 
 	// to determine the Content-Type header
@@ -94,7 +94,7 @@ func (a *StaffAPIService) LoginStaffExecute(r ApiLoginStaffRequest) (*LoginRespo
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	// body params
-	localVarPostBody = r.loginRequest
+	localVarPostBody = r.loginStaffRequest
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
 	if err != nil {
 		return localVarReturnValue, nil, err
