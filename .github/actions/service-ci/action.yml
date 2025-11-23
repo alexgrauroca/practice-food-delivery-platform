@@ -6,8 +6,7 @@ inputs:
     required: true
   go-version:
     description: Go version to setup
-    required: false
-    default: '1.25'
+    required: true
   task:
     description: "One of: unit | integration | docs"
     required: true
