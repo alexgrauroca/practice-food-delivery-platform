@@ -34,7 +34,9 @@ var _ = g.Describe("Customer Authentication Workflow", func() {
 		Expect(loginResponse.RefreshToken).NotTo(BeEmpty())
 		Expect(loginResponse.ExpiresIn).To(BeNumerically(">", 0))
 		Expect(loginResponse.TokenType).To(Equal("Bearer"))
-		Expect(loginResponse.Token.GetSubject()).To(Equal(c.ID))
+		claims, err := loginResponse.Token.GetClaims()
+		Expect(err).NotTo(HaveOccurred())
+		Expect(claims.GetSubject()).To(Equal(c.ID))
 
 		// Refresh the customer auth tokens
 		// Wait 1 second to ensure a difference between ExpiresIn values from each new access_token

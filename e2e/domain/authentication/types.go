@@ -15,7 +15,8 @@ type Token struct {
 // Claims represent the custom claims structure for JWT tokens
 type Claims struct {
 	jwt.RegisteredClaims
-	Role string `json:"role"`
+	Role   string `json:"role"`
+	Tenant string `json:"tenant"`
 }
 
 // LoginRequest represents the payload needed for user authentication, containing email and password.

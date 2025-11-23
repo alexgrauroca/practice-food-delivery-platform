@@ -45,6 +45,7 @@ func (c *TestRestaurant) Register(owner *staff.TestStaff) (*RegisterResponse, er
 			// Update staff owner data
 			owner.ID = res.StaffOwner.ID
 			owner.RestaurantID = c.ID
+			owner.Owner = res.StaffOwner.Owner
 		}
 	}
 
